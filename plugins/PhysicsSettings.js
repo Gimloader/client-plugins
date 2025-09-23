@@ -5,6 +5,7 @@
  * @author TheLazySquid
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/plugins/PhysicsSettings.js
  * @webpage https://gimloader.github.io/plugins/physicssettings
+ * @hasSettings true
  * @needsLib QuickSettings | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/libraries/QuickSettings/build/QuickSettings.js
  */
 
