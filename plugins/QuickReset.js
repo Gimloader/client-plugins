@@ -1,7 +1,7 @@
 /**
  * @name QuickReset
  * @description Quickly lets you restart 2d gamemodes
- * @version 0.2.4
+ * @version 0.3.0
  * @author TheLazySquid
  * @webpage https://gimloader.github.io/plugins/quickreset
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/plugins/QuickReset.js
@@ -42,4 +42,19 @@ api.hotkeys.addConfigurableHotkey({
             unsub();
         }
     });
+});
+
+api.hotkeys.addConfigurableHotkey({
+    category: "Quick Reset",
+    title: "Exit to Lobby",
+    preventDefault: false,
+    default: {
+        key: "KeyL",
+        alt: true
+    }
+}, () => {
+    if(api.net.type !== "Colyseus" || !GL.net.isHost) return;
+
+    api.net.send("END_GAME");
+    api.net.send("RESTORE_MAP_EARLIER");
 });
