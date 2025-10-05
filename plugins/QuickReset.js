@@ -47,7 +47,7 @@ api.hotkeys.addConfigurableHotkey({
 api.hotkeys.addConfigurableHotkey({
     category: "Quick Reset",
     title: "Exit to Lobby",
-    preventDefault: false,
+    preventDefault: true,
     default: {
         key: "KeyL",
         alt: true
