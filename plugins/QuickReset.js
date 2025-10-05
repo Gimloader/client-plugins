@@ -5,6 +5,7 @@
  * @author TheLazySquid
  * @webpage https://gimloader.github.io/plugins/quickreset
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/plugins/QuickReset.js
+ * @gamemode 2d
  */
 
 let startMessage = null;
