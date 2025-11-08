@@ -1,0 +1,62 @@
+import type { Op } from "./consts";
+
+export const isUint8 = (n: number) => Number.isInteger(n) && n >= 0 && n <= 255;
+
+export function bytesToFloat(bytes: number[]) {
+    const buffer = new ArrayBuffer(8);
+    const view = new Uint8Array(buffer);
+
+    for(let i = 0; i < 7; i++) {
+        view[i] = bytes[i] ?? 0;
+    }
+
+    return new Float64Array(buffer)[0];
+}
+
+export function floatToBytes(float: number) {
+    const buffer = new ArrayBuffer(8);
+    const floatView = new Float64Array(buffer);
+    floatView[0] = float;
+    const byteView = new Uint8Array(buffer);
+    return Array.from(byteView);
+}
+
+export function getIdentifier(str: string) {
+    let hash = 0;
+
+    for(let i = 0; i < str.length; i++) {
+        const charCode = str.charCodeAt(i);
+        hash = hash * 31 + charCode | 0;
+    }
+
+    const uInt32Hash = hash >>> 0;
+
+    return [
+        uInt32Hash >>> 24 & 255,
+        uInt32Hash >>> 16 & 255,
+        uInt32Hash >>> 8 & 255,
+        uInt32Hash & 255
+    ];
+}
+export function encodeStringMessage(identifier: number[], op: Op, message: string) {
+    let codes = message.split("").map((c) => c.charCodeAt(0));
+    codes = codes.filter((c) => c < 256);
+
+    const charsLow = codes.length & 255;
+    const charsHigh = (codes.length & 65280) >> 8;
+
+    const header = [...identifier, op, charsHigh, charsLow];
+    const messages = [bytesToFloat(header)];
+
+    while(codes.length % 7 !== 0) codes.push(0);
+
+    for(let i = 0; i < codes.length; i += 7) {
+        const msg = [];
+        for(let j = 0; j < 7; j++) {
+            msg[j] = codes[i + j];
+        }
+        messages.push(bytesToFloat(msg));
+    }
+
+    return messages;
+}
