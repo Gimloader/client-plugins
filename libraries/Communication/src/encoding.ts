@@ -38,6 +38,7 @@ export function getIdentifier(str: string) {
         uInt32Hash & 255
     ];
 }
+
 export function encodeStringMessage(identifier: number[], op: Op, message: string) {
     let codes = message.split("").map((c) => c.charCodeAt(0));
     codes = codes.filter((c) => c < 256);
