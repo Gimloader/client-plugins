@@ -34,7 +34,7 @@ export default class Runtime {
 
         const bytes = floatToBytes(angle);
         const identifierBytes = bytes.slice(0, 4);
-        const identifierString = JSON.stringify(identifierBytes);
+        const identifierString = identifierBytes.join(",");
         const callbacksForIdentifier = this.callbacks.get(identifierString);
 
         const state = this.messageStates.get(char);

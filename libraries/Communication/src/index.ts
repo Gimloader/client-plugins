@@ -20,7 +20,7 @@ export default class Communication {
     private identifier: number[];
 
     private get identifierString() {
-        return JSON.stringify(this.identifier);
+        return this.identifier.join(",");
     }
 
     private get scriptCallbacks() {
