@@ -74,18 +74,21 @@ var Runtime = class {
   sending = false;
   pendingAngle = 0;
   ignoreNextAngle = false;
-  angleChangeRes;
+  angleChangeRes = null;
   messageStates = /* @__PURE__ */ new Map();
+  messageQue = [];
   callbacks = /* @__PURE__ */ new Map();
+  async sendRealAngle() {
+    await this.sendAngle(this.pendingAngle);
+  }
   handleAngle(char, angle) {
     if (!angle) return;
     if (char.id === this.myId) {
-      this.angleChangeRes?.();
-      return;
+      return this.angleChangeRes?.();
     }
     const bytes = floatToBytes(angle);
     const identifierBytes = bytes.slice(0, 4);
-    const identifierString = JSON.stringify(identifierBytes);
+    const identifierString = identifierBytes.join(",");
     const callbacksForIdentifier = this.callbacks.get(identifierString);
     const state = this.messageStates.get(char);
     if (callbacksForIdentifier) {
@@ -137,13 +140,30 @@ var Runtime = class {
     await new Promise((res) => this.angleChangeRes = res);
   }
   async sendMessages(messages) {
-    this.sending = true;
-    for (const message of messages) {
-      this.ignoreNextAngle = true;
-      await this.sendAngle(message);
+    if (this.sending) {
+      return new Promise(
+        (res) => this.messageQue.push({
+          messages,
+          resolve: res
+        })
+      );
     }
+    this.sending = true;
+    this.messageQue.unshift({ messages });
+    const sendLoop = async () => {
+      for (const pendingMessage of this.messageQue) {
+        for (const message of pendingMessage.messages) {
+          this.ignoreNextAngle = true;
+          await this.sendAngle(message);
+        }
+        pendingMessage.resolve?.();
+        await this.sendRealAngle();
+        this.messageQue = this.messageQue.filter((m) => m !== pendingMessage);
+      }
+      if (this.messageQue.length) await sendLoop();
+    };
+    await sendLoop();
     this.sending = false;
-    this.sendAngle(this.pendingAngle);
   }
 };
 
@@ -162,7 +182,7 @@ api.net.onLoad(() => {
 var Communication = class {
   identifier;
   get identifierString() {
-    return JSON.stringify(this.identifier);
+    return this.identifier.join(",");
   }
   get scriptCallbacks() {
     return runtime.callbacks.get(this.identifierString);
@@ -182,7 +202,7 @@ var Communication = class {
             1 /* TransmittingByteInteger */,
             message
           ];
-          await runtime.sendMessages([bytesToFloat(bytes)]);
+          await runtime.sendAngle(bytesToFloat(bytes));
         } else {
           const messages = encodeStringMessage(this.identifier, 3 /* TransmittingNumber */, String(message));
           await runtime.sendMessages(messages);
@@ -217,6 +237,9 @@ var Communication = class {
     return () => {
       runtime.callbacks.set(this.identifierString, this.scriptCallbacks.filter((cb) => cb !== callback));
     };
+  }
+  destroy() {
+    runtime.callbacks.delete(this.identifierString);
   }
 };
 export {
