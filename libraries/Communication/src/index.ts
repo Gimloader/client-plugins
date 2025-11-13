@@ -1,7 +1,7 @@
 import { Op } from "./consts";
 import Runtime from "./core";
 import { bytesToFloat, encodeStringMessage, getIdentifier, isUint8 } from "./encoding";
-import type { Callback, Message } from "./types";
+import type { OnMessageCallback, Message } from "./types";
 
 let runtime: Runtime;
 
@@ -72,7 +72,7 @@ export default class Communication {
         }
     }
 
-    onMessage(callback: Callback) {
+    onMessage(callback: OnMessageCallback) {
         if(!this.scriptCallbacks) {
             runtime.callbacks.set(this.identifierString, []);
         }

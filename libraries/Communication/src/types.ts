@@ -7,7 +7,7 @@ export type Message =
     | { [key: string]: Message }
     | Message[];
 
-export type Callback = (message: Message, player: any) => void;
+export type OnMessageCallback = (message: Message, player: any) => void;
 
 export interface MessageState {
     message: string;

@@ -1,6 +1,6 @@
 import { Op } from "./consts";
 import { floatToBytes } from "./encoding";
-import type { Callback, Message, MessageState } from "./types";
+import type { OnMessageCallback, Message, MessageState } from "./types";
 
 export default class Runtime {
     private sending = false;
@@ -8,7 +8,7 @@ export default class Runtime {
     private ignoreNextAngle = false;
     private angleChangeRes: Function | undefined;
     private messageStates = new Map<string, MessageState>();
-    callbacks = new Map<string, Callback[]>();
+    callbacks = new Map<string, OnMessageCallback[]>();
 
     constructor(private myId: string) {
         api.net.on("send:AIMING", (message, editFn) => {
