@@ -19,7 +19,7 @@ api.net.onLoad(() => {
         UI.addMessage(`${me.name}: ${text}`, true);
     });
 
-    api.onStop(comms.onMessage((message: string | number, char: any) => {
+    api.onStop(comms.onMessage((message: string | Ops, char: any) => {
         if(typeof message === "string") {
             UI.addMessage(`${char.name}: ${message}`);
         } else {
