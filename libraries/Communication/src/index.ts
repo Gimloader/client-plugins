@@ -44,7 +44,7 @@ export default class Communication {
                         Op.TransmittingByteInteger,
                         message
                     ];
-                    await runtime.sendMessages([bytesToFloat(bytes)]);
+                    await runtime.sendAngle(bytesToFloat(bytes));
                 } else {
                     const messages = encodeStringMessage(this.identifier, Op.TransmittingNumber, String(message));
                     await runtime.sendMessages(messages);
