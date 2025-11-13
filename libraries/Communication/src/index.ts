@@ -83,4 +83,8 @@ export default class Communication {
             runtime.callbacks.set(this.identifierString, this.scriptCallbacks!.filter(cb => cb !== callback));
         };
     }
+
+    destroy() {
+        runtime.callbacks.delete(this.identifierString); 
+    }
 }
