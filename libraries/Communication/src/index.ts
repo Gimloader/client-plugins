@@ -1,7 +1,7 @@
 import { Op } from "./consts";
 import Runtime from "./core";
 import { bytesToFloat, encodeStringMessage, getIdentifier, isUint8 } from "./encoding";
-import type { OnMessageCallback, Message } from "./types";
+import type { Message, OnMessageCallback } from "./types";
 
 let runtime: Runtime;
 
@@ -85,6 +85,6 @@ export default class Communication {
     }
 
     destroy() {
-        runtime.callbacks.delete(this.identifierString); 
+        runtime.callbacks.delete(this.identifierString);
     }
 }
