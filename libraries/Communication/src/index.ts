@@ -5,8 +5,20 @@ import type { Message, OnMessageCallback } from "./types";
 
 let runtime: Runtime;
 
+let onEnabledCallbacks: (() => void)[] = [];
+let onDisabledCallbacks: (() => void)[] = [];
+
 api.net.onLoad(() => {
     runtime = new Runtime(api.stores.network.authId);
+
+    api.net.room.state.session.listen("phase", (phase: string) => {
+        if(phase === "game") {
+            onEnabledCallbacks.forEach(cb => cb());
+        } else {
+            onDisabledCallbacks.forEach(cb => cb());
+        }
+    }, false);
+
     api.onStop(api.net.room.state.characters.onAdd((char: any) => {
         const cleanupChar = char.projectiles.listen("aimAngle", (angle: number) => {
             runtime.handleAngle(char, angle);
@@ -15,6 +27,8 @@ api.net.onLoad(() => {
         api.onStop(char.onRemove(cleanupChar));
     }));
 });
+
+const isEnabled = () => api.net.room?.state.session === "game";
 
 export default class Communication {
     private identifier: number[];
@@ -31,8 +45,26 @@ export default class Communication {
         this.identifier = getIdentifier(name);
     }
 
+    static onEnabled(callback: () => void) {
+        if(isEnabled()) callback();
+        onEnabledCallbacks.push(callback);
+
+        return () => {
+            onEnabledCallbacks = onEnabledCallbacks.filter(cb => cb !== callback);
+        };
+    }
+
+    static onDisabled(callback: () => void) {
+        if(!isEnabled()) callback();
+        onDisabledCallbacks.push(callback);
+
+        return () => {
+            onDisabledCallbacks = onDisabledCallbacks.filter(cb => cb !== callback);
+        };
+    }
+
     async send(message: Message) {
-        if(api.net.room?.state.session.phase !== "game") {
+        if(!isEnabled()) {
             throw new Error("Communication can only be used after the game is started");
         }
 
