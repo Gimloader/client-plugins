@@ -34,7 +34,8 @@ export default {
         "Desync": "./libraries/Desync",
         "DLDUtils": "./libraries/DLDUtils",
         "GamemodeDetector": "./libraries/GamemodeDetector",
-        "MobxUtils": "./libraries/MobxUtils"
+        "MobxUtils": "./libraries/MobxUtils",
+        "Communication": "./libraries/Communication"
     },
     plugins: [
         sassPlugin({ type: "css-text" }),
