@@ -5,7 +5,9 @@ export default {
     description: "Easily make simple settings menus",
     author: "TheLazySquid",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Desync.js",
-    version: "0.1.2",
+    webpage: "https://gimloader.github.io/libraries/desync/",
+    version: "0.1.3",
+    changelog: ["Added webpage link"],
     gamemodes: ["2d"],
     isLibrary: true
 };
