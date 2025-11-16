@@ -168,8 +168,8 @@ api.net.onLoad(() => {
     editFn(null);
   });
   const me = api.net.room.state.characters.get(myId);
-  const Communication = api.lib("Communication");
-  const comms = new Communication("Chat");
+  const Comms = api.lib("Communication");
+  const comms = new Comms("Chat");
   UI.init(async (text) => {
     await comms.send(text);
     UI.addMessage(`${me.name}: ${text}`, true);
@@ -188,20 +188,21 @@ api.net.onLoad(() => {
       }
     }
   }));
-  if (api.net.room.state.session.phase === "game") {
-    comms.send(2 /* Greet */);
-  }
-  api.onStop(api.net.room.state.session.listen("phase", (phase) => {
-    UI.setEnabled(phase === "game");
-  }));
-  api.onStop(api.net.room.state.session.listen("phase", (phase) => {
-    if (phase === "game") {
+  api.onStop(Comms.onEnabled((immediate) => {
+    UI.setEnabled(true);
+    if (immediate) {
+      comms.send(2 /* Greet */);
+    } else {
       UI.addMessage("The chat is active!");
       comms.send(0 /* Join */);
-    } else {
+    }
+  }));
+  api.onStop(Comms.onDisabled((immediate) => {
+    UI.setEnabled(false);
+    if (!immediate) {
       UI.addMessage("The chat is no longer active");
     }
-  }, false));
+  }));
   window.addEventListener("beforeunload", () => {
     comms.send(1 /* Leave */);
   });

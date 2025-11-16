@@ -28,7 +28,7 @@ api.net.onLoad(() => {
     }));
 });
 
-const isEnabled = () => api.net.room?.state.session === "game";
+type EnabledStateCallback = (immediate: boolean) => void;
 
 export default class Communication {
     private identifier: number[];
@@ -45,26 +45,34 @@ export default class Communication {
         this.identifier = getIdentifier(name);
     }
 
-    static onEnabled(callback: () => void) {
-        if(isEnabled()) callback();
-        onEnabledCallbacks.push(callback);
+    static get enabled() {
+        return api.net.room?.state.session.phase === "game";
+    }
+
+    static onEnabled(callback: EnabledStateCallback, immediate = true) {
+        if(this.enabled && immediate) callback(true);
+
+        const listenerCallback = () => callback(false);
+        onEnabledCallbacks.push(listenerCallback);
 
         return () => {
-            onEnabledCallbacks = onEnabledCallbacks.filter(cb => cb !== callback);
+            onEnabledCallbacks = onEnabledCallbacks.filter(cb => cb !== listenerCallback);
         };
     }
 
-    static onDisabled(callback: () => void) {
-        if(!isEnabled()) callback();
-        onDisabledCallbacks.push(callback);
+    static onDisabled(callback: EnabledStateCallback, immediate = true) {
+        if(!this.enabled && immediate) callback(true);
+
+        const listenerCallback = () => callback(false);
+        onDisabledCallbacks.push(listenerCallback);
 
         return () => {
-            onDisabledCallbacks = onDisabledCallbacks.filter(cb => cb !== callback);
+            onDisabledCallbacks = onDisabledCallbacks.filter(cb => cb !== listenerCallback);
         };
     }
 
     async send(message: Message) {
-        if(!isEnabled()) {
+        if(!Communication.enabled) {
             throw new Error("Communication can only be used after the game is started");
         }
 
@@ -104,12 +112,12 @@ export default class Communication {
         }
     }
 
-    onMessage(callback: OnMessageCallback) {
+    onMessage<T extends Message = Message>(callback: OnMessageCallback<T>) {
         if(!this.scriptCallbacks) {
             runtime.callbacks.set(this.identifierString, []);
         }
 
-        this.scriptCallbacks!.push(callback);
+        this.scriptCallbacks!.push(callback as OnMessageCallback<Message>);
 
         return () => {
             runtime.callbacks.set(this.identifierString, this.scriptCallbacks!.filter(cb => cb !== callback));

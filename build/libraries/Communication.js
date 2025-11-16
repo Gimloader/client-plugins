@@ -169,8 +169,17 @@ var Runtime = class {
 
 // libraries/Communication/src/index.ts
 var runtime;
+var onEnabledCallbacks = [];
+var onDisabledCallbacks = [];
 api.net.onLoad(() => {
   runtime = new Runtime(api.stores.network.authId);
+  api.net.room.state.session.listen("phase", (phase) => {
+    if (phase === "game") {
+      onEnabledCallbacks.forEach((cb) => cb());
+    } else {
+      onDisabledCallbacks.forEach((cb) => cb());
+    }
+  }, false);
   api.onStop(api.net.room.state.characters.onAdd((char) => {
     const cleanupChar = char.projectiles.listen("aimAngle", (angle) => {
       runtime.handleAngle(char, angle);
@@ -179,7 +188,7 @@ api.net.onLoad(() => {
     api.onStop(char.onRemove(cleanupChar));
   }));
 });
-var Communication = class {
+var Communication = class _Communication {
   identifier;
   get identifierString() {
     return this.identifier.join(",");
@@ -190,8 +199,27 @@ var Communication = class {
   constructor(name) {
     this.identifier = getIdentifier(name);
   }
+  static get enabled() {
+    return api.net.room?.state.session.phase === "game";
+  }
+  static onEnabled(callback, immediate = true) {
+    if (this.enabled && immediate) callback(true);
+    const listenerCallback = () => callback(false);
+    onEnabledCallbacks.push(listenerCallback);
+    return () => {
+      onEnabledCallbacks = onEnabledCallbacks.filter((cb) => cb !== listenerCallback);
+    };
+  }
+  static onDisabled(callback, immediate = true) {
+    if (!this.enabled && immediate) callback(true);
+    const listenerCallback = () => callback(false);
+    onDisabledCallbacks.push(listenerCallback);
+    return () => {
+      onDisabledCallbacks = onDisabledCallbacks.filter((cb) => cb !== listenerCallback);
+    };
+  }
   async send(message) {
-    if (api.net.room?.state.session.phase !== "game") {
+    if (!_Communication.enabled) {
       throw new Error("Communication can only be used after the game is started");
     }
     switch (typeof message) {

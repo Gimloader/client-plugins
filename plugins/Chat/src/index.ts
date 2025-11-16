@@ -1,3 +1,4 @@
+import type Communication from "libraries/Communication/src";
 import { Ops } from "./consts";
 import UI from "./ui";
 
@@ -11,8 +12,8 @@ api.net.onLoad(() => {
     });
 
     const me = api.net.room.state.characters.get(myId);
-    const Communication = api.lib("Communication");
-    const comms = new Communication("Chat");
+    const Comms = api.lib("Communication") as typeof Communication;
+    const comms = new Comms("Chat");
 
     UI.init(async (text: string) => {
         await comms.send(text);
@@ -35,23 +36,25 @@ api.net.onLoad(() => {
         }
     }));
 
-    // if we join mid-game request for others to re-send their join message
-    if(api.net.room.state.session.phase === "game") {
-        comms.send(Ops.Greet);
-    }
+    api.onStop(Comms.onEnabled(immediate => {
+        UI.setEnabled(true);
 
-    api.onStop(api.net.room.state.session.listen("phase", (phase: string) => {
-        UI.setEnabled(phase === "game");
-    }));
-
-    api.onStop(api.net.room.state.session.listen("phase", (phase: string) => {
-        if(phase === "game") {
+        if(immediate) {
+            // if we join mid-game request for others to re-send their join message
+            comms.send(Ops.Greet);
+        } else {
             UI.addMessage("The chat is active!");
             comms.send(Ops.Join);
-        } else {
+        }
+    }));
+
+    api.onStop(Comms.onDisabled(immediate => {
+        UI.setEnabled(false);
+
+        if(!immediate) {
             UI.addMessage("The chat is no longer active");
         }
-    }, false));
+    }));
 
     window.addEventListener("beforeunload", () => {
         comms.send(Ops.Leave);
