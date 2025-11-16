@@ -1,7 +1,10 @@
 import styles from "./styles.scss";
 import { createUI } from "./ui";
+import type * as DLDUtils from "libraries/DLDUtils/src";
 
-api.lib("DLDUtils").setLaserWarningEnabled(false);
+const dldUtils = api.lib("DLDUtils") as typeof DLDUtils;
+dldUtils.setLaserWarningEnabled(false);
+
 api.UI.addStyles(styles);
 
 const startTasBtn = document.createElement("button");

@@ -1,5 +1,6 @@
 import type { IFrameInfo, IRecording } from "../types";
 import { stopUpdatingLasers, updateLasers } from "./updateLasers";
+import type * as DLDUtils from "libraries/DLDUtils/src";
 
 export default class Recorder {
     physicsManager: any;
@@ -90,7 +91,8 @@ export default class Recorder {
     }
 
     async playback(data: IRecording) {
-        api.lib("DLDUtils").cancelRespawn();
+        const dldUtils = api.lib("DLDUtils") as typeof DLDUtils;
+        dldUtils.cancelRespawn();
 
         this.playing = true;
         this.platformerPhysics = JSON.stringify(GL.platformerPhysics);

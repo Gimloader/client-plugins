@@ -5,6 +5,8 @@ import type { DLDData } from "../types";
 import { DLDFullGameUI, DLDSummitUI } from "../ui/DLD";
 import { fmtMs, inArea, onFrame, onPhysicsStep } from "../util";
 import { SplitsAutosplitter } from "./autosplitter";
+import type * as Savestates from "plugins/Savestates/src";
+import type * as InputRecorder from "plugins/InputRecorder/src";
 
 export default class DLDAutosplitter extends SplitsAutosplitter {
     declare data: DLDData;
@@ -52,7 +54,7 @@ export default class DLDAutosplitter extends SplitsAutosplitter {
             this.hasMoved = false;
         });
 
-        const savestates = api.plugin("Savestates");
+        const savestates = api.plugin("Savestates") as typeof Savestates | null;
         if(savestates) {
             savestates.onStateLoaded(this.onStateLoadedBound);
         }
@@ -187,7 +189,7 @@ export default class DLDAutosplitter extends SplitsAutosplitter {
     }
 
     getRecorder() {
-        const inputRecorder = api.plugin("InputRecorder");
+        const inputRecorder = api.plugin("InputRecorder") as typeof InputRecorder | null;
         if(!inputRecorder) return;
 
         return inputRecorder.getRecorder();
@@ -276,7 +278,7 @@ export default class DLDAutosplitter extends SplitsAutosplitter {
     destroy() {
         this.ui.remove();
 
-        const savestates = api.plugin("Savestates");
+        const savestates = api.plugin("Savestates") as typeof Savestates | null;
         if(savestates) {
             savestates.offStateLoaded(this.onStateLoadedBound);
         }

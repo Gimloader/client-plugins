@@ -1090,7 +1090,7 @@ function create_fragment(ctx) {
       t1 = space();
       table = element("table");
       tr = element("tr");
-      tr.innerHTML = `<th style="min-width: 80px;">Split</th> <th style="min-width: 80px;">Best Split</th> <th style="min-width: 80px;">Split during PB</th>`;
+      tr.innerHTML = `<th style="min-width: 80px">Split</th> <th style="min-width: 80px">Best Split</th> <th style="min-width: 80px">Split during PB</th>`;
       t7 = space();
       for (let i = 0; i < each_blocks.length; i += 1) {
         each_blocks[i].c();

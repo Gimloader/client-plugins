@@ -1,6 +1,7 @@
 import { summitCoords } from "$shared/consts";
+import type * as DLDUtils from "libraries/DLDUtils/src";
 
-const DLDUtils = api.lib("DLDUtils");
+const dldUtils = api.lib("DLDUtils") as typeof DLDUtils;
 
 const defaultState =
     '{"gravity":0.001,"velocity":{"x":0,"y":0},"movement":{"direction":"none","xVelocity":0,"accelerationTicks":0},"jump":{"isJumping":false,"jumpsLeft":2,"jumpCounter":0,"jumpTicks":118,"xVelocityAtJumpStart":0},"forces":[],"grounded":true,"groundedTicks":0,"lastGroundedAngle":0}';
@@ -13,7 +14,7 @@ const tp = (summit: number) => {
     const physics = api.stores.phaser.mainCharacter.physics;
     const rb = physics.getBody().rigidBody;
 
-    DLDUtils.cancelRespawn();
+    dldUtils.cancelRespawn();
 
     rb.setTranslation(summitCoords[summit], true);
     physics.state = JSON.parse(defaultState);
@@ -47,7 +48,7 @@ const loadState = () => {
 
     if(!lastPos || !lastState) return;
 
-    api.lib("DLDUtils").cancelRespawn();
+    dldUtils.cancelRespawn();
     rb.setTranslation(lastPos, true);
     physics.state = JSON.parse(lastState);
 

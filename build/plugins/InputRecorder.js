@@ -113,7 +113,8 @@ var Recorder = class {
     a.click();
   }
   async playback(data) {
-    api.lib("DLDUtils").cancelRespawn();
+    const dldUtils = api.lib("DLDUtils");
+    dldUtils.cancelRespawn();
     this.playing = true;
     this.platformerPhysics = JSON.stringify(GL.platformerPhysics);
     this.rb.setTranslation(data.startPos, true);

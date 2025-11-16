@@ -676,7 +676,8 @@ function createUI() {
 }
 
 // plugins/DLDTAS/src/index.ts
-api.lib("DLDUtils").setLaserWarningEnabled(false);
+var dldUtils = api.lib("DLDUtils");
+dldUtils.setLaserWarningEnabled(false);
 api.UI.addStyles(styles_default);
 var startTasBtn = document.createElement("button");
 startTasBtn.id = "startTasBtn";

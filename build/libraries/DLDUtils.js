@@ -148,7 +148,8 @@ var enable = () => {
 };
 api.net.onLoad(() => {
   enable();
-  GL.lib("Desync").enable();
+  const desync = GL.lib("Desync");
+  desync.enable();
 });
 function boundingBoxOverlap(start, end, topLeft, bottomRight) {
   return lineIntersects(start, end, topLeft, { x: bottomRight.x, y: topLeft.y }) || lineIntersects(start, end, topLeft, { x: topLeft.x, y: bottomRight.y }) || lineIntersects(start, end, { x: bottomRight.x, y: topLeft.y }, bottomRight) || lineIntersects(start, end, { x: topLeft.x, y: bottomRight.y }, bottomRight);

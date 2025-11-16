@@ -65,12 +65,14 @@ api.net.onLoad(() => {
   api.net.room.state.listen("mapSettings", () => {
     applyAll();
   });
-  GL.plugin("DLDTAS")?.setMoveSpeed(api.settings.speed);
+  const dldTas = GL.plugin("DLDTAS");
+  dldTas?.setMoveSpeed(api.settings.speed);
   api.stores.me.movementSpeed = api.settings.speed;
   api.settings.listen("jumps", (jumps) => updateMapOption("maxJumps", jumps));
   api.settings.listen("jumpheight", (height) => updateMapOption("jumpHeight", height));
   api.settings.listen("speed", (speed) => {
-    GL.plugin("DLDTAS")?.setMoveSpeed(api.settings.speed);
+    const dldTas2 = GL.plugin("DLDTAS");
+    dldTas2?.setMoveSpeed(api.settings.speed);
     api.stores.me.movementSpeed = speed;
   });
 });

@@ -1,5 +1,7 @@
 import { summitCoords } from "$shared/consts";
 import type { Capsule, Vector } from "@dimforge/rapier2d-compat";
+import type * as Savestates from "plugins/Savestates/src";
+import type * as Desync from "libraries/Desync/src";
 
 const respawnHeight = 621.093;
 const floorHeight = 638.37;
@@ -7,7 +9,7 @@ let lastCheckpointReached = 0;
 let canRespawn = false;
 
 api.net.onLoad(() => {
-    const savestates = api.plugin("Savestates");
+    const savestates = api.plugin("Savestates") as typeof Savestates | null;
     if(savestates) {
         savestates.onStateLoaded((summit: string | number) => {
             if(typeof summit !== "number") return;
@@ -173,7 +175,8 @@ const enable = () => {
 
 api.net.onLoad(() => {
     enable();
-    GL.lib("Desync").enable();
+    const desync = GL.lib("Desync") as typeof Desync;
+    desync.enable();
 });
 
 function boundingBoxOverlap(start: Vector, end: Vector, topLeft: Vector, bottomRight: Vector) {

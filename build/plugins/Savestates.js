@@ -22,14 +22,14 @@ var summitCoords = [
 ];
 
 // plugins/Savestates/src/index.ts
-var DLDUtils = api.lib("DLDUtils");
+var dldUtils = api.lib("DLDUtils");
 var defaultState = '{"gravity":0.001,"velocity":{"x":0,"y":0},"movement":{"direction":"none","xVelocity":0,"accelerationTicks":0},"jump":{"isJumping":false,"jumpsLeft":2,"jumpCounter":0,"jumpTicks":118,"xVelocityAtJumpStart":0},"forces":[],"grounded":true,"groundedTicks":0,"lastGroundedAngle":0}';
 var stateLoadCallbacks = [];
 var tp = (summit) => {
   if (!gameLoaded) return;
   const physics = api.stores.phaser.mainCharacter.physics;
   const rb = physics.getBody().rigidBody;
-  DLDUtils.cancelRespawn();
+  dldUtils.cancelRespawn();
   rb.setTranslation(summitCoords[summit], true);
   physics.state = JSON.parse(defaultState);
   stateLoadCallbacks.forEach((cb) => cb(summit));
@@ -52,7 +52,7 @@ var loadState = () => {
   const physics = api.stores.phaser.mainCharacter.physics;
   const rb = physics.getBody().rigidBody;
   if (!lastPos || !lastState) return;
-  api.lib("DLDUtils").cancelRespawn();
+  dldUtils.cancelRespawn();
   rb.setTranslation(lastPos, true);
   physics.state = JSON.parse(lastState);
   api.notification.open({ message: "State Loaded", duration: 0.75 });

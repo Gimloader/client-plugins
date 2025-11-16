@@ -10,7 +10,8 @@
  */
 
 // plugins/ClickTP/src/index.ts
-api.lib("Desync").enable();
+var desync = api.lib("Desync");
+desync.enable();
 api.net.onLoad(() => {
   const onClick = (e) => {
     if (!e.ctrlKey) return;
