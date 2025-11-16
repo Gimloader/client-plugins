@@ -1,4 +1,4 @@
-import type * as DLDTAS from 'plugins/DLDTAS/src';
+import type * as DLDTAS from "plugins/DLDTAS/src";
 
 api.settings.create([
     {
