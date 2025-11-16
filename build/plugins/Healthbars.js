@@ -2,10 +2,11 @@
  * @name Healthbars
  * @description Adds healthbars underneath players' names
  * @author TheLazySquid
- * @version 0.1.2
+ * @version 0.1.3
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Healthbars.js
  * @webpage https://gimloader.github.io/plugins/healthbars
  * @gamemode 2d
+ * @changelog Fixed healthbars appearing when fragility is used
  */
 
 // plugins/Healthbars/src/index.ts

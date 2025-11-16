@@ -6,6 +6,7 @@ export default {
     author: "TheLazySquid",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Healthbars.js",
     webpage: "https://gimloader.github.io/plugins/healthbars",
-    version: "0.1.2",
-    gamemodes: ["2d"]
+    version: "0.1.3",
+    gamemodes: ["2d"],
+    changelog: ["Fixed healthbars appearing when fragility is used"]
 };
