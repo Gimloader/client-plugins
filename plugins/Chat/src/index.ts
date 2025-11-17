@@ -14,13 +14,14 @@ api.net.onLoad(() => {
     const me = api.net.room.state.characters.get(myId);
     const Comms = api.lib("Communication") as typeof Communication;
     const comms = new Comms("Chat");
+    api.onStop(comms.destroy);
 
     UI.init(async (text: string) => {
         await comms.send(text);
         UI.addMessage(`${me.name}: ${text}`, true);
     });
 
-    api.onStop(comms.onMessage((message: string | Ops, char: any) => {
+    comms.onMessage<string | Ops>((message, char) => {
         if(typeof message === "string") {
             UI.addMessage(`${char.name}: ${message}`);
         } else {
@@ -34,9 +35,9 @@ api.net.onLoad(() => {
                 comms.send(Ops.Join);
             }
         }
-    }));
+    });
 
-    api.onStop(Comms.onEnabled(immediate => {
+    comms.onEnabled(immediate => {
         UI.setEnabled(true);
 
         if(immediate) {
@@ -46,15 +47,15 @@ api.net.onLoad(() => {
             UI.addMessage("The chat is active!");
             comms.send(Ops.Join);
         }
-    }));
+    });
 
-    api.onStop(Comms.onDisabled(immediate => {
+    comms.onDisabled(immediate => {
         UI.setEnabled(false);
 
         if(!immediate) {
             UI.addMessage("The chat is no longer active");
         }
-    }));
+    });
 
     window.addEventListener("beforeunload", () => {
         comms.send(Ops.Leave);

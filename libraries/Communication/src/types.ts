@@ -15,3 +15,5 @@ export interface MessageState {
     identifierString: string;
     op: Op;
 }
+
+export type EnabledStateCallback = (immediate: boolean) => void;

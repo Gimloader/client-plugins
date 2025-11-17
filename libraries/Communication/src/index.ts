@@ -1,23 +1,27 @@
 import { Op } from "./consts";
 import Runtime from "./core";
 import { bytesToFloat, encodeStringMessage, getIdentifier, isUint8 } from "./encoding";
-import type { Message, OnMessageCallback } from "./types";
+import type { EnabledStateCallback, Message, OnMessageCallback } from "./types";
 
 let runtime: Runtime;
 
-let onEnabledCallbacks: (() => void)[] = [];
-let onDisabledCallbacks: (() => void)[] = [];
+const onEnabledCallbacks = new Map<string, (() => void)[]>();
+const onDisabledCallbacks = new Map<string, (() => void)[]>();
 
 api.net.onLoad(() => {
     runtime = new Runtime(api.stores.network.authId);
 
-    api.net.room.state.session.listen("phase", (phase: string) => {
+    api.onStop(api.net.room.state.session.listen("phase", (phase: string) => {
         if(phase === "game") {
-            onEnabledCallbacks.forEach(cb => cb());
+            for(const callbacks of onEnabledCallbacks.values()) {
+                callbacks.forEach(cb => cb());
+            }
         } else {
-            onDisabledCallbacks.forEach(cb => cb());
+            for(const callbacks of onDisabledCallbacks.values()) {
+                callbacks.forEach(cb => cb());
+            }
         }
-    }, false);
+    }, false));
 
     api.onStop(api.net.room.state.characters.onAdd((char: any) => {
         const cleanupChar = char.projectiles.listen("aimAngle", (angle: number) => {
@@ -28,8 +32,6 @@ api.net.onLoad(() => {
     }));
 });
 
-type EnabledStateCallback = (immediate: boolean) => void;
-
 export default class Communication {
     private identifier: number[];
 
@@ -37,37 +39,59 @@ export default class Communication {
         return this.identifier.join(",");
     }
 
-    private get scriptCallbacks() {
-        return runtime.callbacks.get(this.identifierString);
-    }
-
     constructor(name: string) {
         this.identifier = getIdentifier(name);
+    }
+
+    private get scriptCallbacks() {
+        return runtime.callbacks.get(this.identifierString);
     }
 
     static get enabled() {
         return api.net.room?.state.session.phase === "game";
     }
 
-    static onEnabled(callback: EnabledStateCallback, immediate = true) {
+    private get onEnabledCallbacks() {
+        if(!onEnabledCallbacks.has(this.identifierString)) {
+            onEnabledCallbacks.set(this.identifierString, []);
+        }
+
+        return onEnabledCallbacks.get(this.identifierString)!;
+    }
+
+    private get onDisabledCallbacks() {
+        if(!onDisabledCallbacks.has(this.identifierString)) {
+            onDisabledCallbacks.set(this.identifierString, []);
+        }
+
+        return onDisabledCallbacks.get(this.identifierString)!;
+    }
+
+    onEnabled(callback: EnabledStateCallback, immediate = true) {
         if(Communication.enabled && immediate) callback(true);
 
         const listenerCallback = () => callback(false);
-        onEnabledCallbacks.push(listenerCallback);
+        this.onEnabledCallbacks.push(listenerCallback);
 
         return () => {
-            onEnabledCallbacks = onEnabledCallbacks.filter(cb => cb !== listenerCallback);
+            onEnabledCallbacks.set(
+                this.identifierString,
+                this.onEnabledCallbacks.filter(cb => cb !== listenerCallback)
+            );
         };
     }
 
-    static onDisabled(callback: EnabledStateCallback, immediate = true) {
+    onDisabled(callback: EnabledStateCallback, immediate = true) {
         if(!Communication.enabled && immediate) callback(true);
 
         const listenerCallback = () => callback(false);
-        onDisabledCallbacks.push(listenerCallback);
+        this.onDisabledCallbacks.push(listenerCallback);
 
         return () => {
-            onDisabledCallbacks = onDisabledCallbacks.filter(cb => cb !== listenerCallback);
+            onDisabledCallbacks.set(
+                this.identifierString,
+                this.onDisabledCallbacks.filter(cb => cb !== listenerCallback)
+            );
         };
     }
 
@@ -126,5 +150,7 @@ export default class Communication {
 
     destroy() {
         runtime.callbacks.delete(this.identifierString);
+        onEnabledCallbacks.delete(this.identifierString);
+        onDisabledCallbacks.delete(this.identifierString);
     }
 }
