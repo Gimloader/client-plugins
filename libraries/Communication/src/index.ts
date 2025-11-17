@@ -50,7 +50,7 @@ export default class Communication {
     }
 
     static onEnabled(callback: EnabledStateCallback, immediate = true) {
-        if(this.enabled && immediate) callback(true);
+        if(Communication.enabled && immediate) callback(true);
 
         const listenerCallback = () => callback(false);
         onEnabledCallbacks.push(listenerCallback);
@@ -61,7 +61,7 @@ export default class Communication {
     }
 
     static onDisabled(callback: EnabledStateCallback, immediate = true) {
-        if(!this.enabled && immediate) callback(true);
+        if(!Communication.enabled && immediate) callback(true);
 
         const listenerCallback = () => callback(false);
         onDisabledCallbacks.push(listenerCallback);

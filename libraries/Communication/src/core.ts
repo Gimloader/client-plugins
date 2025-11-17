@@ -99,7 +99,7 @@ export default class Runtime {
 
     async sendAngle(angle: number) {
         api.net.send("AIMING", { angle });
-        await new Promise<void>((res) => this.angleChangeRes = res);
+        await new Promise<void>(res => this.angleChangeRes = res);
     }
 
     async sendMessages(messages: number[]) {
@@ -113,25 +113,22 @@ export default class Runtime {
         }
 
         this.sending = true;
+
         this.messageQue.unshift({ messages });
 
-        const sendLoop = async () => {
-            for(const pendingMessage of this.messageQue) {
-                for(const message of pendingMessage.messages) {
-                    this.ignoreNextAngle = true;
-                    await this.sendAngle(message);
-                }
+        while(this.messageQue.length) {
+            const pendingMessage = this.messageQue.shift()!;
 
-                pendingMessage.resolve?.();
-                await this.sendRealAngle();
-
-                this.messageQue = this.messageQue.filter(m => m !== pendingMessage);
+            for(const message of pendingMessage.messages) {
+                this.ignoreNextAngle = true;
+                await this.sendAngle(message);
             }
 
-            if(this.messageQue.length) await sendLoop();
-        };
+            pendingMessage.resolve?.();
 
-        await sendLoop();
+            this.ignoreNextAngle = true;
+            await this.sendRealAngle();
+        }
 
         this.sending = false;
     }
