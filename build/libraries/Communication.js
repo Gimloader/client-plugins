@@ -2,7 +2,7 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.0.1
+ * @version 0.1.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
  * @isLibrary true
@@ -150,36 +150,37 @@ var Runtime = class {
     }
     this.sending = true;
     this.messageQue.unshift({ messages });
-    const sendLoop = async () => {
-      for (const pendingMessage of this.messageQue) {
-        for (const message of pendingMessage.messages) {
-          this.ignoreNextAngle = true;
-          await this.sendAngle(message);
-        }
-        pendingMessage.resolve?.();
-        await this.sendRealAngle();
-        this.messageQue = this.messageQue.filter((m) => m !== pendingMessage);
+    while (this.messageQue.length) {
+      const pendingMessage = this.messageQue.shift();
+      for (const message of pendingMessage.messages) {
+        this.ignoreNextAngle = true;
+        await this.sendAngle(message);
       }
-      if (this.messageQue.length) await sendLoop();
-    };
-    await sendLoop();
+      pendingMessage.resolve?.();
+      this.ignoreNextAngle = true;
+      await this.sendRealAngle();
+    }
     this.sending = false;
   }
 };
 
 // libraries/Communication/src/index.ts
 var runtime;
-var onEnabledCallbacks = [];
-var onDisabledCallbacks = [];
+var onEnabledCallbacks = /* @__PURE__ */ new Map();
+var onDisabledCallbacks = /* @__PURE__ */ new Map();
 api.net.onLoad(() => {
   runtime = new Runtime(api.stores.network.authId);
-  api.net.room.state.session.listen("phase", (phase) => {
+  api.onStop(api.net.room.state.session.listen("phase", (phase) => {
     if (phase === "game") {
-      onEnabledCallbacks.forEach((cb) => cb());
+      for (const callbacks of onEnabledCallbacks.values()) {
+        callbacks.forEach((cb) => cb());
+      }
     } else {
-      onDisabledCallbacks.forEach((cb) => cb());
+      for (const callbacks of onDisabledCallbacks.values()) {
+        callbacks.forEach((cb) => cb());
+      }
     }
-  }, false);
+  }, false));
   api.onStop(api.net.room.state.characters.onAdd((char) => {
     const cleanupChar = char.projectiles.listen("aimAngle", (angle) => {
       runtime.handleAngle(char, angle);
@@ -193,29 +194,47 @@ var Communication = class _Communication {
   get identifierString() {
     return this.identifier.join(",");
   }
-  get scriptCallbacks() {
-    return runtime.callbacks.get(this.identifierString);
-  }
   constructor(name) {
     this.identifier = getIdentifier(name);
+  }
+  get scriptCallbacks() {
+    return runtime.callbacks.get(this.identifierString);
   }
   static get enabled() {
     return api.net.room?.state.session.phase === "game";
   }
-  static onEnabled(callback, immediate = true) {
-    if (this.enabled && immediate) callback(true);
+  get onEnabledCallbacks() {
+    if (!onEnabledCallbacks.has(this.identifierString)) {
+      onEnabledCallbacks.set(this.identifierString, []);
+    }
+    return onEnabledCallbacks.get(this.identifierString);
+  }
+  get onDisabledCallbacks() {
+    if (!onDisabledCallbacks.has(this.identifierString)) {
+      onDisabledCallbacks.set(this.identifierString, []);
+    }
+    return onDisabledCallbacks.get(this.identifierString);
+  }
+  onEnabled(callback, immediate = true) {
+    if (_Communication.enabled && immediate) callback(true);
     const listenerCallback = () => callback(false);
-    onEnabledCallbacks.push(listenerCallback);
+    this.onEnabledCallbacks.push(listenerCallback);
     return () => {
-      onEnabledCallbacks = onEnabledCallbacks.filter((cb) => cb !== listenerCallback);
+      onEnabledCallbacks.set(
+        this.identifierString,
+        this.onEnabledCallbacks.filter((cb) => cb !== listenerCallback)
+      );
     };
   }
-  static onDisabled(callback, immediate = true) {
-    if (!this.enabled && immediate) callback(true);
+  onDisabled(callback, immediate = true) {
+    if (!_Communication.enabled && immediate) callback(true);
     const listenerCallback = () => callback(false);
-    onDisabledCallbacks.push(listenerCallback);
+    this.onDisabledCallbacks.push(listenerCallback);
     return () => {
-      onDisabledCallbacks = onDisabledCallbacks.filter((cb) => cb !== listenerCallback);
+      onDisabledCallbacks.set(
+        this.identifierString,
+        this.onDisabledCallbacks.filter((cb) => cb !== listenerCallback)
+      );
     };
   }
   async send(message) {
@@ -268,6 +287,8 @@ var Communication = class _Communication {
   }
   destroy() {
     runtime.callbacks.delete(this.identifierString);
+    onEnabledCallbacks.delete(this.identifierString);
+    onDisabledCallbacks.delete(this.identifierString);
   }
 };
 export {
