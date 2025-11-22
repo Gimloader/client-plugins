@@ -1,0 +1,1 @@
+api.patcher.instead(window, "open", () => ({ location }));
