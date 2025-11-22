@@ -29,16 +29,20 @@ export default class Runtime {
         });
     }
 
+    async sendAngle(angle: number) {
+        api.net.send("AIMING", { angle });
+        await new Promise<void>(res => this.angleChangeRes = res);
+    }
+
     private async sendRealAngle() {
+        if(this.pendingAngle === 0) return;
         await this.sendAngle(this.pendingAngle);
     }
 
     handleAngle(char: any, angle: number) {
         if(!angle) return;
 
-        if(char.id === this.myId) {
-            return this.angleChangeRes?.();
-        }
+        if(char.id === this.myId) return this.angleChangeRes?.();
 
         const bytes = floatToBytes(angle);
         const identifierBytes = bytes.slice(0, 4);
@@ -95,11 +99,6 @@ export default class Runtime {
                 stateCallbacks.forEach(callback => callback(message, char));
             }
         }
-    }
-
-    async sendAngle(angle: number) {
-        api.net.send("AIMING", { angle });
-        await new Promise<void>(res => this.angleChangeRes = res);
     }
 
     async sendMessages(messages: number[]) {

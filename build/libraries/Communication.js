@@ -78,14 +78,17 @@ var Runtime = class {
   messageStates = /* @__PURE__ */ new Map();
   messageQue = [];
   callbacks = /* @__PURE__ */ new Map();
+  async sendAngle(angle) {
+    api.net.send("AIMING", { angle });
+    await new Promise((res) => this.angleChangeRes = res);
+  }
   async sendRealAngle() {
+    if (this.pendingAngle === 0) return;
     await this.sendAngle(this.pendingAngle);
   }
   handleAngle(char, angle) {
     if (!angle) return;
-    if (char.id === this.myId) {
-      return this.angleChangeRes?.();
-    }
+    if (char.id === this.myId) return this.angleChangeRes?.();
     const bytes = floatToBytes(angle);
     const identifierBytes = bytes.slice(0, 4);
     const identifierString = identifierBytes.join(",");
@@ -134,10 +137,6 @@ var Runtime = class {
         stateCallbacks.forEach((callback) => callback(message, char));
       }
     }
-  }
-  async sendAngle(angle) {
-    api.net.send("AIMING", { angle });
-    await new Promise((res) => this.angleChangeRes = res);
   }
   async sendMessages(messages) {
     if (this.sending) {
