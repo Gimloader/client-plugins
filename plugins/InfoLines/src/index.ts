@@ -3,6 +3,7 @@ import Settings from "./Settings";
 import FPS from "./lines/fps";
 import PhysicsCoordinates from "./lines/physicsCoordinates";
 import Velocity from "./lines/velocity";
+import Ping from "./lines/ping";
 import styles from "./styles.scss";
 
 api.UI.addStyles(styles);
@@ -12,7 +13,8 @@ export class InfoLines {
         new VisualCoordinates(),
         new Velocity(),
         new PhysicsCoordinates(),
-        new FPS()
+        new FPS(),
+        new Ping()
     ];
     element?: HTMLElement;
     position: string = api.storage.getValue("position", "top right");

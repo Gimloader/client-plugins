@@ -211,6 +211,46 @@ var Velocity = class extends BaseLine {
   }
 };
 
+// plugins/InfoLines/src/lines/ping.ts
+var Ping = class extends BaseLine {
+  name = "Ping";
+  enabledDefault = true;
+  deviceChangeRes = null;
+  init() {
+    let pongDelivered = false;
+    const onDeviceStateChanges = (value, editFn) => {
+      if (!value.initial) return;
+      this.deviceChangeRes?.();
+      editFn(null);
+      pongDelivered = true;
+    };
+    const onTerrainChanges = (_, editFn) => {
+      if (!pongDelivered) return;
+      editFn(null);
+    };
+    const onWorldChanges = (_, editFn) => {
+      if (!pongDelivered) return;
+      pongDelivered = false;
+      editFn(null);
+    };
+    api.net.on("DEVICES_STATES_CHANGES", onDeviceStateChanges);
+    api.net.on("TERRAIN_CHANGES", onTerrainChanges);
+    api.net.on("WORLD_CHANGES", onWorldChanges);
+    const interval = setInterval(async () => {
+      api.net.send("REQUEST_INITIAL_WORLD", void 0);
+      const start = Date.now();
+      await new Promise((res) => this.deviceChangeRes = res);
+      this.update(`ping: ${Date.now() - start} ms`);
+    }, 5e3);
+    this.disable = () => {
+      api.net.off("DEVICES_STATES_CHANGES", onDeviceStateChanges);
+      api.net.off("TERRAIN_CHANGES", onTerrainChanges);
+      api.net.off("WORLD_CHANGES", onWorldChanges);
+      clearInterval(interval);
+    };
+  }
+};
+
 // plugins/InfoLines/src/styles.scss
 var styles_default = `#infoLines {
   position: absolute;
@@ -248,7 +288,8 @@ var InfoLines = class {
     new VisualCoordinates(),
     new Velocity(),
     new PhysicsCoordinates(),
-    new FPS()
+    new FPS(),
+    new Ping()
   ];
   element;
   position = api.storage.getValue("position", "top right");
