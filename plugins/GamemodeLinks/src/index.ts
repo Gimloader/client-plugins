@@ -1,5 +1,6 @@
 // Not putting fetch types here until gimloader documents them
 
+import minifiedNavigator from "$shared/minifiedNavigator";
 import makeGame from "./makeGame";
 
 const [root, id] = location.pathname.split("/").slice(1);
@@ -70,37 +71,23 @@ if(root === "gamemode") {
 
     const closePopupWrapper = api.rewriter.createShared("ClosePopupWrapper", cleanup);
 
+    // Creating games will close the popup
+    api.net.modifyFetchResponse("**/create", cleanup);
+
     api.rewriter.addParseHook("App", code => {
         // Updates the hooks
         if(code.includes("We're showing this hook for testing purposes")) {
-            const stateStart = code.indexOf("state:") + 6;
-            const stateEnd = code.indexOf(",", stateStart);
-            const stateVarName = code.slice(stateStart, stateEnd).trim();
-
-            return code.replace(".readOnly]);", `.readOnly]);${setHooksWrapper}?.(${stateVarName});`);
-            // Updates the map id/name, and cleans up when clicking off the popup
+            const name = minifiedNavigator(code, "state:", ",").inBetween;
+            // Updates the hooks
+            return minifiedNavigator(code, ".readOnly]);").insertAfterStart(`${setHooksWrapper}?.(${name});`);
         } else if(code.includes("The more reliable, the easier it is for crewmates to win")) {
-            const nameStart = code.indexOf(".name,description:") + 18;
-            const nameEnd = code.indexOf(".tagline", nameStart);
-            const gameVarName = code.slice(nameStart, nameEnd).trim();
+            const gameVarName = minifiedNavigator(code, ".name,description:", ".").inBetween;
 
-            const closeStart = code.indexOf('(["Escape"],()=>{') + 17;
-            const closeEnd = code.indexOf("()});const", closeStart);
-            const closePopupVarName = code.slice(closeStart, closeEnd).trim();
-
-            // For manual popup closes
-            code = code.replace(`(!0),${closePopupVarName}=()=>{`, `(!0),${closePopupVarName}=()=>{${closePopupWrapper}?.();`);
-
-            // For automatic popup closes (making a new game)
-            code = code.replace(
-                /`\$\{([a-zA-Z_$][\w$]*)\(\)\}\/host\?id=\$\{([a-zA-Z_$][\w$]*)\}`;/,
-                "`${$1()" + "}/host?id=${$2" + "}`;" + `${closePopupWrapper}?.();`
-            );
-
-            // For when the selected map is changed
-            return code.replace(
-                '"EXPERIENCE_HOOKS"})',
-                `"EXPERIENCE_HOOKS"});${setMapDataWrapper}?.(${gameVarName}?._id, ${gameVarName}?.name);`
+            // Triggers manual popup closes
+            code = minifiedNavigator(code, [")=>{const[", "{"]).insertAfterStart(`${closePopupWrapper}?.();`);
+            // Updates the selected game
+            return minifiedNavigator(code, '"EXPERIENCE_HOOKS"})').insertAfterStart(
+                `;${setMapDataWrapper}?.(${gameVarName}?._id, ${gameVarName}?.name);`
             );
         }
         return code;

@@ -2,13 +2,57 @@
  * @name GamemodeLinks
  * @description Creates game rooms from links, particularly useful in bookmarks.
  * @author retrozy
- * @version 0.2.1
+ * @version 0.2.2
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/GamemodeLinks.js
  * @webpage https://gimloader.github.io/plugins/gamemodelinks
  * @reloadRequired true
  * @hasSettings true
- * @changelog Actually fixed kit not properly working when joining from url
+ * @changelog Switched to a utility for rewriting source code
  */
+
+// shared/minifiedNavigator.ts
+function minifiedNavigator(code, start, end) {
+  if (typeof start === "string") start = [start];
+  if (typeof end === "string") end = [end];
+  let startIndex = 0;
+  if (start) {
+    for (const snippet of start) {
+      startIndex = code.indexOf(snippet, startIndex) + snippet.length;
+    }
+  }
+  let endIndex = startIndex;
+  if (end) {
+    for (const snippet in end) {
+      endIndex = code.indexOf(end[snippet], endIndex);
+      if (Number(snippet) < end.length - 1) endIndex += end[snippet].length;
+    }
+  } else {
+    endIndex = code.length - 1;
+  }
+  const startCode = code.slice(0, startIndex);
+  const endCode = code.substring(endIndex);
+  return {
+    startIndex,
+    endIndex,
+    inBetween: code.slice(startIndex, endIndex),
+    insertAfterStart(string) {
+      return startCode + string + this.inBetween + endCode;
+    },
+    insertBeforeEnd(string) {
+      return startCode + this.inBetween + string + endCode;
+    },
+    replaceEntireBetween(string) {
+      return startCode + string + endCode;
+    },
+    replaceBetween(...args) {
+      const changedMiddle = this.inBetween.replace(...args);
+      return this.replaceEntireBetween(changedMiddle);
+    },
+    deleteBetween() {
+      return startCode + endCode;
+    }
+  };
+}
 
 // plugins/GamemodeLinks/src/makeGame.ts
 async function makeGame(id2, entries) {
@@ -137,27 +181,16 @@ if (root === "gamemode") {
     setLink("/gamemode/" + id2 + location.search);
   });
   const closePopupWrapper = api.rewriter.createShared("ClosePopupWrapper", cleanup);
+  api.net.modifyFetchResponse("**/create", cleanup);
   api.rewriter.addParseHook("App", (code) => {
     if (code.includes("We're showing this hook for testing purposes")) {
-      const stateStart = code.indexOf("state:") + 6;
-      const stateEnd = code.indexOf(",", stateStart);
-      const stateVarName = code.slice(stateStart, stateEnd).trim();
-      return code.replace(".readOnly]);", `.readOnly]);${setHooksWrapper}?.(${stateVarName});`);
+      const name = minifiedNavigator(code, "state:", ",").inBetween;
+      return minifiedNavigator(code, ".readOnly]);").insertAfterStart(`${setHooksWrapper}?.(${name});`);
     } else if (code.includes("The more reliable, the easier it is for crewmates to win")) {
-      const nameStart = code.indexOf(".name,description:") + 18;
-      const nameEnd = code.indexOf(".tagline", nameStart);
-      const gameVarName = code.slice(nameStart, nameEnd).trim();
-      const closeStart = code.indexOf('(["Escape"],()=>{') + 17;
-      const closeEnd = code.indexOf("()});const", closeStart);
-      const closePopupVarName = code.slice(closeStart, closeEnd).trim();
-      code = code.replace(`(!0),${closePopupVarName}=()=>{`, `(!0),${closePopupVarName}=()=>{${closePopupWrapper}?.();`);
-      code = code.replace(
-        /`\$\{([a-zA-Z_$][\w$]*)\(\)\}\/host\?id=\$\{([a-zA-Z_$][\w$]*)\}`;/,
-        `\`\${$1()}/host?id=\${$2}\`;${closePopupWrapper}?.();`
-      );
-      return code.replace(
-        '"EXPERIENCE_HOOKS"})',
-        `"EXPERIENCE_HOOKS"});${setMapDataWrapper}?.(${gameVarName}?._id, ${gameVarName}?.name);`
+      const gameVarName = minifiedNavigator(code, ".name,description:", ".").inBetween;
+      code = minifiedNavigator(code, [")=>{const[", "{"]).insertAfterStart(`${closePopupWrapper}?.();`);
+      return minifiedNavigator(code, '"EXPERIENCE_HOOKS"})').insertAfterStart(
+        `;${setMapDataWrapper}?.(${gameVarName}?._id, ${gameVarName}?.name);`
       );
     }
     return code;
