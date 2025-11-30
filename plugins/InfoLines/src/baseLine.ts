@@ -29,24 +29,22 @@ export default abstract class BaseLine extends EventEmitter<{
         }
     };
 
-    constructor() {
-        super();
+    enable() {
+        const { worldManager } = api.stores.phaser.scene;
 
-        api.net.onLoad(() => {
-            const { worldManager } = api.stores.phaser.scene;
+        this.patcher.after(worldManager, "update", () => this.emit("frame"));
+        this.patcher.after(worldManager.physics, "physicsStep", () => this.emit("physicsTick"));
 
-            this.patcher.after(worldManager, "update", () => this.emit("frame"));
-            this.patcher.after(worldManager.physics, "physicsStep", () => this.emit("physicsTick"));
-        });
-    }
-
-    update(value: string) {
-        this.emit("update", value);
+        this.init();
     }
 
     disable() {
         this.emit("stop");
         this.removeAllListeners("frame");
         this.removeAllListeners("physicsTick");
+    }
+
+    update(value: string) {
+        this.emit("update", value);
     }
 }

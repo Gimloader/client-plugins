@@ -40,10 +40,7 @@ export class InfoLines {
                         type: "toggle" as const,
                         id: line.name,
                         title: line.name,
-                        default: line.enabledDefault,
-                        onChange(value: boolean) {
-                            value ? line.init() : line.disable();
-                        }
+                        default: line.enabledDefault
                     },
                     ...line.settings ?? []
                 ]
@@ -76,7 +73,8 @@ export class InfoLines {
             });
 
             api.net.onLoad(() => {
-                if(api.settings[line.name]) line.init();
+                if(api.settings[line.name]) line.enable();
+                api.settings.listen(line.name, value => value ? line.enable() : line.disable());
             });
         }
 
