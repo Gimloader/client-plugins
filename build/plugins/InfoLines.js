@@ -243,21 +243,19 @@ var BaseLine = class extends eventemitter3_default {
       this.on("stop", api.patcher.after(...args));
     }
   };
-  constructor() {
-    super();
-    api.net.onLoad(() => {
-      const { worldManager } = api.stores.phaser.scene;
-      this.patcher.after(worldManager, "update", () => this.emit("frame"));
-      this.patcher.after(worldManager.physics, "physicsStep", () => this.emit("physicsTick"));
-    });
-  }
-  update(value) {
-    this.emit("update", value);
+  enable() {
+    const { worldManager } = api.stores.phaser.scene;
+    this.patcher.after(worldManager, "update", () => this.emit("frame"));
+    this.patcher.after(worldManager.physics, "physicsStep", () => this.emit("physicsTick"));
+    this.init();
   }
   disable() {
     this.emit("stop");
     this.removeAllListeners("frame");
     this.removeAllListeners("physicsTick");
+  }
+  update(value) {
+    this.emit("update", value);
   }
 };
 
@@ -413,10 +411,7 @@ var InfoLines = class {
             type: "toggle",
             id: line.name,
             title: line.name,
-            default: line.enabledDefault,
-            onChange(value) {
-              value ? line.init() : line.disable();
-            }
+            default: line.enabledDefault
           },
           ...line.settings ?? []
         ]
@@ -442,7 +437,8 @@ var InfoLines = class {
         lineElement.innerText = "";
       });
       api.net.onLoad(() => {
-        if (api.settings[line.name]) line.init();
+        if (api.settings[line.name]) line.enable();
+        api.settings.listen(line.name, (value) => value ? line.enable() : line.disable());
       });
     }
     document.body.appendChild(this.element);
