@@ -1,96 +1,52 @@
-const frameCallbacks: (() => void)[] = [];
-const physicsTickCallbacks: (() => void)[] = [];
+import EventEmitter from "eventemitter3";
 
-api.net.onLoad(() => {
-    const worldManager = api.stores.phaser.scene.worldManager;
-
-    // whenever a frame passes
-    api.patcher.after(worldManager, "update", () => {
-        for(const callback of frameCallbacks) {
-            callback();
-        }
-    });
-
-    // whenever a physics tick passes
-    api.patcher.after(worldManager.physics, "physicsStep", () => {
-        for(const callback of physicsTickCallbacks) {
-            callback();
-        }
-    });
-});
-
-export interface Setting {
-    label: string;
-    min: number;
-    max: number;
-    default: number;
-    value?: number;
-}
-
-export type Settings = Record<string, Setting>;
-
-export default abstract class BaseLine {
+export default abstract class BaseLine extends EventEmitter<{
+    stop: [];
+    update: [string];
+    frame: [];
+    physicsTick: [];
+}> {
     abstract name: string;
     abstract enabledDefault: boolean;
-    enabled = false;
-    settings?: Settings;
+    abstract init(): void;
+    settings?: Gimloader.PluginSetting[];
 
-    subscribedCallbacks: ((value: string) => void)[] = [];
+    protected net = {
+        on: (...args: Parameters<Gimloader.NetApi["on"]>) => {
+            this.on("stop", () => {
+                api.net.off(args[0], args[1]);
+            });
+            return api.net.on(...args);
+        }
+    };
+
+    protected patcher = {
+        before: (...args: Parameters<Gimloader.Api["patcher"]["before"]>) => {
+            this.on("stop", api.patcher.before(...args));
+        },
+        after: (...args: Parameters<Gimloader.Api["patcher"]["after"]>) => {
+            this.on("stop", api.patcher.after(...args));
+        }
+    };
 
     constructor() {
-        // scuffed way to make sure settings are loaded after the constructor has run
-        setTimeout(() => {
-            this.enabled = api.storage.getValue(this.name, this.enabledDefault);
-            this.setupSettings();
+        super();
 
-            if(this.onFrame) {
-                frameCallbacks.push(() => {
-                    if(!this.enabled) return;
-                    this.onFrame?.();
-                });
-            }
+        api.net.onLoad(() => {
+            const { worldManager } = api.stores.phaser.scene;
 
-            if(this.onPhysicsTick) {
-                physicsTickCallbacks.push(() => {
-                    if(!this.enabled) return;
-                    this.onPhysicsTick?.();
-                });
-            }
-
-            api.net.onLoad(() => {
-                if(this.init) this.init();
-            });
-        }, 0);
-    }
-
-    setupSettings() {
-        if(this.settings) {
-            for(const id in this.settings) {
-                const setting = this.settings[id];
-                setting.value = api.storage.getValue(id, setting.default);
-            }
-        }
-    }
-
-    subscribe(callback: (value: string) => void) {
-        this.subscribedCallbacks.push(callback);
+            this.patcher.after(worldManager, "update", () => this.emit("frame"));
+            this.patcher.after(worldManager.physics, "physicsStep", () => this.emit("physicsTick"));
+        });
     }
 
     update(value: string) {
-        for(const callback of this.subscribedCallbacks) {
-            callback(value);
-        }
+        this.emit("update", value);
     }
-
-    enable() {}
 
     disable() {
-        // The line still exists, but it's blank lol
-        this.update("");
+        this.emit("stop");
+        this.removeAllListeners("frame");
+        this.removeAllListeners("physicsTick");
     }
-
-    init?(): void;
-    onSettingsChange?(): void;
-    onFrame?(): void;
-    onPhysicsTick?(): void;
 }

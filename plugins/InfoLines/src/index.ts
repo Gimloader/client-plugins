@@ -1,10 +1,10 @@
+import styles from "./styles.scss";
+
 import VisualCoordinates from "./lines/visualCoordinates";
-import Settings from "./Settings";
 import FPS from "./lines/fps";
 import PhysicsCoordinates from "./lines/physicsCoordinates";
 import Velocity from "./lines/velocity";
 import Ping from "./lines/ping";
-import styles from "./styles.scss";
 
 api.UI.addStyles(styles);
 
@@ -17,9 +17,39 @@ export class InfoLines {
         new Ping()
     ];
     element?: HTMLElement;
-    position: string = api.storage.getValue("position", "top right");
 
     constructor() {
+        api.settings.create([
+            {
+                type: "dropdown",
+                id: "position",
+                title: "Position",
+                options: [
+                    { label: "Top Left", value: "top left" },
+                    { label: "Top Right", value: "top right" },
+                    { label: "Bottom Left", value: "bottom left" },
+                    { label: "Bottom Right", value: "bottom right" }
+                ],
+                default: "top right"
+            },
+            ...this.lines.map(line => ({
+                type: "group" as const,
+                title: line.name,
+                settings: [
+                    {
+                        type: "toggle" as const,
+                        id: line.name,
+                        title: line.name,
+                        default: line.enabledDefault,
+                        onChange(value: boolean) {
+                            value ? line.init() : line.disable();
+                        }
+                    },
+                    ...line.settings ?? []
+                ]
+            }))
+        ]);
+
         api.net.onLoad(() => {
             this.create();
         });
@@ -28,15 +58,25 @@ export class InfoLines {
     create() {
         this.element = document.createElement("div");
         this.element.id = "infoLines";
-        this.element.className = this.position;
+        this.element!.className = api.settings.position;
+        api.settings.listen("position", (value: string) => this.element!.className = value);
 
         for(const line of this.lines) {
             const lineElement = document.createElement("div");
             lineElement.classList.add("line");
             this.element.appendChild(lineElement);
 
-            line.subscribe(value => {
+            line.on("update", value => {
                 lineElement.innerText = value;
+            });
+
+            line.on("stop", () => {
+                // The line still exists, but it's blank lol
+                lineElement.innerText = "";
+            });
+
+            api.net.onLoad(() => {
+                if(api.settings[line.name]) line.init();
             });
         }
 
@@ -54,10 +94,3 @@ export class InfoLines {
 
 const infoLines = new InfoLines();
 api.onStop(() => infoLines.destroy());
-api.openSettingsMenu(() => {
-    api.UI.showModal(api.React.createElement(Settings, { infoLines }), {
-        title: "InfoLines settings",
-        id: "infoLinesSettings",
-        buttons: [{ text: "Close", "style": "close" }]
-    });
-});
