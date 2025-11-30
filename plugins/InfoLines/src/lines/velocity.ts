@@ -1,30 +1,29 @@
-import BaseLine, { type Settings } from "../baseLine";
+import BaseLine from "../baseLine";
 
 export default class Velocity extends BaseLine {
-    enabledDefault = true;
     name = "Velocity";
-    settings: Settings = {
-        "velocityDecimalPlaces": {
-            label: "Velocity decimal places",
-            min: 0,
-            max: 10,
-            default: 2
-        }
-    };
-
-    rb: any;
+    enabledDefault = true;
+    settings: Gimloader.PluginSetting[] = [{
+        type: "slider",
+        id: "velocityDecimalPlaces",
+        title: "Velocity decimal places",
+        min: 0,
+        max: 10,
+        step: 1,
+        default: 2
+    }];
 
     init() {
-        const physics = api.stores.phaser.mainCharacter.physics;
-        this.rb = physics.getBody().rigidBody;
-    }
+        const { physics } = api.stores.phaser.mainCharacter;
+        const rb = physics.getBody().rigidBody;
 
-    onPhysicsTick() {
-        const velocity = this.rb?.linvel();
-        if(!velocity) return;
+        this.on("physicsTick", () => {
+            const velocity = rb?.linvel();
+            if(!velocity) return;
 
-        const decimals = this.settings.velocityDecimalPlaces.value;
+            const decimals = api.settings.velocityDecimalPlaces;
 
-        this.update(`velocity x: ${velocity.x.toFixed(decimals)}, y: ${velocity.y.toFixed(decimals)}`);
+            this.update(`velocity x: ${velocity.x.toFixed(decimals)}, y: ${velocity.y.toFixed(decimals)}`);
+        });
     }
 }
