@@ -28,48 +28,33 @@ api.net.onLoad(() => {
 var BaseLine = class {
   enabled = false;
   settings;
-  subscribedCallbacks = [];
-  constructor() {
-    setTimeout(() => {
-      this.enabled = api.storage.getValue(this.name, this.enabledDefault);
-      this.setupSettings();
-      if (this.onFrame) {
-        frameCallbacks.push(() => {
-          if (!this.enabled) return;
-          this.onFrame?.();
-        });
-      }
-      if (this.onPhysicsTick) {
-        physicsTickCallbacks.push(() => {
-          if (!this.enabled) return;
-          this.onPhysicsTick?.();
-        });
-      }
-      api.net.onLoad(() => {
-        if (this.init) this.init();
+  net = {
+    on: (...args) => {
+      this.on("stop", () => {
+        api.net.off(args[0], args[1]);
       });
-    }, 0);
-  }
-  setupSettings() {
-    if (this.settings) {
-      for (const id in this.settings) {
-        const setting = this.settings[id];
-        setting.value = api.storage.getValue(id, setting.default);
-      }
+      return api.net.on(...args);
     }
-  }
-  subscribe(callback) {
-    this.subscribedCallbacks.push(callback);
-  }
-  update(value) {
-    for (const callback of this.subscribedCallbacks) {
-      callback(value);
+  };
+  patcher = {
+    before: (...args) => {
+      this.on("stop", api.patcher.before(...args));
+    },
+    after: (...args) => {
+      this.on("stop", api.patcher.after(...args));
     }
-  }
+  };
   enable() {
+    const { worldManager } = api.stores.phaser.scene;
+    this.patcher.after(worldManager, "update", () => this.emit("frame"));
+    this.patcher.after(worldManager.physics, "physicsStep", () => this.emit("physicsTick"));
+    this.init();
   }
   disable() {
     this.update("");
+  }
+  update(value) {
+    this.emit("update", value);
   }
 };
 
@@ -286,6 +271,33 @@ var InfoLines = class {
   ];
   element;
   constructor() {
+    api.settings.create([
+      {
+        type: "dropdown",
+        id: "position",
+        title: "Position",
+        options: [
+          { label: "Top Left", value: "top left" },
+          { label: "Top Right", value: "top right" },
+          { label: "Bottom Left", value: "bottom left" },
+          { label: "Bottom Right", value: "bottom right" }
+        ],
+        default: "top right"
+      },
+      ...this.lines.map((line) => ({
+        type: "group",
+        title: line.name,
+        settings: [
+          {
+            type: "toggle",
+            id: line.name,
+            title: line.name,
+            default: line.enabledDefault
+          },
+          ...line.settings ?? []
+        ]
+      }))
+    ]);
     api.net.onLoad(() => {
       this.create();
     });
@@ -300,6 +312,13 @@ var InfoLines = class {
       this.element.appendChild(lineElement);
       line.subscribe((value) => {
         lineElement.innerText = value;
+      });
+      line.on("stop", () => {
+        lineElement.innerText = "";
+      });
+      api.net.onLoad(() => {
+        if (api.settings[line.name]) line.enable();
+        api.settings.listen(line.name, (value) => value ? line.enable() : line.disable());
       });
     }
     document.body.appendChild(this.element);
