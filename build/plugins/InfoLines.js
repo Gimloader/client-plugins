@@ -7,97 +7,139 @@
  * @webpage https://gimloader.github.io/plugins/infolines
  * @hasSettings true
  * @gamemode 2d
- * @changelog Switched to native Gimloader settings. Your old settings have been reset!
- * @changelog Fixed ping not hiding when disabled
- * @changelog Made FPS more accurate
  */
 
-// plugins/InfoLines/src/styles.scss
-var styles_default = `#infoLines {
-  position: absolute;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 4px;
-  z-index: 99999999;
-  border-radius: 5px;
-}
-#infoLines.top {
-  top: 4px;
-}
-#infoLines.bottom {
-  bottom: 4px;
-}
-#infoLines.left {
-  left: 4px;
-}
-#infoLines.right {
-  right: 4px;
-}`;
-
 // plugins/InfoLines/src/baseLine.ts
+var frameCallbacks = [];
+var physicsTickCallbacks = [];
+api.net.onLoad(() => {
+  const worldManager = api.stores.phaser.scene.worldManager;
+  api.patcher.after(worldManager, "update", () => {
+    for (const callback of frameCallbacks) {
+      callback();
+    }
+  });
+  api.patcher.after(worldManager.physics, "physicsStep", () => {
+    for (const callback of physicsTickCallbacks) {
+      callback();
+    }
+  });
+});
 var BaseLine = class {
-  onStopCallbacks = [];
-  onUpdateCallbacks = [];
+  enabled = false;
   settings;
-  net = {
-    on: (...args) => {
-      this.onStop(() => {
-        api.net.off(args[0], args[1]);
-      });
-      return api.net.on(...args);
-    }
-  };
-  patcher = {
-    before: (...args) => {
-      this.onStop(api.patcher.before(...args));
-    },
-    after: (...args) => {
-      this.onStop(api.patcher.after(...args));
-    }
-  };
-  enable() {
-    api.net.onLoad(() => {
+  subscribedCallbacks = [];
+  constructor() {
+    setTimeout(() => {
+      this.enabled = api.storage.getValue(this.name, this.enabledDefault);
+      this.setupSettings();
       if (this.onFrame) {
-        this.patcher.after(api.stores.phaser.scene.worldManager, "update", () => this.onFrame?.());
+        frameCallbacks.push(() => {
+          if (!this.enabled) return;
+          this.onFrame?.();
+        });
       }
       if (this.onPhysicsTick) {
-        this.patcher.after(api.stores.phaser.scene.worldManager.physics, "physicsStep", () => this.onPhysicsTick?.());
+        physicsTickCallbacks.push(() => {
+          if (!this.enabled) return;
+          this.onPhysicsTick?.();
+        });
       }
-      this.init?.();
-    });
+      api.net.onLoad(() => {
+        if (this.init) this.init();
+      });
+    }, 0);
   }
-  disable() {
-    this.onStopCallbacks.forEach((cb) => cb());
+  setupSettings() {
+    if (this.settings) {
+      for (const id in this.settings) {
+        const setting = this.settings[id];
+        setting.value = api.storage.getValue(id, setting.default);
+      }
+    }
   }
-  onStop(cb) {
-    this.onStopCallbacks.push(cb);
-  }
-  onUpdate(cb) {
-    this.onUpdateCallbacks.push(cb);
+  subscribe(callback) {
+    this.subscribedCallbacks.push(callback);
   }
   update(value) {
-    this.onUpdateCallbacks.forEach((cb) => cb(value));
+    for (const callback of this.subscribedCallbacks) {
+      callback(value);
+    }
+  }
+  enable() {
+  }
+  disable() {
+    this.update("");
   }
 };
 
 // plugins/InfoLines/src/lines/visualCoordinates.ts
 var VisualCoordinates = class extends BaseLine {
   name = "Visual Coordinates";
-  enabledDefault = true;
-  settings = [{
-    type: "slider",
-    id: "visualCoordsDecimalPlaces",
-    title: "Visual coordinates decimal places",
-    min: 0,
-    max: 10,
-    step: 1,
-    default: 2
-  }];
+  settings = {
+    "visualCoordsDecimalPlaces": {
+      label: "Visual coordinates decimal places",
+      min: 0,
+      max: 10,
+      default: 0
+    }
+  };
   onFrame() {
-    const { body } = api.stores.phaser.mainCharacter;
-    const decimals = api.settings.visualCoordsDecimalPlaces;
+    const body = api.stores.phaser.mainCharacter.body;
+    const decimals = this.settings.visualCoordsDecimalPlaces.value;
     this.update(`visual x: ${body.x.toFixed(decimals)}, y: ${body.y.toFixed(decimals)}`);
   }
 };
+
+// plugins/InfoLines/src/Settings.tsx
+function Settings({ infoLines: infoLines2 }) {
+  const React = GL.React;
+  const [lines, setLines] = React.useState(infoLines2.lines);
+  const [position, setPosition] = React.useState(infoLines2.position);
+  return /* @__PURE__ */ GL.React.createElement("div", { id: "il-settings" }, /* @__PURE__ */ GL.React.createElement("div", { className: "position" }, "Position", /* @__PURE__ */ GL.React.createElement(
+    "select",
+    {
+      value: position,
+      onChange: (e) => {
+        setPosition(e.target.value);
+        api.storage.setValue("position", e.target.value);
+        if (infoLines2.element) infoLines2.element.className = e.target.value;
+      }
+    },
+    /* @__PURE__ */ GL.React.createElement("option", { value: "top left" }, "Top Left"),
+    /* @__PURE__ */ GL.React.createElement("option", { value: "top right" }, "Top Right"),
+    /* @__PURE__ */ GL.React.createElement("option", { value: "bottom left" }, "Bottom Left"),
+    /* @__PURE__ */ GL.React.createElement("option", { value: "bottom right" }, "Bottom Right")
+  )), /* @__PURE__ */ GL.React.createElement("hr", null), lines.map((line) => /* @__PURE__ */ GL.React.createElement("div", null, /* @__PURE__ */ GL.React.createElement("div", null, /* @__PURE__ */ GL.React.createElement(
+    "input",
+    {
+      type: "checkbox",
+      checked: line.enabled,
+      onChange: (e) => {
+        line.enabled = e.target.checked;
+        api.storage.setValue(line.name, line.enabled);
+        if (line.enabled) line.enable();
+        else line.disable();
+        setLines([...lines]);
+      }
+    }
+  ), line.name), line.settings && Object.entries(line.settings).map(([id, setting]) => /* @__PURE__ */ GL.React.createElement("div", { className: "setting" }, setting.label, /* @__PURE__ */ GL.React.createElement(
+    "input",
+    {
+      type: "range",
+      min: setting.min,
+      step: 1,
+      max: setting.max,
+      value: setting.value,
+      onChange: (e) => {
+        setting.value = parseInt(e.target.value, 10);
+        api.storage.setValue(id, setting.value);
+        if (line.enabled) line.onSettingsChange?.();
+        setLines([...lines]);
+      }
+    }
+  ), setting.value)), /* @__PURE__ */ GL.React.createElement("hr", null))));
+}
 
 // plugins/InfoLines/src/lines/fps.ts
 var FPS = class extends BaseLine {
@@ -117,23 +159,23 @@ var FPS = class extends BaseLine {
 var PhysicsCoordinates = class extends BaseLine {
   name = "Physics Coordinates";
   enabledDefault = false;
-  settings = [{
-    type: "slider",
-    id: "physicsCoordsDecimalPlaces",
-    title: "Physics coordinates decimal places",
-    min: 0,
-    max: 10,
-    step: 1,
-    default: 2
-  }];
+  settings = {
+    "physicsCoordsDecimalPlaces": {
+      label: "Physics coordinates decimal places",
+      min: 0,
+      max: 10,
+      default: 2
+    }
+  };
   rb;
   init() {
-    this.rb = api.stores.phaser.mainCharacter.physics.getBody().rigidBody;
+    const physics = api.stores.phaser.mainCharacter.physics;
+    this.rb = physics.getBody().rigidBody;
   }
   onPhysicsTick() {
     const translation = this.rb?.translation();
     if (!translation) return;
-    const decimals = api.settings.physicsCoordsDecimalPlaces;
+    const decimals = this.settings.physicsCoordsDecimalPlaces.value;
     this.update(`physics x: ${translation.x.toFixed(decimals)}, y: ${translation.y.toFixed(decimals)}`);
   }
 };
@@ -142,23 +184,24 @@ var PhysicsCoordinates = class extends BaseLine {
 var Velocity = class extends BaseLine {
   name = "Velocity";
   enabledDefault = true;
-  settings = [{
-    type: "slider",
-    id: "velocityDecimalPlaces",
-    title: "Velocity decimal places",
-    min: 0,
-    max: 10,
-    step: 1,
-    default: 2
-  }];
+  name = "Velocity";
+  settings = {
+    "velocityDecimalPlaces": {
+      label: "Velocity decimal places",
+      min: 0,
+      max: 10,
+      default: 2
+    }
+  };
   rb;
   init() {
-    this.rb = api.stores.phaser.mainCharacter.physics.getBody().rigidBody;
+    const physics = api.stores.phaser.mainCharacter.physics;
+    this.rb = physics.getBody().rigidBody;
   }
   onPhysicsTick() {
     const velocity = this.rb?.linvel();
     if (!velocity) return;
-    const decimals = api.settings.velocityDecimalPlaces;
+    const decimals = this.settings.velocityDecimalPlaces.value;
     this.update(`velocity x: ${velocity.x.toFixed(decimals)}, y: ${velocity.y.toFixed(decimals)}`);
   }
 };
@@ -192,9 +235,44 @@ var Ping = class extends BaseLine {
       await new Promise((res) => deviceChangeRes = res);
       this.update(`ping: ${Date.now() - start} ms`);
     }, 5e3);
-    this.onStop(() => clearInterval(interval));
+    this.disable = () => {
+      api.net.off("DEVICES_STATES_CHANGES", onDeviceStateChanges);
+      api.net.off("TERRAIN_CHANGES", onTerrainChanges);
+      api.net.off("WORLD_CHANGES", onWorldChanges);
+      clearInterval(interval);
+    };
   }
 };
+
+// plugins/InfoLines/src/styles.scss
+var styles_default = `#infoLines {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 4px;
+  z-index: 99999999;
+  border-radius: 5px;
+}
+#infoLines.top {
+  top: 4px;
+}
+#infoLines.bottom {
+  bottom: 4px;
+}
+#infoLines.left {
+  left: 4px;
+}
+#infoLines.right {
+  right: 4px;
+}
+
+#il-settings .setting, #il-settings .position {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+#il-settings .setting input {
+  flex-grow: 1;
+}`;
 
 // plugins/InfoLines/src/index.ts
 api.UI.addStyles(styles_default);
@@ -208,30 +286,6 @@ var InfoLines = class {
   ];
   element;
   constructor() {
-    const settings = [
-      {
-        type: "dropdown",
-        id: "position",
-        title: "Position",
-        options: [
-          { label: "Top Left", value: "top left" },
-          { label: "Top Right", value: "top right" },
-          { label: "Bottom Left", value: "bottom left" },
-          { label: "Bottom Right", value: "bottom right" }
-        ],
-        default: "top right"
-      }
-    ];
-    for (const line of this.lines) {
-      settings.push({
-        type: "toggle",
-        id: line.name,
-        title: line.name,
-        default: line.enabledDefault
-      });
-      if (line.settings) settings.push(...line.settings);
-    }
-    api.settings.create(settings);
     api.net.onLoad(() => {
       this.create();
     });
@@ -239,16 +293,14 @@ var InfoLines = class {
   create() {
     this.element = document.createElement("div");
     this.element.id = "infoLines";
-    api.settings.listen("position", (value) => this.element.className = value, true);
+    this.element.className = this.position;
     for (const line of this.lines) {
       const lineElement = document.createElement("div");
       lineElement.classList.add("line");
       this.element.appendChild(lineElement);
-      line.onUpdate((value) => lineElement.innerText = value);
-      line.onStop(() => {
-        lineElement.innerText = "";
+      line.subscribe((value) => {
+        lineElement.innerText = value;
       });
-      api.settings.listen(line.name, (value) => value ? line.enable() : line.disable(), true);
     }
     document.body.appendChild(this.element);
   }

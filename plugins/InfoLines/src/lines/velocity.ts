@@ -1,4 +1,3 @@
-import type { RigidBody } from "@dimforge/rapier2d-compat";
 import BaseLine from "../baseLine";
 
 export default class Velocity extends BaseLine {
@@ -14,18 +13,17 @@ export default class Velocity extends BaseLine {
         default: 2
     }];
 
-    private rb?: RigidBody;
-
     init() {
-        this.rb = api.stores.phaser.mainCharacter.physics.getBody().rigidBody;
-    }
+        const { physics } = api.stores.phaser.mainCharacter;
+        const rb = physics.getBody().rigidBody;
 
-    onPhysicsTick() {
-        const velocity = this.rb?.linvel();
-        if(!velocity) return;
+        this.on("physicsTick", () => {
+            const velocity = rb?.linvel();
+            if(!velocity) return;
 
-        const decimals = api.settings.velocityDecimalPlaces;
+            const decimals = api.settings.velocityDecimalPlaces;
 
-        this.update(`velocity x: ${velocity.x.toFixed(decimals)}, y: ${velocity.y.toFixed(decimals)}`);
+            this.update(`velocity x: ${velocity.x.toFixed(decimals)}, y: ${velocity.y.toFixed(decimals)}`);
+        });
     }
 }

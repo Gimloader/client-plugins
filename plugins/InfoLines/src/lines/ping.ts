@@ -36,6 +36,6 @@ export default class Ping extends BaseLine {
             this.update(`ping: ${Date.now() - start} ms`);
         }, 5000);
 
-        this.onStop(() => clearInterval(interval));
+        this.on("stop", () => clearInterval(interval));
     }
 }
