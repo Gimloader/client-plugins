@@ -14,6 +14,8 @@ export function stopUpdatingLasers() {
     lasers = [];
 }
 
+let lastActive: boolean | null = null;
+
 export function updateLasers(frame: number) {
     if(lasers.length === 0) {
         lasers = api.stores.phaser.scene.worldManager.devices.allDevices.filter((d: any) => d.laser);
@@ -23,6 +25,10 @@ export function updateLasers(frame: number) {
     const states = api.stores.world.devices.states;
     const devices = api.stores.phaser.scene.worldManager.devices;
     const active = frame % 66 < 36;
+
+    // More performative
+    if(lastActive === active) return;
+    lastActive = active;
 
     if(!states.has(lasers[0].id)) {
         lasers = api.stores.phaser.scene.worldManager.devices.allDevices.filter((d: any) => d.laser);
