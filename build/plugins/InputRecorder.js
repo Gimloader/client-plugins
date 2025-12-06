@@ -24,6 +24,7 @@ api.net.on("DEVICES_STATES_CHANGES", (packet) => {
 function stopUpdatingLasers() {
   lasers = [];
 }
+var lastActive = null;
 function updateLasers(frame) {
   if (lasers.length === 0) {
     lasers = api.stores.phaser.scene.worldManager.devices.allDevices.filter((d) => d.laser);
@@ -31,6 +32,8 @@ function updateLasers(frame) {
   const states = api.stores.world.devices.states;
   const devices = api.stores.phaser.scene.worldManager.devices;
   const active = frame % 66 < 36;
+  if (lastActive === active) return;
+  lastActive = active;
   if (!states.has(lasers[0].id)) {
     lasers = api.stores.phaser.scene.worldManager.devices.allDevices.filter((d) => d.laser);
   }
