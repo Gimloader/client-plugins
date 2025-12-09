@@ -5,7 +5,10 @@ export default singleConfig({
     name: "DLDTAS",
     description: "Allows you to create TASes for Dont Look Down",
     author: "TheLazySquid",
-    version: "0.4.2",
+    version: "0.5.0",
+    changelog: [
+        "Supported uploading input recordings"
+    ],
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js",
     webpage: "https://gimloader.github.io/plugins/dldtas",
     libs: [

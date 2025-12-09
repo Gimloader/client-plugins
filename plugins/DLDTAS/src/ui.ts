@@ -1,9 +1,10 @@
 import controller from "$assets/controller.svg";
-import type { IFrameInfo, ISharedValues } from "../types";
+import type { IRecording } from "plugins/InputRecorder/types";
+import type { IFrameInfo, ISharedValues, TAS } from "../types";
 import { hideHitbox, initOverlay, showHitbox } from "./overlay";
 import TASTools from "./tools";
 import { getLaserOffset, setLaserOffset } from "./updateLasers";
-import { save } from "./util";
+import { getTickKeys, save } from "./util";
 
 const frames: IFrameInfo[] = api.storage.getValue("frames", []);
 const values: ISharedValues = { frames, currentFrame: 0 };
@@ -116,14 +117,21 @@ export function createUI() {
                 const data = reader.result;
                 if(typeof data !== "string") return;
 
-                const parsed = JSON.parse(data);
+                const parsed: IFrameInfo[] | TAS | IRecording = JSON.parse(data);
 
-                // compatibility with older versions
+                // compatibility with older versions and input recordings
                 if(Array.isArray(parsed)) {
                     values.frames = parsed;
                 } else {
-                    values.frames = parsed.frames;
-                    setLaserOffset(parsed.laserOffset);
+                    if("laserOffset" in parsed) {
+                        values.frames = parsed.frames;
+                        setLaserOffset(parsed.laserOffset);
+                    } else {
+                        values.frames = parsed.frames.map(getTickKeys);
+                    }
+
+                    if(parsed.startPos) tools.startPos = parsed.startPos;
+                    if(parsed.startState) tools.startState = parsed.startState;
                 }
 
                 tools.reset();

@@ -2,11 +2,12 @@
  * @name DLDTAS
  * @description Allows you to create TASes for Dont Look Down
  * @author TheLazySquid
- * @version 0.4.2
+ * @version 0.5.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js
  * @webpage https://gimloader.github.io/plugins/dldtas
  * @needsLib DLDUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/DLDUtils.js
  * @gamemode dontLookDown
+ * @changelog Supported uploading input recordings
  */
 
 // plugins/DLDTAS/src/styles.scss
@@ -104,7 +105,7 @@ api.onStop(() => canvas.remove());
 var propHitboxes = [];
 function initOverlay() {
   document.body.appendChild(canvas);
-  const scene = GL.stores.phaser.scene;
+  const scene = api.stores.phaser.scene;
   const props = scene.worldManager.devices.allDevices.filter((d) => d.deviceOption?.id === "prop");
   for (const prop of props) {
     for (const collider of prop.colliders.list) {
@@ -150,10 +151,10 @@ function showHitbox() {
 }
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const physics = GL.stores.phaser.mainCharacter.physics;
+  const physics = api.stores.phaser.mainCharacter.physics;
   const collider = physics.getBody().collider;
   let { halfHeight, radius } = collider.shape;
-  const { x: cX, y: cY } = GL.stores.phaser.scene.cameras.cameras[0].midPoint;
+  const { x: cX, y: cY } = api.stores.phaser.scene.cameras.cameras[0].midPoint;
   let { x, y } = physics.getBody().rigidBody.translation();
   const { x: vX, y: vY } = physics.getBody().rigidBody.linvel();
   ctx.fillStyle = "white";
@@ -261,6 +262,11 @@ function generatePhysicsInput(frame, lastFrame) {
   else if (frame.right && frame.left && frame.up) angle = 225;
   return { angle, jump, _jumpKeyPressed: frame.up };
 }
+var getTickKeys = (input) => ({
+  left: input.angle === 180 || input.angle === 225,
+  right: input.angle === 0 || input.angle === 315,
+  up: input.jump
+});
 function save(frames2) {
   const saveList = [];
   for (const frame of frames2) {
@@ -277,39 +283,31 @@ function save(frames2) {
 
 // plugins/DLDTAS/src/tools.ts
 var TASTools = class {
-  physicsManager;
-  nativeStep;
-  physics;
-  rb;
-  inputManager;
-  values;
-  updateTable;
-  getPhysicsInput;
-  slowdownAmount = 1;
-  slowdownDelayedFrames = 0;
   constructor(values2, updateTable) {
-    this.physicsManager = api.stores.phaser.scene.worldManager.physics;
     this.values = values2;
     this.updateTable = updateTable;
-    this.nativeStep = this.physicsManager.physicsStep;
     this.physicsManager.physicsStep = (dt) => {
       api.stores.phaser.mainCharacter.physics.postUpdate(dt);
     };
     api.onStop(() => this.physicsManager.physicsStep = this.nativeStep);
-    this.physics = api.stores.phaser.mainCharacter.physics;
-    this.rb = this.physics.getBody().rigidBody;
-    this.inputManager = api.stores.phaser.scene.inputManager;
-    this.getPhysicsInput = this.inputManager.getPhysicsInput;
     api.onStop(() => this.inputManager.getPhysicsInput = this.getPhysicsInput);
     this.reset();
     initLasers(this.values);
   }
+  physicsManager = api.stores.phaser.scene.worldManager.physics;
+  nativeStep = this.physicsManager.physicsStep;
+  physics = api.stores.phaser.mainCharacter.physics;
+  rb = this.physics.getBody().rigidBody;
+  inputManager = api.stores.phaser.scene.inputManager;
+  getPhysicsInput = this.inputManager.getPhysicsInput;
+  slowdownAmount = 1;
+  slowdownDelayedFrames = 0;
+  // hardcoded, for now
+  startPos = { x: 33.87, y: 638.38 };
+  startState = defaultState;
   reset() {
-    this.rb.setTranslation({
-      "x": 33.87,
-      "y": 638.38
-    }, true);
-    this.physics.state = JSON.parse(defaultState);
+    this.rb.setTranslation(this.startPos, true);
+    this.physics.state = JSON.parse(this.startState);
   }
   startPlaying() {
     const { frames: frames2 } = this.values;
@@ -346,9 +344,10 @@ var TASTools = class {
       if (this.slowdownDelayedFrames < this.slowdownAmount) return;
       this.slowdownDelayedFrames = 0;
       const keys = this.inputManager.keyboard.heldKeys;
-      const left = keys.has(37 /* LeftArrow */) || keys.has(65 /* A */);
-      const right = keys.has(39 /* RightArrow */) || keys.has(68 /* D */);
-      const up = keys.has(38 /* UpArrow */) || keys.has(87 /* W */) || keys.has(32 /* Space */);
+      const { KeyCodes } = Phaser.Input.Keyboard;
+      const left = keys.has(KeyCodes.LEFT) || keys.has(KeyCodes.A);
+      const right = keys.has(KeyCodes.RIGHT) || keys.has(KeyCodes.D);
+      const up = keys.has(KeyCodes.UP) || keys.has(KeyCodes.W) || keys.has(KeyCodes.SPACE);
       const translation = this.rb.translation();
       const state = JSON.stringify(this.physics.state);
       this.values.frames[this.values.currentFrame] = { left, right, up, translation, state };
@@ -489,8 +488,14 @@ function createUI() {
         if (Array.isArray(parsed)) {
           values.frames = parsed;
         } else {
-          values.frames = parsed.frames;
-          setLaserOffset(parsed.laserOffset);
+          if ("laserOffset" in parsed) {
+            values.frames = parsed.frames;
+            setLaserOffset(parsed.laserOffset);
+          } else {
+            values.frames = parsed.frames.map(getTickKeys);
+          }
+          if (parsed.startPos) tools.startPos = parsed.startPos;
+          if (parsed.startState) tools.startState = parsed.startState;
         }
         tools.reset();
         values.currentFrame = 0;

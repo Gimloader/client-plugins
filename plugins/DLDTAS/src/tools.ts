@@ -12,6 +12,9 @@ export default class TASTools {
     getPhysicsInput = this.inputManager.getPhysicsInput;
     slowdownAmount = 1;
     slowdownDelayedFrames = 0;
+    // hardcoded, for now
+    startPos = { x: 33.87, y: 638.38 };
+    startState = defaultState;
 
     constructor(public values: ISharedValues, public updateTable: () => void) {
         this.physicsManager.physicsStep = (dt: number) => {
@@ -26,13 +29,9 @@ export default class TASTools {
     }
 
     reset() {
-        // hardcoded, for now
-        this.rb.setTranslation({
-            "x": 33.87,
-            "y": 638.38
-        }, true);
+        this.rb.setTranslation(this.startPos, true);
 
-        this.physics.state = JSON.parse(defaultState);
+        this.physics.state = JSON.parse(this.startState);
     }
 
     startPlaying() {
