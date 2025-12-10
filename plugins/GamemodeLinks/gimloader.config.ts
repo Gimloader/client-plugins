@@ -7,10 +7,10 @@ export default singleConfig({
     author: "retrozy",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/GamemodeLinks.js",
     webpage: "https://gimloader.github.io/plugins/gamemodelinks",
-    version: "0.2.1",
+    version: "0.2.2",
     hasSettings: true,
     reloadRequired: true,
     changelog: [
-        "Actually fixed kit not properly working when joining from url"
+        "Switched to a utility for rewriting source code"
     ]
 });
