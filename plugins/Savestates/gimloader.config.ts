@@ -8,7 +8,7 @@ export default singleConfig({
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Savestates.js",
     webpage: "https://gimloader.github.io/plugins/savestates",
     version: "0.4.1",
-    libs: [
+    needsLibs: [
         "DLDUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/DLDUtils.js"
     ],
     optionalLibs: [

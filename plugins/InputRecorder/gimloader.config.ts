@@ -12,7 +12,7 @@ export default singleConfig({
     reloadRequired: "ingame",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/InputRecorder.js",
     webpage: "https://gimloader.github.io/plugins/inputrecorder",
-    libs: [
+    needsLibs: [
         "DLDUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/DLDUtils.js"
     ],
     gamemodes: ["dontLookDown"]

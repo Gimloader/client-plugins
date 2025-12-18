@@ -9,7 +9,7 @@ export default singleConfig({
     webpage: "https://gimloader.github.io/libraries/dldutils/",
     version: "0.3.9",
     changelog: ["Added webpage link"],
-    libs: [
+    needsLibs: [
         "Desync | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Desync.js"
     ],
     gamemodes: ["dontLookDown"],

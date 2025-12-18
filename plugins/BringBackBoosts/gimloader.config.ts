@@ -10,7 +10,7 @@ export default singleConfig({
     hasSettings: true,
     reloadRequired: "ingame",
     webpage: "https://gimloader.github.io/plugins/bringbackboosts",
-    libs: [
+    needsLibs: [
         "DLDUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/DLDUtils.js"
     ],
     gamemodes: ["dontLookDown"]

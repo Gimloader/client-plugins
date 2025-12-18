@@ -11,7 +11,7 @@ export default singleConfig({
     ],
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js",
     webpage: "https://gimloader.github.io/plugins/dldtas",
-    libs: [
+    needsLibs: [
         "DLDUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/DLDUtils.js"
     ],
     gamemodes: ["dontLookDown"]
