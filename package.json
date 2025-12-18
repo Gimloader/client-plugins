@@ -3,7 +3,7 @@
     "devDependencies": {
         "@biomejs/biome": "2.3.1",
         "@dimforge/rapier2d-compat": "~0.17.2",
-        "@gimloader/build": "^1.3.2",
+        "@gimloader/build": "^1.4.0",
         "@types/bun": "^1.3.0",
         "@types/gimloader": "^1.10.0",
         "compress-json": "^3.4.0",
