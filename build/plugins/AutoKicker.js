@@ -374,7 +374,7 @@ var styles_default = `#AutoKick-UI {
 
 // plugins/AutoKicker/src/ui.tsx
 function UI({ autoKicker: autoKicker2 }) {
-  const React = GL.React;
+  const React = api.React;
   const [kickDuplicated, setKickDuplicated] = React.useState(autoKicker2.kickDuplicateNames);
   const [kickSkinless, setKickSkinless] = React.useState(autoKicker2.kickSkinless);
   const [kickBlank, setKickBlank] = React.useState(autoKicker2.kickBlank);
@@ -505,7 +505,7 @@ var checkStart = () => {
     autoKicker.start();
     ui = document.createElement("div");
     ui.id = "AutoKick-UI";
-    GL.ReactDOM.createRoot(ui).render(GL.React.createElement(UI, { autoKicker }));
+    api.ReactDOM.createRoot(ui).render(api.React.createElement(UI, { autoKicker }));
     document.body.appendChild(ui);
     if (!uiShown) {
       ui.style.display = "none";

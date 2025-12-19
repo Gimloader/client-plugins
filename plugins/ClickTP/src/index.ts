@@ -1,8 +1,3 @@
-import type * as Desync from "libraries/Desync/src";
-
-const desync = api.lib("Desync") as typeof Desync;
-desync.enable();
-
 api.net.onLoad(() => {
     const onClick = (e: MouseEvent) => {
         if(!e.ctrlKey) return;

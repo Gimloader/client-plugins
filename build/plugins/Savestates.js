@@ -2,11 +2,11 @@
  * @name Savestates
  * @description Allows you to save and load states/summits in Don't Look Down. Only client side, nobody else can see you move.
  * @author TheLazySquid
- * @version 0.4.1
+ * @version 0.4.2
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Savestates.js
  * @webpage https://gimloader.github.io/plugins/savestates
- * @needsLib DLDUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/DLDUtils.js
  * @optionalLib CommandLine | https://raw.githubusercontent.com/Blackhole927/gimkitmods/main/libraries/CommandLine/CommandLine.js
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
  */
 
@@ -22,17 +22,18 @@ var summitCoords = [
 ];
 
 // plugins/Savestates/src/index.ts
-var dldUtils = api.lib("DLDUtils");
+var desync = api.plugin("Desynchronize");
 var defaultState = '{"gravity":0.001,"velocity":{"x":0,"y":0},"movement":{"direction":"none","xVelocity":0,"accelerationTicks":0},"jump":{"isJumping":false,"jumpsLeft":2,"jumpCounter":0,"jumpTicks":118,"xVelocityAtJumpStart":0},"forces":[],"grounded":true,"groundedTicks":0,"lastGroundedAngle":0}';
 var stateLoadCallbacks = [];
 var tp = (summit) => {
   if (!gameLoaded) return;
   const physics = api.stores.phaser.mainCharacter.physics;
   const rb = physics.getBody().rigidBody;
-  dldUtils.cancelRespawn();
+  desync.DLD.cancelRespawn();
   rb.setTranslation(summitCoords[summit], true);
   physics.state = JSON.parse(defaultState);
   stateLoadCallbacks.forEach((cb) => cb(summit));
+  desync.DLD.onSummitTeleport(summit);
 };
 var lastPos = api.storage.getValue("lastPos", null);
 var lastState = api.storage.getValue("lastState", null);
@@ -52,7 +53,7 @@ var loadState = () => {
   const physics = api.stores.phaser.mainCharacter.physics;
   const rb = physics.getBody().rigidBody;
   if (!lastPos || !lastState) return;
-  dldUtils.cancelRespawn();
+  desync.DLD.cancelRespawn();
   rb.setTranslation(lastPos, true);
   physics.state = JSON.parse(lastState);
   api.notification.open({ message: "State Loaded", duration: 0.75 });
