@@ -10,13 +10,8 @@ export default singleConfig({
     hasSettings: true,
     reloadRequired: "ingame",
     webpage: "https://gimloader.github.io/plugins/bringbackboosts",
-<<<<<<< HEAD
-    needsLibs: [
-        "DLDUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/DLDUtils.js"
-=======
     needsPlugins: [
         "Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js"
->>>>>>> origin/main
     ],
     gamemodes: ["dontLookDown"],
     changelog: ["Replace DLDUtils with Desynchronize dependency"]
