@@ -684,7 +684,7 @@ var CosmeticChanger = class {
   skinId = api.storage.getValue("skinId", "");
   trailId = api.storage.getValue("trailId", "");
   selectedStyles = api.storage.getValue("selectedStyles", {});
-  normalSkin;
+  normalSkin = null;
   allowNextSkin = false;
   normalTrail = "";
   allowNextTrail = false;
@@ -718,7 +718,7 @@ var CosmeticChanger = class {
     const atlasUrl = URL.createObjectURL(atlasBlob);
     const jsonBlob = new Blob([gim_json_default], { type: "application/json" });
     const jsonUrl = URL.createObjectURL(jsonBlob);
-    const fileTypes = window.Phaser.Loader.FileTypes;
+    const fileTypes = Phaser.Loader.FileTypes;
     const imgFile = fileTypes.ImageFile;
     class newImgFile extends imgFile {
       constructor(loader, key, url, config) {
@@ -1590,7 +1590,7 @@ function create_if_block_4(ctx) {
       button = element("button");
       t0 = text("Current: ");
       t1 = text(t1_value);
-      t2 = text(".\r\n            Upload skin");
+      t2 = text(". Upload skin");
     },
     m(target, anchor) {
       insert(target, button, anchor);
@@ -1797,7 +1797,7 @@ function create_else_block(ctx) {
       append(div, t);
     },
     p(ctx2, dirty) {
-      if (dirty & /*styles, selectedStyles*/
+      if (dirty & /*selectedStyles, styles*/
       96) {
         each_value_1 = ensure_array_like(
           /*category*/
@@ -1900,13 +1900,8 @@ function create_each_block_1(ctx) {
   return {
     c() {
       button = element("button");
+      button.innerHTML = ``;
       attr(button, "class", "color svelte-79x94m");
-      set_style(
-        button,
-        "background-color",
-        /*option*/
-        ctx[20].preview.color
-      );
       toggle_class(
         button,
         "selected",
@@ -1926,6 +1921,12 @@ function create_each_block_1(ctx) {
           ctx[22] === 0
         )
       );
+      set_style(
+        button,
+        "background-color",
+        /*option*/
+        ctx[20].preview.color
+      );
     },
     m(target, anchor) {
       insert(target, button, anchor);
@@ -1936,15 +1937,6 @@ function create_each_block_1(ctx) {
     },
     p(new_ctx, dirty) {
       ctx = new_ctx;
-      if (dirty & /*styles*/
-      64) {
-        set_style(
-          button,
-          "background-color",
-          /*option*/
-          ctx[20].preview.color
-        );
-      }
       if (dirty & /*selectedStyles, styles*/
       96) {
         toggle_class(
@@ -1965,6 +1957,15 @@ function create_each_block_1(ctx) {
             /*i*/
             ctx[22] === 0
           )
+        );
+      }
+      if (dirty & /*styles*/
+      64) {
+        set_style(
+          button,
+          "background-color",
+          /*option*/
+          ctx[20].preview.color
         );
       }
     },

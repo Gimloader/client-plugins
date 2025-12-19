@@ -1,7 +1,5 @@
-import { summitCoords } from "$shared/consts";
 import type { Capsule, Vector } from "@dimforge/rapier2d-compat";
-import type * as Savestates from "plugins/Savestates/src";
-import type * as Desync from "libraries/Desync/src";
+import { summitCoords } from "$shared/consts";
 
 const respawnHeight = 621.093;
 const floorHeight = 638.37;
@@ -9,16 +7,6 @@ let lastCheckpointReached = 0;
 let canRespawn = false;
 
 api.net.onLoad(() => {
-    const savestates = api.plugin("Savestates") as typeof Savestates | null;
-    if(savestates) {
-        savestates.onStateLoaded((summit: string | number) => {
-            if(typeof summit !== "number") return;
-
-            lastCheckpointReached = summit;
-            if(summit <= 1) canRespawn = false;
-        });
-    }
-
     api.net.room.state.session.gameSession.listen("phase", (phase: string) => {
         if(phase !== "results") return;
 
@@ -26,6 +14,11 @@ api.net.onLoad(() => {
         lastCheckpointReached = 0;
     });
 });
+
+export function onSummitTeleport(summit: number) {
+    lastCheckpointReached = summit;
+    if(summit <= 1) canRespawn = false;
+}
 
 export function cancelRespawn() {
     canRespawn = false;
@@ -173,10 +166,9 @@ const enable = () => {
     physics.bodies.activeBodies.disableBody = () => {};
 };
 
-api.net.onLoad(() => {
+api.net.onLoad((_, gamemode) => {
+    if(gamemode !== "dontlookdown") return;
     enable();
-    const desync = api.lib("Desync") as typeof Desync;
-    desync.enable();
 });
 
 function boundingBoxOverlap(start: Vector, end: Vector, topLeft: Vector, bottomRight: Vector) {

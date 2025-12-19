@@ -1,16 +1,25 @@
 /**
- * @name DLDUtils
- * @description Allows plugins to move characters without the server's permission
+ * @name Desynchronize
+ * @description Disables the client being snapped back by the server, others cannot see you move. Breaks most gamemodes.
  * @author TheLazySquid
- * @version 0.3.10
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/DLDUtils.js
- * @webpage https://gimloader.github.io/libraries/dldutils/
- * @needsLib Desync | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Desync.js
- * @gamemode dontLookDown
- * @changelog Deprecated in favor of the Desynchronize plugin
- * @isLibrary true
- * @deprecated This library has been superceded by the Desynchronize plugin
+ * @version 0.1.0
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
+ * @webpage https://gimloader.github.io/plugins/desynchronize
  */
+var __defProp = Object.defineProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// plugins/Desynchronize/src/dld.ts
+var dld_exports = {};
+__export(dld_exports, {
+  cancelRespawn: () => cancelRespawn,
+  onSummitTeleport: () => onSummitTeleport,
+  setLaserRespawnEnabled: () => setLaserRespawnEnabled,
+  setLaserWarningEnabled: () => setLaserWarningEnabled
+});
 
 // shared/consts.ts
 var summitCoords = [
@@ -23,26 +32,22 @@ var summitCoords = [
   { x: 401.269989013671, y: 285.73999023437 }
 ];
 
-// libraries/DLDUtils/src/index.ts
+// plugins/Desynchronize/src/dld.ts
 var respawnHeight = 621.093;
 var floorHeight = 638.37;
 var lastCheckpointReached = 0;
 var canRespawn = false;
 api.net.onLoad(() => {
-  const savestates = api.plugin("Savestates");
-  if (savestates) {
-    savestates.onStateLoaded((summit) => {
-      if (typeof summit !== "number") return;
-      lastCheckpointReached = summit;
-      if (summit <= 1) canRespawn = false;
-    });
-  }
   api.net.room.state.session.gameSession.listen("phase", (phase) => {
     if (phase !== "results") return;
     canRespawn = false;
     lastCheckpointReached = 0;
   });
 });
+function onSummitTeleport(summit) {
+  lastCheckpointReached = summit;
+  if (summit <= 1) canRespawn = false;
+}
 function cancelRespawn() {
   canRespawn = false;
 }
@@ -149,10 +154,9 @@ var enable = () => {
   physics.bodies.activeBodies.disableBody = () => {
   };
 };
-api.net.onLoad(() => {
+api.net.onLoad((_, gamemode) => {
+  if (gamemode !== "dontlookdown") return;
   enable();
-  const desync = api.lib("Desync");
-  desync.enable();
 });
 function boundingBoxOverlap(start, end, topLeft, bottomRight) {
   return lineIntersects(start, end, topLeft, { x: bottomRight.x, y: topLeft.y }) || lineIntersects(start, end, topLeft, { x: topLeft.x, y: bottomRight.y }) || lineIntersects(start, end, { x: bottomRight.x, y: topLeft.y }, bottomRight) || lineIntersects(start, end, { x: topLeft.x, y: bottomRight.y }, bottomRight);
@@ -166,8 +170,27 @@ function lineIntersects(start1, end1, start2, end2) {
   const s = numerator2 / denominator;
   return r >= 0 && r <= 1 && (s >= 0 && s <= 1);
 }
+
+// plugins/Desynchronize/src/index.ts
+api.net.onLoad(() => {
+  let allowNext = false;
+  let firstPhase = true;
+  api.onStop(api.net.room.state.session.listen("phase", () => {
+    if (firstPhase) {
+      firstPhase = false;
+      return;
+    }
+    allowNext = true;
+  }));
+  api.net.on("PHYSICS_STATE", (_, editFn) => {
+    if (allowNext) {
+      allowNext = false;
+      return;
+    }
+    editFn(null);
+  });
+  api.net.on("send:INPUT", (_, editFn) => editFn(null));
+});
 export {
-  cancelRespawn,
-  setLaserRespawnEnabled,
-  setLaserWarningEnabled
+  dld_exports as DLD
 };

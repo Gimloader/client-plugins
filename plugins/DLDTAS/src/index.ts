@@ -1,9 +1,9 @@
 import styles from "./styles.scss";
 import { createUI } from "./ui";
-import type * as DLDUtils from "libraries/DLDUtils/src";
+import type * as Desynchronize from "plugins/Desynchronize/src";
 
-const dldUtils = api.lib("DLDUtils") as typeof DLDUtils;
-dldUtils.setLaserWarningEnabled(false);
+const desync = api.plugin("Desynchronize") as typeof Desynchronize;
+desync.DLD.setLaserWarningEnabled(false);
 
 api.UI.addStyles(styles);
 

@@ -94,7 +94,7 @@ var VisualCoordinates = class extends BaseLine {
 
 // plugins/InfoLines/src/Settings.tsx
 function Settings({ infoLines: infoLines2 }) {
-  const React = GL.React;
+  const React = api.React;
   const [lines, setLines] = React.useState(infoLines2.lines);
   const [position, setPosition] = React.useState(infoLines2.position);
   return /* @__PURE__ */ GL.React.createElement("div", { id: "il-settings" }, /* @__PURE__ */ GL.React.createElement("div", { className: "position" }, "Position", /* @__PURE__ */ GL.React.createElement(

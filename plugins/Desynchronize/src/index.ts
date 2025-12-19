@@ -1,9 +1,4 @@
-let enabled = false;
-api.onStop(() => enabled = false);
-
-export function enable() {
-    enabled = true;
-}
+export * as DLD from "./dld";
 
 api.net.onLoad(() => {
     let allowNext = false;
@@ -23,7 +18,7 @@ api.net.onLoad(() => {
             allowNext = false;
             return;
         }
-        if(enabled) editFn(null);
+        editFn(null);
     });
 
     api.net.on("send:INPUT", (_, editFn) => editFn(null));

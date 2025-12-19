@@ -5,7 +5,7 @@
  * @version 0.5.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js
  * @webpage https://gimloader.github.io/plugins/dldtas
- * @needsLib DLDUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/DLDUtils.js
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
  * @changelog Supported uploading input recordings
  */
@@ -681,8 +681,8 @@ function createUI() {
 }
 
 // plugins/DLDTAS/src/index.ts
-var dldUtils = api.lib("DLDUtils");
-dldUtils.setLaserWarningEnabled(false);
+var desync = api.plugin("Desynchronize");
+desync.DLD.setLaserWarningEnabled(false);
 api.UI.addStyles(styles_default);
 var startTasBtn = document.createElement("button");
 startTasBtn.id = "startTasBtn";

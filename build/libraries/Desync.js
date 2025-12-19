@@ -2,12 +2,13 @@
  * @name Desync
  * @description Easily make simple settings menus
  * @author TheLazySquid
- * @version 0.1.3
+ * @version 0.1.4
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Desync.js
  * @webpage https://gimloader.github.io/libraries/desync/
  * @gamemode 2d
- * @changelog Added webpage link
+ * @changelog Deprecated in favor of the Desynchronize plugin
  * @isLibrary true
+ * @deprecated This library has been superceded by the Desynchronize plugin
  */
 
 // libraries/Desync/src/index.ts

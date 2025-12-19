@@ -3302,13 +3302,13 @@ function instance8($$self, $$props, $$invalidate) {
   let data = dataObj;
   function save() {
     for (let gamemode of gamemodes) {
-      window.GL.storage.setValue("Autosplitter", `${gamemode}Data`, data[gamemode]);
+      api.storage.setValue(`${gamemode}Data`, data[gamemode]);
     }
   }
   function exportAll() {
     let json = {};
     for (let gamemode of gamemodes) {
-      let data2 = window.GL.storage.getValue("Autosplitter", `${gamemode}Data`);
+      let data2 = api.storage.getValue(`${gamemode}Data`);
       if (!data2) continue;
       json[gamemode] = data2;
     }
@@ -3319,7 +3319,7 @@ function instance8($$self, $$props, $$invalidate) {
       for (let gamemode of gamemodes) {
         if (!newData[gamemode]) continue;
         $$invalidate(1, data[gamemode] = newData[gamemode], data);
-        window.GL.storage.setValue("Autosplitter", `${gamemode}Data`, newData[gamemode]);
+        api.storage.setValue(`${gamemode}Data`, newData[gamemode]);
       }
     });
   }
@@ -3330,7 +3330,7 @@ function instance8($$self, $$props, $$invalidate) {
   function importMode() {
     readFile().then((newData) => {
       $$invalidate(1, data[activeTab] = newData, data);
-      window.GL.storage.setValue("Autosplitter", `${activeTab}Data`, newData);
+      api.storage.setValue(`${activeTab}Data`, newData);
     });
   }
   const click_handler = (tab) => $$invalidate(0, activeTab = tab);

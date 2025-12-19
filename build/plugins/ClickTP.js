@@ -2,16 +2,14 @@
  * @name ClickTP
  * @description Ctrl+Click to teleport anywhere client-side
  * @author TheLazySquid
- * @version 0.1.2
+ * @version 0.1.3
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/ClickTP.js
  * @webpage https://gimloader.github.io/plugins/clicktp
- * @needsLib Desync | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Desync.js
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode 2d
  */
 
 // plugins/ClickTP/src/index.ts
-var desync = api.lib("Desync");
-desync.enable();
 api.net.onLoad(() => {
   const onClick = (e) => {
     if (!e.ctrlKey) return;
