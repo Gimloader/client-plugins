@@ -23,6 +23,7 @@ api.net.onLoad(() => {
         const hp = stateChar.health;
 
         const stopUpdate = api.patcher.after(character.nametag, "update", () => {
+            if(!character.nametag.tag) return;
             let { x, y, depth } = character.nametag.tag;
             y += 22;
 
