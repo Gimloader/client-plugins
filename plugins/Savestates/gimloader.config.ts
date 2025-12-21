@@ -7,7 +7,7 @@ export default singleConfig({
     author: "TheLazySquid",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Savestates.js",
     webpage: "https://gimloader.github.io/plugins/savestates",
-    version: "0.4.2",
+    version: "0.5.0",
     needsPlugins: [
         "Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js"
     ],
@@ -15,5 +15,5 @@ export default singleConfig({
         "CommandLine | https://raw.githubusercontent.com/Blackhole927/gimkitmods/main/libraries/CommandLine/CommandLine.js"
     ],
     gamemodes: ["dontLookDown"],
-    changelog: ["Replace DLDUtils with Desynchronize dependency"]
+    changelog: ["Added Gimloader commands for managing multiple custom states"]
 });

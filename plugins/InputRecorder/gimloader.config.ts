@@ -5,7 +5,7 @@ export default singleConfig({
     name: "InputRecorder",
     description: "Records your inputs in Don't Look Down",
     author: "TheLazySquid",
-    version: "0.3.2",
+    version: "0.4.0",
     reloadRequired: "ingame",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/InputRecorder.js",
     webpage: "https://gimloader.github.io/plugins/inputrecorder",
@@ -13,5 +13,5 @@ export default singleConfig({
         "Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js"
     ],
     gamemodes: ["dontLookDown"],
-    changelog: ["Replace DLDUtils with Desynchronize dependency"]
+    changelog: ["Added Gimloader commands"]
 });

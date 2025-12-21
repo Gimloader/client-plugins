@@ -2,10 +2,11 @@
  * @name QuickReset
  * @description Quickly lets you restart 2d gamemodes
  * @author TheLazySquid
- * @version 0.3.0
+ * @version 0.4.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/QuickReset.js
  * @webpage https://gimloader.github.io/plugins/quickreset
  * @gamemode 2d
+ * @changelog Added Gimloader commands for resetting
  */
 
 // plugins/QuickReset/src/index.ts
@@ -15,18 +16,10 @@ api.net.on("send:START_GAME", (message) => {
   if (ignoreNextStart) return;
   startMessage = message;
 });
-api.hotkeys.addConfigurableHotkey({
-  category: "Quick Reset",
-  title: "Reset",
-  preventDefault: false,
-  default: {
-    key: "KeyR",
-    alt: true
-  }
-}, () => {
+function reset() {
   if (api.net.type !== "Colyseus" || !api.net.isHost) return;
-  api.net.send("END_GAME", void 0);
-  api.net.send("RESTORE_MAP_EARLIER", void 0);
+  api.net.send("END_GAME");
+  api.net.send("RESTORE_MAP_EARLIER");
   ignoreNextStart = true;
   const interval = setInterval(() => {
     api.net.send("START_GAME", startMessage);
@@ -38,7 +31,21 @@ api.hotkeys.addConfigurableHotkey({
       unsub();
     }
   });
-});
+}
+function exitToLobby() {
+  if (api.net.type !== "Colyseus" || !api.net.isHost) return;
+  api.net.send("END_GAME");
+  api.net.send("RESTORE_MAP_EARLIER");
+}
+api.hotkeys.addConfigurableHotkey({
+  category: "Quick Reset",
+  title: "Reset",
+  preventDefault: false,
+  default: {
+    key: "KeyR",
+    alt: true
+  }
+}, reset);
 api.hotkeys.addConfigurableHotkey({
   category: "Quick Reset",
   title: "Exit to Lobby",
@@ -47,8 +54,18 @@ api.hotkeys.addConfigurableHotkey({
     key: "KeyL",
     alt: true
   }
-}, () => {
-  if (api.net.type !== "Colyseus" || !api.net.isHost) return;
-  api.net.send("END_GAME", void 0);
-  api.net.send("RESTORE_MAP_EARLIER", void 0);
+}, exitToLobby);
+api.net.onLoad(() => {
+  api.commands.addCommand({
+    text: "Restart Game",
+    keywords: ["reset"]
+  }, reset);
+  api.commands.addCommand({
+    text: "Exit to Lobby",
+    keywords: ["restart", "reset"]
+  }, exitToLobby);
 });
+export {
+  exitToLobby,
+  reset
+};
