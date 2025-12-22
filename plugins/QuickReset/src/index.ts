@@ -30,7 +30,7 @@ api.hotkeys.addConfigurableHotkey({
 
     const unsub = gameSession.listen("phase", (phase: string) => {
         if(phase !== "countdown") return;
-        
+
         ignoreNextStart = false;
         clearInterval(interval);
         unsub();
