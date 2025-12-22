@@ -2,14 +2,11 @@
  * @name QuickReset
  * @description Quickly lets you restart 2d gamemodes
  * @author TheLazySquid
-<<<<<<< Updated upstream
- * @version 0.3.0
-=======
- * @version 0.4.1
->>>>>>> Stashed changes
+ * @version 0.3.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/QuickReset.js
  * @webpage https://gimloader.github.io/plugins/quickreset
  * @gamemode 2d
+ * @changelog Added Gimloader commands for resetting
  */
 
 // plugins/QuickReset/src/index.ts
@@ -29,15 +26,10 @@ api.hotkeys.addConfigurableHotkey({
   }
 }, () => {
   if (api.net.type !== "Colyseus" || !api.net.isHost) return;
-<<<<<<< Updated upstream
   api.net.send("END_GAME", void 0);
   api.net.send("RESTORE_MAP_EARLIER", void 0);
-=======
-  api.net.send("END_GAME");
-  api.net.send("RESTORE_MAP_EARLIER");
   const gameSession = api.net.room.state.session.gameSession;
   if (gameSession.phase === "countdown") return;
->>>>>>> Stashed changes
   ignoreNextStart = true;
   const interval = setInterval(() => {
     api.net.send("START_GAME", startMessage);
