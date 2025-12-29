@@ -13,7 +13,7 @@ api.net.onLoad(() => {
   const placedTiles = /* @__PURE__ */ new Set();
   api.net.on("send:CONSUME", (data, editFn) => {
     if (!("x" in data)) return;
-    const tileString = JSON.stringify(data);
+    const tileString = `${data.x}_${data.y}`;
     if (placedTiles.has(tileString)) {
       editFn(null);
     } else {
@@ -22,8 +22,8 @@ api.net.onLoad(() => {
   });
   api.net.on("TERRAIN_CHANGES", (data) => {
     for (const tile of data.removedTiles) {
-      const [x, y] = tile.split("_").slice(1);
-      placedTiles.delete(JSON.stringify({ x: +x, y: +y }));
+      const tileString = tile.slice(tile.indexOf("_") + 1);
+      placedTiles.delete(tileString);
     }
   });
 });
