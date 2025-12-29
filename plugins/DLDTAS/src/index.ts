@@ -1,9 +1,5 @@
 import styles from "./styles.scss";
 import { createUI } from "./ui";
-import type * as Desynchronize from "plugins/Desynchronize/src";
-
-const desync = api.plugin("Desynchronize") as typeof Desynchronize;
-desync.DLD.setLaserWarningEnabled(false);
 
 api.UI.addStyles(styles);
 

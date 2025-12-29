@@ -2,12 +2,12 @@
  * @name DLDTAS
  * @description Allows you to create TASes for Dont Look Down
  * @author TheLazySquid
- * @version 0.5.0
+ * @version 0.5.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js
  * @webpage https://gimloader.github.io/plugins/dldtas
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
- * @changelog Supported uploading input recordings
+ * @changelog Remove usage of unneeded Desync functions
  */
 
 // plugins/DLDTAS/src/styles.scss
@@ -681,8 +681,6 @@ function createUI() {
 }
 
 // plugins/DLDTAS/src/index.ts
-var desync = api.plugin("Desynchronize");
-desync.DLD.setLaserWarningEnabled(false);
 api.UI.addStyles(styles_default);
 var startTasBtn = document.createElement("button");
 startTasBtn.id = "startTasBtn";

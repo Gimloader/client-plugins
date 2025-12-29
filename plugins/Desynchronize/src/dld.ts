@@ -1,4 +1,4 @@
-import type { Capsule, Vector } from "@dimforge/rapier2d-compat";
+import type { Capsule, RigidBody, Vector } from "@dimforge/rapier2d-compat";
 import { summitCoords } from "$shared/consts";
 
 const respawnHeight = 621.093;
@@ -24,17 +24,6 @@ export function cancelRespawn() {
     canRespawn = false;
 }
 
-let doLaserRespawn = true;
-
-export function setLaserRespawnEnabled(enabled: boolean) {
-    doLaserRespawn = enabled;
-}
-
-// for backwards compatibility
-export function setLaserWarningEnabled(enabled: boolean) {
-    doLaserRespawn = enabled;
-}
-
 const enable = () => {
     const states = api.stores.world.devices.states;
     const body = api.stores.phaser.mainCharacter.physics.getBody();
@@ -55,7 +44,7 @@ const enable = () => {
 
     api.patcher.after(physics, "physicsStep", () => {
         if(api.net.room.state.session.gameSession.phase === "results") return;
-        if(!doLaserRespawn || startImmunityActive) return;
+        if(startImmunityActive) return;
 
         const devicesInView = api.stores.phaser.scene.worldManager.devices.devicesInView;
         const lasers = devicesInView.filter(d => d.laser);
@@ -111,9 +100,7 @@ const enable = () => {
             hurtFrames++;
             if(hurtFrames >= maxHurtFrames) {
                 hurtFrames = 0;
-                body.rigidBody.setTranslation(summitCoords[lastCheckpointReached], true);
-                api.stores.me.isRespawning = true;
-                setTimeout(() => api.stores.me.isRespawning = false, 1000);
+                onLaserHit(body.rigidBody);
             }
         } else {
             hurtFrames = 0;
@@ -170,6 +157,22 @@ api.net.onLoad((_, gamemode) => {
     if(gamemode !== "dontlookdown") return;
     enable();
 });
+
+function onLaserHit(rb: RigidBody) {
+    switch (api.settings.dldLaserAction) {
+        case "respawn":
+            rb.setTranslation(summitCoords[lastCheckpointReached], true);
+            api.stores.me.isRespawning = true;
+            setTimeout(() => api.stores.me.isRespawning = false, 1000);
+            break;
+
+        case "warn":
+            api.notification.warning({
+                message: "Character ran into laser"
+            });
+            break;
+    }
+}
 
 function boundingBoxOverlap(start: Vector, end: Vector, topLeft: Vector, bottomRight: Vector) {
     // check if the line intersects with any of the bounding box sides

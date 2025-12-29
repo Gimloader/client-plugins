@@ -8,6 +8,7 @@
  * @optionalLib CommandLine | https://raw.githubusercontent.com/Blackhole927/gimkitmods/main/libraries/CommandLine/CommandLine.js
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
+ * @changelog Replace DLDUtils with Desynchronize dependency
  */
 
 // shared/consts.ts
