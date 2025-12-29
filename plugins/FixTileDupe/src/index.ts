@@ -14,7 +14,7 @@ api.net.onLoad(() => {
         }
     });
 
-    api.net.on("TERRAIN_CHANGES", (data: any) => {
+    api.net.on("TERRAIN_CHANGES", (data) => {
         for(const tile of data.removedTiles) {
             const [x, y] = tile.split("_").slice(1);
             placedTiles.delete(JSON.stringify({ x: +x, y: +y }));
