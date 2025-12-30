@@ -21,6 +21,13 @@ api.net.onLoad(() => {
     }
   });
   api.net.on("TERRAIN_CHANGES", (data) => {
+    if (data.initial) return;
+    setTimeout(() => {
+      for (const [x, y] of data.added.tiles) {
+        const tileString = `${x}_${y}`;
+        placedTiles.delete(tileString);
+      }
+    }, 500);
     for (const tile of data.removedTiles) {
       const tileString = tile.slice(tile.indexOf("_") + 1);
       placedTiles.delete(tileString);
