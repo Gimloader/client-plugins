@@ -12,7 +12,7 @@ const checkStart = () => {
 
         ui = document.createElement("div");
         ui.id = "AutoKick-UI";
-        GL.ReactDOM.createRoot(ui).render(GL.React.createElement(UI, { autoKicker }));
+        api.ReactDOM.createRoot(ui).render(api.React.createElement(UI, { autoKicker }));
         document.body.appendChild(ui);
 
         if(!uiShown) {

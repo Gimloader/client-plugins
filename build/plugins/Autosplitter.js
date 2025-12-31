@@ -2,13 +2,14 @@
  * @name Autosplitter
  * @description Automatically times speedruns for various gamemodes
  * @author TheLazySquid
- * @version 0.5.4
+ * @version 0.5.5
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Autosplitter.js
  * @webpage https://gimloader.github.io/plugins/autosplitter
  * @hasSettings true
  * @gamemode dontLookDown
  * @gamemode fishtopia
  * @gamemode oneWayOut
+ * @changelog Fixed One Way Out autosplitter not starting correctly
  */
 
 // node_modules/svelte/src/runtime/internal/utils.js
@@ -3301,13 +3302,13 @@ function instance8($$self, $$props, $$invalidate) {
   let data = dataObj;
   function save() {
     for (let gamemode of gamemodes) {
-      window.GL.storage.setValue("Autosplitter", `${gamemode}Data`, data[gamemode]);
+      api.storage.setValue(`${gamemode}Data`, data[gamemode]);
     }
   }
   function exportAll() {
     let json = {};
     for (let gamemode of gamemodes) {
-      let data2 = window.GL.storage.getValue("Autosplitter", `${gamemode}Data`);
+      let data2 = api.storage.getValue(`${gamemode}Data`);
       if (!data2) continue;
       json[gamemode] = data2;
     }
@@ -3318,7 +3319,7 @@ function instance8($$self, $$props, $$invalidate) {
       for (let gamemode of gamemodes) {
         if (!newData[gamemode]) continue;
         $$invalidate(1, data[gamemode] = newData[gamemode], data);
-        window.GL.storage.setValue("Autosplitter", `${gamemode}Data`, newData[gamemode]);
+        api.storage.setValue(`${gamemode}Data`, newData[gamemode]);
       }
     });
   }
@@ -3329,7 +3330,7 @@ function instance8($$self, $$props, $$invalidate) {
   function importMode() {
     readFile().then((newData) => {
       $$invalidate(1, data[activeTab] = newData, data);
-      window.GL.storage.setValue("Autosplitter", `${activeTab}Data`, newData);
+      api.storage.setValue(`${activeTab}Data`, newData);
     });
   }
   const click_handler = (tab) => $$invalidate(0, activeTab = tab);
@@ -3990,7 +3991,7 @@ var OneWayOutAutosplitter = class extends SplitsAutosplitter {
     const gameSession = api.net.room.state.session.gameSession;
     api.net.on("DEVICES_STATES_CHANGES", (msg) => {
       for (const change of msg.changes) {
-        if (msg.values[change[1][0]] === "apiOBAL_healthPercent") {
+        if (msg.values[change[1][0]] === "GLOBAL_healthPercent") {
           const device = api.stores.phaser.scene.worldManager.devices.getDeviceById(change[0]);
           if (device?.propOption.id === "barriers/scifi_barrier_1" && change[2][0] === 0) {
             this.addAttempt();

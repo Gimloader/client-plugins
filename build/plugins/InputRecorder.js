@@ -2,12 +2,13 @@
  * @name InputRecorder
  * @description Records your inputs in Don't Look Down
  * @author TheLazySquid
- * @version 0.3.0
+ * @version 0.3.2
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/InputRecorder.js
  * @webpage https://gimloader.github.io/plugins/inputrecorder
  * @reloadRequired ingame
- * @needsLib DLDUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/DLDUtils.js
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
+ * @changelog Replace DLDUtils with Desynchronize dependency
  */
 
 // plugins/InputRecorder/src/updateLasers.ts
@@ -24,6 +25,7 @@ api.net.on("DEVICES_STATES_CHANGES", (packet) => {
 function stopUpdatingLasers() {
   lasers = [];
 }
+var lastActive = null;
 function updateLasers(frame) {
   if (lasers.length === 0) {
     lasers = api.stores.phaser.scene.worldManager.devices.allDevices.filter((d) => d.laser);
@@ -31,6 +33,8 @@ function updateLasers(frame) {
   const states = api.stores.world.devices.states;
   const devices = api.stores.phaser.scene.worldManager.devices;
   const active = frame % 66 < 36;
+  if (lastActive === active) return;
+  lastActive = active;
   if (!states.has(lasers[0].id)) {
     lasers = api.stores.phaser.scene.worldManager.devices.allDevices.filter((d) => d.laser);
   }
@@ -48,19 +52,8 @@ function updateLasers(frame) {
 
 // plugins/InputRecorder/src/recorder.ts
 var Recorder = class {
-  physicsManager;
-  nativeStep;
-  physics;
-  rb;
-  inputManager;
-  getPhysicsInput;
-  startPos = { x: 0, y: 0 };
-  startState = "";
-  platformerPhysics = "";
-  frames = [];
-  recording = false;
-  playing = false;
   constructor(physicsManager) {
+    this.physicsManager = physicsManager;
     this.physicsManager = physicsManager;
     this.nativeStep = physicsManager.physicsStep;
     for (const id of physicsManager.bodies.staticBodies) {
@@ -68,11 +61,18 @@ var Recorder = class {
     }
     physicsManager.bodies.activeBodies.disableBody = () => {
     };
-    this.physics = api.stores.phaser.mainCharacter.physics;
-    this.rb = this.physics.getBody().rigidBody;
-    this.inputManager = api.stores.phaser.scene.inputManager;
-    this.getPhysicsInput = this.inputManager.getPhysicsInput;
   }
+  nativeStep;
+  physics = api.stores.phaser.mainCharacter.physics;
+  rb = this.physics.getBody().rigidBody;
+  inputManager = api.stores.phaser.scene.inputManager;
+  getPhysicsInput = this.inputManager.getPhysicsInput;
+  startPos = { x: 0, y: 0 };
+  startState = "";
+  platformerPhysics = "";
+  frames = [];
+  recording = false;
+  playing = false;
   toggleRecording() {
     if (this.recording) {
       const conf = window.confirm("Do you want to save the recording?");
@@ -113,8 +113,8 @@ var Recorder = class {
     a.click();
   }
   async playback(data) {
-    const dldUtils = api.lib("DLDUtils");
-    dldUtils.cancelRespawn();
+    const desync = api.plugin("Desynchronize");
+    desync.DLD.cancelRespawn();
     this.playing = true;
     this.platformerPhysics = JSON.stringify(GL.platformerPhysics);
     this.rb.setTranslation(data.startPos, true);

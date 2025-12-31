@@ -5,11 +5,12 @@ export default singleConfig({
     name: "DLDTAS",
     description: "Allows you to create TASes for Dont Look Down",
     author: "TheLazySquid",
-    version: "0.4.2",
+    version: "0.5.1",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js",
     webpage: "https://gimloader.github.io/plugins/dldtas",
-    libs: [
-        "DLDUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/DLDUtils.js"
+    needsPlugins: [
+        "Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js"
     ],
-    gamemodes: ["dontLookDown"]
+    gamemodes: ["dontLookDown"],
+    changelog: ["Remove usage of unneeded Desync functions"]
 });

@@ -2,17 +2,21 @@
  * @name Healthbars
  * @description Adds healthbars underneath players' names
  * @author TheLazySquid
- * @version 0.1.3
+ * @version 0.1.5
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Healthbars.js
  * @webpage https://gimloader.github.io/plugins/healthbars
  * @gamemode 2d
- * @changelog Fixed healthbars appearing when fragility is used
+ * @changelog Fixed potential crash when others join your game
  */
 
 // plugins/Healthbars/src/index.ts
 api.net.onLoad(() => {
   const options = JSON.parse(api.stores.world.mapOptionsJSON);
-  if (!options.showHealthAndShield || options.healthMode !== "healthAndShield") return;
+  let visible = options.showHealthAndShield && options.healthMode === "healthAndShield";
+  api.onStop(api.net.room.state.listen("mapSettings", (settingsJson) => {
+    const options2 = JSON.parse(settingsJson);
+    visible = options2.showHealthAndShield && options2.healthMode === "healthAndShield";
+  }, false));
   const { scene } = api.stores.phaser;
   const width = 130;
   const blue = 6853868;
@@ -26,9 +30,10 @@ api.net.onLoad(() => {
     const stateChar = api.net.room.state.characters.get(character.id);
     const hp = stateChar.health;
     const stopUpdate = api.patcher.after(character.nametag, "update", () => {
+      if (!character.nametag.tag) return;
       let { x, y, depth } = character.nametag.tag;
       y += 22;
-      bg.visible = health.visible = shield.visible = !stateChar.isRespawning;
+      bg.visible = health.visible = shield.visible = visible && !stateChar.isRespawning;
       health.width = hp.health / hp.maxHealth * width;
       shield.width = hp.shield / hp.maxShield * width;
       bg.setDepth(depth);

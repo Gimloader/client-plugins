@@ -115,7 +115,7 @@ export function makeFrameState() {
     return returnObj;
 }
 
-export function updateDeviceState(device: any, key: string, value: any) {
+export function updateDeviceState(device: Gimloader.Stores.Device, key: string, value: any) {
     const deviceId = device.id;
 
     const states = api.stores.world.devices.states;

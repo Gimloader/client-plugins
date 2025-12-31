@@ -12,7 +12,7 @@ api.openSettingsMenu(() => {
         confirmFunc = callback;
     };
 
-    api.UI.showModal(GL.React.createElement(UI, { uiChanger, onConfirm }), {
+    api.UI.showModal(api.React.createElement(UI, { uiChanger, onConfirm }), {
         id: "CustomUI",
         title: "UI Customization Options",
         style: "min-width: 400px",

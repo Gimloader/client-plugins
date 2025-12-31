@@ -444,7 +444,7 @@ function parseHex(hex) {
 
 // plugins/CustomUI/src/ui/themeCreator.tsx
 function ThemeCreator({ onChange }) {
-  const React = GL.React;
+  const React = api.React;
   const [theme, setTheme] = React.useState({
     name: "New theme",
     question: {
@@ -685,7 +685,7 @@ function ThemePreview(props) {
 
 // plugins/CustomUI/src/ui/themePicker.tsx
 function ThemePicker(props) {
-  const React = GL.React;
+  const React = api.React;
   const [themeType, setThemeType] = React.useState(props.themeType);
   const [themeIndex, setThemeIndex] = React.useState(props.themeIndex);
   const [customThemes, setCustomThemes] = React.useState(props.customThemes);
@@ -774,7 +774,7 @@ function ThemePicker(props) {
 
 // plugins/CustomUI/src/ui/ui.tsx
 function UI({ uiChanger: uiChanger2, onConfirm }) {
-  const React = GL.React;
+  const React = api.React;
   const [hideTopBar, setHideTopBar] = React.useState(uiChanger2.hideTopBar);
   const [useCustomTheme, setUseCustomTheme] = React.useState(uiChanger2.useCustomTheme);
   const [customThemes, setCustomThemes] = React.useState(uiChanger2.customThemes);
@@ -920,7 +920,7 @@ api.openSettingsMenu(() => {
   const onConfirm = (callback) => {
     confirmFunc = callback;
   };
-  api.UI.showModal(GL.React.createElement(UI, { uiChanger, onConfirm }), {
+  api.UI.showModal(api.React.createElement(UI, { uiChanger, onConfirm }), {
     id: "CustomUI",
     title: "UI Customization Options",
     style: "min-width: 400px",

@@ -4,7 +4,7 @@ import ThemePicker from "./themePicker";
 import ThemePreview from "./themePreview";
 
 export default function UI({ uiChanger, onConfirm }: { uiChanger: UIChanger; onConfirm: (callback: () => void) => void }) {
-    const React = GL.React;
+    const React = api.React;
 
     const [hideTopBar, setHideTopBar] = React.useState(uiChanger.hideTopBar);
     const [useCustomTheme, setUseCustomTheme] = React.useState(uiChanger.useCustomTheme);

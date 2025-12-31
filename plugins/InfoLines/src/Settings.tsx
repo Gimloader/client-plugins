@@ -1,7 +1,7 @@
 import type { InfoLines } from "./index";
 
 export default function Settings({ infoLines }: { infoLines: InfoLines }) {
-    const React = GL.React;
+    const React = api.React;
 
     const [lines, setLines] = React.useState(infoLines.lines);
     const [position, setPosition] = React.useState(infoLines.position);

@@ -8,6 +8,11 @@ export default singleConfig({
     version: "0.2.4",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Chat.js",
     webpage: "https://gimloader.github.io/plugins/chat",
+<<<<<<< HEAD
     libs: ["Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js"],
     gamemodes: ["2d"]
+=======
+    gamemodes: ["2d"],
+    changelog: ["Fixed chat colors not working when loaded mid-game"]
+>>>>>>> main
 });

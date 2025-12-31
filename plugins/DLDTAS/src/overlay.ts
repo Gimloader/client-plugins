@@ -11,13 +11,13 @@ window.addEventListener("resize", () => {
 
 api.onStop(() => canvas.remove());
 
-const propHitboxes: any[] = [];
+const propHitboxes: Phaser.GameObjects.Shape[] = [];
 
 export function initOverlay() {
     document.body.appendChild(canvas);
 
-    const scene = GL.stores.phaser.scene;
-    const props = scene.worldManager.devices.allDevices.filter((d: any) => d.deviceOption?.id === "prop");
+    const scene = api.stores.phaser.scene;
+    const props = scene.worldManager.devices.allDevices.filter((d) => d.deviceOption?.id === "prop");
 
     // create prop hitboxes
     for(const prop of props) {
@@ -81,10 +81,10 @@ export function showHitbox() {
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const physics = GL.stores.phaser.mainCharacter.physics;
+    const physics = api.stores.phaser.mainCharacter.physics;
     const collider = physics.getBody().collider;
     let { halfHeight, radius } = collider.shape as any;
-    const { x: cX, y: cY } = GL.stores.phaser.scene.cameras.cameras[0].midPoint;
+    const { x: cX, y: cY } = api.stores.phaser.scene.cameras.cameras[0].midPoint;
     let { x, y } = physics.getBody().rigidBody.translation();
     const { x: vX, y: vY } = physics.getBody().rigidBody.linvel();
 

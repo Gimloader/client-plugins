@@ -1,9 +1,5 @@
 import styles from "./styles.scss";
 import { createUI } from "./ui";
-import type * as DLDUtils from "libraries/DLDUtils/src";
-
-const dldUtils = api.lib("DLDUtils") as typeof DLDUtils;
-dldUtils.setLaserWarningEnabled(false);
 
 api.UI.addStyles(styles);
 

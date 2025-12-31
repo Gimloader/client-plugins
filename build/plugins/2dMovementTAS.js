@@ -1086,7 +1086,7 @@ var currentFrame = easyAccessWritable(0);
 
 // plugins/2dMovementTAS/src/tools.ts
 var active = false;
-GL.net.on("PHYSICS_STATE", (_, editFn) => {
+api.net.on("PHYSICS_STATE", (_, editFn) => {
   if (active) editFn(null);
 });
 window.expectedPoses = [];
@@ -1094,10 +1094,8 @@ var TASTools = class {
   constructor(frames, setFrames, startPos) {
     this.frames = frames;
     this.setFrames = setFrames;
-    this.physicsManager = GL.stores.phaser.scene.worldManager.physics;
-    this.nativeStep = this.physicsManager.physicsStep;
     active = true;
-    const mcState = GL.net.room.state.characters.get(GL.stores.phaser.mainCharacter.id);
+    const mcState = api.net.room.state.characters.get(api.stores.phaser.mainCharacter.id);
     mcState.$callbacks.movementSpeed = [];
     for (const slot of mcState.inventory.slots.values()) {
       slot.$callbacks = {};
@@ -1107,9 +1105,8 @@ var TASTools = class {
         item.$callbacks = {};
       });
     });
-    const mc = GL.stores.phaser.mainCharacter;
+    const mc = api.stores.phaser.mainCharacter;
     this.stopPlayback();
-    this.inputManager = GL.stores.phaser.scene.inputManager;
     this.rb = mc.physics.getBody().rigidBody;
     if (startPos) {
       this.startPos = startPos;
@@ -1117,11 +1114,10 @@ var TASTools = class {
     } else {
       this.startPos = this.rb.translation();
     }
-    this.movement = mc.movement;
     this.movement.state = Object.assign({}, defaultState);
-    const allDevices = GL.stores.phaser.scene.worldManager.devices.allDevices;
+    const allDevices = api.stores.phaser.scene.worldManager.devices.allDevices;
     this.tagEnergyDisplay = allDevices.find((d) => d.options?.text === '0/10,000 <item-image item="energy" />');
-    GL.net.on("DEVICES_STATES_CHANGES", (packet) => {
+    api.net.on("DEVICES_STATES_CHANGES", (packet) => {
       packet.changes.splice(0, packet.changes.length);
     });
     this.setEnergy(940);
@@ -1133,12 +1129,13 @@ var TASTools = class {
     });
   }
   startPos;
-  nativeStep;
-  physicsManager;
-  inputManager;
+  physicsManager = api.stores.phaser.scene.worldManager.physics;
+  nativeStep = this.physicsManager.physicsStep;
+  inputManager = api.stores.phaser.scene.inputManager;
   prevFrameStates = [];
-  rb;
-  movement;
+  mc = api.stores.phaser.mainCharacter;
+  rb = this.mc.physics.getBody().rigidBody;
+  movement = this.mc.movement;
   tagEnergyDisplay;
   energyPerQuestion = 5e3;
   energyUsage = 60;
@@ -1150,28 +1147,28 @@ var TASTools = class {
     if (this.tagEnergyDisplay) {
       updateDeviceState(
         this.tagEnergyDisplay,
-        `PLAYER_${GL.stores.phaser.mainCharacter.id}_text`,
+        `PLAYER_${api.stores.phaser.mainCharacter.id}_text`,
         `${amount}/${this.tagMaxEnergy} <item-image item="energy" />`
       );
     }
-    const energySlot = GL.stores.me.inventory.slots.get("energy");
+    const energySlot = api.stores.me.inventory.slots.get("energy");
     if (energySlot) energySlot.amount = amount;
   }
   getEnergy() {
-    return GL.stores.me.inventory.slots.get("energy")?.amount ?? 0;
+    return api.stores.me.inventory.slots.get("energy")?.amount ?? 0;
   }
   goBackToFrame(number) {
     for (let i = currentFrame.value - 1; i >= number; i--) {
       const frame2 = this.prevFrameStates[i];
       if (!frame2) continue;
-      if (frame2.undoDeviceChanges) frame2.undoDeviceChanges();
+      frame2.undoDeviceChanges?.();
     }
     const frame = this.prevFrameStates[number];
     if (!frame) return;
     currentFrame.set(number);
     this.rb.setTranslation(frame.position, true);
-    GL.stores.phaser.mainCharacter.physics.state = getFrameState(frame.state);
-    GL.stores.me.movementSpeed = frame.speed;
+    api.stores.phaser.mainCharacter.physics.state = getFrameState(frame.state);
+    api.stores.me.movementSpeed = frame.speed;
     this.setEnergy(frame.energy);
     this.energyPerQuestion = frame.epq;
     this.energyUsage = frame.energyUsage;
@@ -1195,8 +1192,8 @@ var TASTools = class {
     currentFrame.set(currentFrame.value + 1);
   }
   hideUI() {
-    GL.stores.me.currentAction = "none";
-    GL.stores.gui.none.screen = "home";
+    api.stores.me.currentAction = "none";
+    api.stores.gui.none.screen = "home";
   }
   updateDevices(frame) {
     for (const [countdown, purchase] of this.purchaseTimeouts) {
@@ -1206,7 +1203,7 @@ var TASTools = class {
       }
     }
     if (!frame.purchase) return;
-    const devices = GL.stores.phaser.scene.worldManager.devices;
+    const devices = api.stores.phaser.scene.worldManager.devices;
     const realPos = this.rb.translation();
     const device = devices.interactives.findClosestInteractiveDevice(devices.devicesInView, realPos.x * 100, realPos.y * 100);
     if (!device) return;
@@ -1248,13 +1245,13 @@ var TASTools = class {
           Math.floor(device.options.interactionDuration * 12) - 1,
           () => {
             updateDeviceState(device, "GLOBAL_active", false);
-            GL.notification.open({ message: `Purchased ${name}` });
+            api.notification.open({ message: `Purchased ${name}` });
             switch (name) {
               case "Energy Per Question Upgrade":
                 this.energyPerQuestion += 200;
                 break;
               case "Speed Upgrade":
-                GL.stores.me.movementSpeed += 46.5;
+                api.stores.me.movementSpeed += 46.5;
                 break;
               case "Efficiency Upgrade":
                 this.energyUsage -= 7;
@@ -1274,7 +1271,7 @@ var TASTools = class {
           true
         ]);
       } else {
-        GL.notification.open({ message: "Unable to handle what you're trying to purchase. If this is unexpected, please report it." });
+        api.notification.open({ message: "Unable to handle what you're trying to purchase. If this is unexpected, please report it." });
       }
     }
   }
@@ -1303,9 +1300,9 @@ var TASTools = class {
         this.setEnergy(this.getEnergy() + 120);
       }
     }
-    const devices = GL.stores.phaser.scene.worldManager.devices;
+    const devices = api.stores.phaser.scene.worldManager.devices;
     const teleporters = devices.devicesInView.filter((d) => d.deviceOption?.id === "teleporter");
-    const body = GL.stores.phaser.mainCharacter.body;
+    const body = api.stores.phaser.mainCharacter.body;
     for (const teleporter of teleporters) {
       if (teleporter.x > body.x - 90 && teleporter.x < body.x + 90 && teleporter.y > body.y - 85 && teleporter.y < body.y + 100) {
         const target = teleporter.options.targetGroup;
@@ -1320,14 +1317,14 @@ var TASTools = class {
   updateUI() {
     const frame = this.frames[currentFrame.value];
     if (frame.answer) {
-      GL.stores.phaser.scene.worldManager.devices.allDevices.find((d) => d.options?.openWhenReceivingOn === "answer questions")?.openDeviceUI();
+      api.stores.phaser.scene.worldManager.devices.allDevices.find((d) => d.options?.openWhenReceivingOn === "answer questions")?.openDeviceUI();
     } else {
-      GL.stores.me.currentAction = "none";
+      api.stores.me.currentAction = "none";
     }
     if (frame.purchase) {
-      GL.stores.gui.none.screen = "inventory";
+      api.stores.gui.none.screen = "inventory";
     } else {
-      GL.stores.gui.none.screen = "home";
+      api.stores.gui.none.screen = "home";
     }
   }
   getPhysicsInput(index = currentFrame.value) {
@@ -1354,7 +1351,7 @@ var TASTools = class {
       position: this.rb.translation(),
       state: makeFrameState(),
       energy: this.getEnergy(),
-      speed: GL.stores.me.movementSpeed,
+      speed: api.stores.me.movementSpeed,
       epq: this.energyPerQuestion,
       energyUsage: this.energyUsage,
       energyTimeout: this.energyTimeout,
@@ -1377,7 +1374,7 @@ var TASTools = class {
     };
   }
   stopPlayback() {
-    const mc = GL.stores.phaser.mainCharacter;
+    const mc = api.stores.phaser.mainCharacter;
     this.physicsManager.physicsStep = (delta) => {
       mc.physics.postUpdate(delta);
     };

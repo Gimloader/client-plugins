@@ -2,13 +2,14 @@
  * @name DLDUtils
  * @description Allows plugins to move characters without the server's permission
  * @author TheLazySquid
- * @version 0.3.9
+ * @version 0.3.10
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/DLDUtils.js
  * @webpage https://gimloader.github.io/libraries/dldutils/
  * @needsLib Desync | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Desync.js
  * @gamemode dontLookDown
- * @changelog Added webpage link
+ * @changelog Deprecated in favor of the Desynchronize plugin
  * @isLibrary true
+ * @deprecated This library has been superceded by the Desynchronize plugin
  */
 
 // shared/consts.ts
@@ -150,7 +151,7 @@ var enable = () => {
 };
 api.net.onLoad(() => {
   enable();
-  const desync = GL.lib("Desync");
+  const desync = api.lib("Desync");
   desync.enable();
 });
 function boundingBoxOverlap(start, end, topLeft, bottomRight) {

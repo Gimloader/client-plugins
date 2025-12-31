@@ -1,9 +1,9 @@
 import type { ISharedValues } from "../types";
 
-let lasers: any[] = [];
+let lasers: Gimloader.Stores.Device[] = [];
 let laserOffset: number = api.storage.getValue("laserOffset", 0);
 
-api.net.on("DEVICES_STATES_CHANGES", (packet: any) => {
+api.net.on("DEVICES_STATES_CHANGES", (packet) => {
     for(let i = 0; i < packet.changes.length; i++) {
         const device = packet.changes[i];
         if(lasers.some(l => l.id === device[0])) {
@@ -46,7 +46,7 @@ export function setLaserOffset(offset: number) {
 
 export function updateLasers(frame: number) {
     if(lasers.length === 0) {
-        lasers = api.stores.phaser.scene.worldManager.devices.allDevices.filter((d: any) => d.laser);
+        lasers = api.stores.phaser.scene.worldManager.devices.allDevices.filter((d) => d.laser);
     }
 
     // lasers turn on for 36 frames and off for 30 frames
@@ -55,7 +55,7 @@ export function updateLasers(frame: number) {
     const active = (frame + laserOffset) % 66 < 36;
 
     if(!states.has(lasers[0].id)) {
-        lasers = api.stores.phaser.scene.worldManager.devices.allDevices.filter((d: any) => d.laser);
+        lasers = api.stores.phaser.scene.worldManager.devices.allDevices.filter((d) => d.laser);
     }
 
     for(const laser of lasers) {

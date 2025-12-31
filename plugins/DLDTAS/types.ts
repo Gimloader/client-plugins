@@ -1,22 +1,21 @@
-export enum Keycodes {
-    LeftArrow = 37,
-    RightArrow = 39,
-    UpArrow = 38,
-    W = 87,
-    A = 65,
-    D = 68,
-    Space = 32
-}
+import type { Vector } from "@dimforge/rapier2d-compat";
 
 export interface IFrameInfo {
     right: boolean;
     left: boolean;
     up: boolean;
-    translation?: { x: number; y: number };
+    translation?: Vector;
     state?: string;
 }
 
 export interface ISharedValues {
     frames: IFrameInfo[];
     currentFrame: number;
+}
+
+export interface TAS {
+    frames: IFrameInfo[];
+    laserOffset: number;
+    startPos?: Vector;
+    startState?: string;
 }

@@ -13,7 +13,7 @@ export default function ThemePicker(props: {
     setCustomThemes: (themes: Theme[]) => void;
     activeTheme: Theme;
 }) {
-    const React = GL.React;
+    const React = api.React;
 
     const [themeType, setThemeType] = React.useState<"default" | "custom">(props.themeType);
     const [themeIndex, setThemeIndex] = React.useState(props.themeIndex);

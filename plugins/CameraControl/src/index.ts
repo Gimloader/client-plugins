@@ -52,7 +52,7 @@ for(const key of stopKeys) {
 
 let updateFreecam: ((dt: number) => void) | null = null;
 const updateScroll = (dt: number) => {
-    const camera = api.stores?.phaser?.scene?.cameras?.cameras?.[0];
+    const camera = api.stores.phaser.scene.cameras?.cameras?.[0];
     if(!camera) return;
 
     scrollMomentum *= .97 ** dt;
@@ -78,7 +78,7 @@ api.net.onLoad(() => {
     });
 });
 
-let scene: any, camera: any;
+let scene: Gimloader.Stores.Scene, camera: Phaser.Cameras.Scene2D.Camera;
 
 const getCanvasZoom = () => {
     const transform = api.stores.phaser.scene.game.canvas.style.transform;
@@ -121,19 +121,19 @@ function onWheel(e: WheelEvent) {
 
     if(camera.zoom === 0.1 && e.deltaY > 0 && api.settings.capZoomOut) return;
 
-    var oldzoom = camera.zoom;
-    var newzoom = oldzoom * (e.deltaY < 0 ? 1.1 : 0.9);
+    const oldzoom = camera.zoom;
+    const newzoom = oldzoom * (e.deltaY < 0 ? 1.1 : 0.9);
 
     const canvasZoom = getCanvasZoom();
-    var mouse_x = e.clientX / canvasZoom;
-    var mouse_y = e.clientY / canvasZoom;
+    const mouse_x = e.clientX / canvasZoom;
+    const mouse_y = e.clientY / canvasZoom;
 
-    var pixels_difference_w = (camera.width / oldzoom) - (camera.width / newzoom);
-    var side_ratio_x = (mouse_x - (camera.width / 2)) / camera.width;
+    const pixels_difference_w = (camera.width / oldzoom) - (camera.width / newzoom);
+    const side_ratio_x = (mouse_x - (camera.width / 2)) / camera.width;
     freecamPos.x += pixels_difference_w * side_ratio_x;
 
-    var pixels_difference_h = (camera.height / oldzoom) - (camera.height / newzoom);
-    var side_ratio_h = (mouse_y - (camera.height / 2)) / camera.height;
+    const pixels_difference_h = (camera.height / oldzoom) - (camera.height / newzoom);
+    const side_ratio_h = (mouse_y - (camera.height / 2)) / camera.height;
     freecamPos.y += pixels_difference_h * side_ratio_h;
 
     camera.setZoom(newzoom);
@@ -159,8 +159,7 @@ function stopFreecamming() {
     api.stores.me.inventory.activeInteractiveSlot = lastInteractiveSlot;
 
     camera.useBounds = true;
-    const charObj = scene.characterManager.characters
-        .get(api.stores.phaser.mainCharacter.id).body;
+    const charObj = api.stores.phaser.mainCharacter.body;
 
     scene.cameraHelper.startFollowingObject({ object: charObj });
     updateFreecam = null;
@@ -260,7 +259,7 @@ api.onStop(() => {
     window.removeEventListener("mousedown", setPointerDown);
     window.removeEventListener("mouseup", setPointerUp);
 
-    const cam = GL.stores?.phaser.scene.cameras.main;
+    const cam = api.stores?.phaser.scene.cameras.main;
     if(cam) cam.zoom = 1;
 
     // stop freecamming

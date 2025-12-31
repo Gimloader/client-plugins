@@ -24,7 +24,4 @@ jobs:
         run: bunx dprint check
 
       - name: Check types
-        run: bunx tsc
-
-      - name: Check svelte files
         run: bunx svelte-check

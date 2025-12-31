@@ -36,7 +36,7 @@ api.net.onLoad(() => {
     }
 });
 
-var calcGravity: ((id: string) => number) | null = null;
+let calcGravity: ((id: string) => number) | null = null;
 const calcGravCb = api.rewriter.createShared("CalculateGravity", (func: (id: string) => number) => {
     calcGravity = func;
 });
@@ -55,7 +55,7 @@ api.rewriter.addParseHook("App", (code) => {
 
 const wrapCalcMovementVelocity = api.rewriter.createShared("WrapCalcMovmentVel", (func: Function) => {
     // The code used in this has been taken from minified Gimkit code and therefore is nearly unreadable.
-    var n = { default: GL.stores },
+    var n = { default: api.stores },
         a = { default: { normal: 310 } },
         I = {
             PhysicsConstants: {

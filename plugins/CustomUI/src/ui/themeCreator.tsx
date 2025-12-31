@@ -1,7 +1,7 @@
 import type { Theme } from "../types";
 
 export default function ThemeCreator({ onChange }: { onChange: (theme: Theme) => void }) {
-    const React = GL.React;
+    const React = api.React;
 
     const [theme, setTheme] = React.useState<Theme>({
         name: "New theme",

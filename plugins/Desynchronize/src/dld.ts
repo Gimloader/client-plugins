@@ -1,7 +1,5 @@
+import type { Capsule, RigidBody, Vector } from "@dimforge/rapier2d-compat";
 import { summitCoords } from "$shared/consts";
-import type { Capsule, Vector } from "@dimforge/rapier2d-compat";
-import type * as Savestates from "plugins/Savestates/src";
-import type * as Desync from "libraries/Desync/src";
 
 const respawnHeight = 621.093;
 const floorHeight = 638.37;
@@ -9,16 +7,6 @@ let lastCheckpointReached = 0;
 let canRespawn = false;
 
 api.net.onLoad(() => {
-    const savestates = api.plugin("Savestates") as typeof Savestates | null;
-    if(savestates) {
-        savestates.onStateLoaded((summit: string | number) => {
-            if(typeof summit !== "number") return;
-
-            lastCheckpointReached = summit;
-            if(summit <= 1) canRespawn = false;
-        });
-    }
-
     api.net.room.state.session.gameSession.listen("phase", (phase: string) => {
         if(phase !== "results") return;
 
@@ -27,19 +15,13 @@ api.net.onLoad(() => {
     });
 });
 
+export function onSummitTeleport(summit: number) {
+    lastCheckpointReached = summit;
+    if(summit <= 1) canRespawn = false;
+}
+
 export function cancelRespawn() {
     canRespawn = false;
-}
-
-let doLaserRespawn = true;
-
-export function setLaserRespawnEnabled(enabled: boolean) {
-    doLaserRespawn = enabled;
-}
-
-// for backwards compatibility
-export function setLaserWarningEnabled(enabled: boolean) {
-    doLaserRespawn = enabled;
 }
 
 const enable = () => {
@@ -62,7 +44,7 @@ const enable = () => {
 
     api.patcher.after(physics, "physicsStep", () => {
         if(api.net.room.state.session.gameSession.phase === "results") return;
-        if(!doLaserRespawn || startImmunityActive) return;
+        if(startImmunityActive) return;
 
         const devicesInView = api.stores.phaser.scene.worldManager.devices.devicesInView;
         const lasers = devicesInView.filter(d => d.laser);
@@ -118,9 +100,7 @@ const enable = () => {
             hurtFrames++;
             if(hurtFrames >= maxHurtFrames) {
                 hurtFrames = 0;
-                body.rigidBody.setTranslation(summitCoords[lastCheckpointReached], true);
-                api.stores.me.isRespawning = true;
-                setTimeout(() => api.stores.me.isRespawning = false, 1000);
+                onLaserHit(body.rigidBody);
             }
         } else {
             hurtFrames = 0;
@@ -173,11 +153,26 @@ const enable = () => {
     physics.bodies.activeBodies.disableBody = () => {};
 };
 
-api.net.onLoad(() => {
+api.net.onLoad((_, gamemode) => {
+    if(gamemode !== "dontlookdown") return;
     enable();
-    const desync = GL.lib("Desync") as typeof Desync;
-    desync.enable();
 });
+
+function onLaserHit(rb: RigidBody) {
+    switch (api.settings.dldLaserAction) {
+        case "respawn":
+            rb.setTranslation(summitCoords[lastCheckpointReached], true);
+            api.stores.me.isRespawning = true;
+            setTimeout(() => api.stores.me.isRespawning = false, 1000);
+            break;
+
+        case "warn":
+            api.notification.warning({
+                message: "Character ran into laser"
+            });
+            break;
+    }
+}
 
 function boundingBoxOverlap(start: Vector, end: Vector, topLeft: Vector, bottomRight: Vector) {
     // check if the line intersects with any of the bounding box sides

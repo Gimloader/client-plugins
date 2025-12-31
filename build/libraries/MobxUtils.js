@@ -13,7 +13,7 @@
 var observerIntercepts = [];
 var wrapObserver = api.rewriter.createShared("ObserverWrapper", (func) => {
   return function() {
-    if (GL.libs.isEnabled("MobxUtils")) {
+    if (api.libs.isEnabled("MobxUtils")) {
       const str = arguments[0].toString();
       for (const intercept of observerIntercepts) {
         if (intercept.match(str)) {

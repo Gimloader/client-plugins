@@ -1,12 +1,8 @@
-export interface IFrameInfo {
-    angle: number | null;
-    jump: boolean;
-    _jumpKeyPressed: boolean;
-}
+import type { Vector } from "@dimforge/rapier2d-compat";
 
 export interface IRecording {
-    startPos: { x: number; y: number };
+    startPos: Vector;
     startState: string;
     platformerPhysics: string;
-    frames: IFrameInfo[];
+    frames: Gimloader.Stores.TickInput[];
 }

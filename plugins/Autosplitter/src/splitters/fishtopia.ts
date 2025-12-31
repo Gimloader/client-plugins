@@ -32,7 +32,7 @@ export default class FishtopiaAutosplitter extends SplitsAutosplitter {
             }
         });
 
-        api.net.on("send:MESSAGE_FOR_DEVICE", (e: any) => {
+        api.net.on("send:MESSAGE_FOR_DEVICE", (e) => {
             const id = e.deviceId;
             if(!id) return;
             const device = api.stores.phaser.scene.worldManager.devices.getDeviceById(id);
@@ -44,7 +44,7 @@ export default class FishtopiaAutosplitter extends SplitsAutosplitter {
             if(this.usedChannels.has(channel)) return;
             this.usedChannels.add(channel);
 
-            api.net.once("PHYSICS_STATE", (e: any) => {
+            api.net.once("PHYSICS_STATE", (e) => {
                 if(e.teleport) {
                     this.timer.split();
                 }

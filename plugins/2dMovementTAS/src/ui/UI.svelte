@@ -3,9 +3,10 @@
     import type { IFrame } from "../types";
     import { currentFrame } from "../stores";
     import TASTools from "../tools";
+    import type { Vector } from "@dimforge/rapier2d-compat";
 
     export let frames: IFrame[];
-    export let startPos: { x: number; y: number } | undefined;
+    export let startPos: Vector | undefined;
     let height: number;
     let offset = 0;
     $: rows = Math.floor(height / 26) - 1;

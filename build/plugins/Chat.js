@@ -7,6 +7,7 @@
  * @webpage https://gimloader.github.io/plugins/chat
  * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
+ * @changelog Fixed chat colors not working when loaded mid-game
  */
 
 // plugins/Chat/src/consts.ts
@@ -67,17 +68,10 @@ api.hotkeys.addConfigurableHotkey({
   UI.input?.focus();
 });
 var format = null;
-var formatCallback = api.rewriter.createShared("formatActivityFeed", (fmtFn) => {
-  format = fmtFn;
-});
-api.rewriter.addParseHook("App", (code) => {
-  const index = code.indexOf(">%SPACE_HERE%");
-  if (index === -1) return code;
-  const start = code.lastIndexOf("});const", index);
-  const end = code.indexOf("=", start);
-  const name = code.substring(start + 9, end);
-  code += `${formatCallback}?.(${name});`;
-  return code;
+api.rewriter.exposeVar("App", {
+  check: ">%SPACE_HERE",
+  find: /}\);const (\S+)=.=>.{0,175}>%SPACE_HERE%/,
+  callback: (formatter) => format = formatter
 });
 var UI = class _UI {
   static send;

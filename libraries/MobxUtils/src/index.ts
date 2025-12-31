@@ -9,7 +9,7 @@ let observerIntercepts: Intercept[] = [];
 
 const wrapObserver = api.rewriter.createShared("ObserverWrapper", (func: Function) => {
     return function(this: any) {
-        if(GL.libs.isEnabled("MobxUtils")) {
+        if(api.libs.isEnabled("MobxUtils")) {
             // this is our only good way of telling apart functions
             const str = arguments[0].toString();
             for(const intercept of observerIntercepts) {

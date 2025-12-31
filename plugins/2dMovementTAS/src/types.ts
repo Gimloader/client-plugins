@@ -1,3 +1,5 @@
+import type { Vector } from "@dimforge/rapier2d-compat";
+
 export interface IFrame {
     angle: number;
     moving: boolean;
@@ -12,7 +14,7 @@ export interface EasyAccessWritable<T> {
 }
 
 export interface IPreviousFrame {
-    position: { x: number; y: number };
+    position: Vector;
     state: string;
     energy: number;
     speed: number;

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Vector } from "@dimforge/rapier2d-compat";
     import type { IFrame } from "../types";
     import { uploadFile } from "../util";
     import UI from "./UI.svelte";
@@ -7,7 +8,7 @@
     let save = api.storage.getValue("save");
 
     let frames: IFrame[] = [];
-    let startPos: { x: number; y: number } | undefined;
+    let startPos: Vector | undefined;
 
     function continueTAS() {
         frames = save.frames;

@@ -6,7 +6,7 @@ api.hotkeys.addConfigurableHotkey({
         alt: true
     }
 }, () => {
-    const terrain = GL.stores?.me?.adding?.terrain;
+    const terrain = api.stores?.me?.adding?.terrain;
     if(!terrain) return;
 
     terrain.buildTerrainAsWall = !terrain.buildTerrainAsWall;

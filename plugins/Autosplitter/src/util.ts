@@ -1,3 +1,4 @@
+import type { Vector } from "@dimforge/rapier2d-compat";
 import type { DLDData, SplitsData } from "./types";
 
 export function getGamemodeData(gamemode: string) {
@@ -114,30 +115,23 @@ export function parseTime(time: string) {
     return parts[0] * 36e5 + parts[1] * 6e4 + parts[2] * 1e3;
 }
 
-export interface Area {
-    x: number;
-    y: number;
+export interface Area extends Vector {
     direction: "right" | "left";
 }
 
-export interface Coords {
-    x: number;
-    y: number;
-}
-
 export interface Box {
-    p1: Coords;
-    p2: Coords;
+    p1: Vector;
+    p2: Vector;
 }
 
-export function inArea(coords: Coords, area: Area) {
+export function inArea(coords: Vector, area: Area) {
     if(area.direction === "right" && coords.x < area.x) return false;
     if(area.direction === "left" && coords.x > area.x) return false;
     if(coords.y > area.y + 10) return false; // little bit of leeway
     return true;
 }
 
-export function inBox(coords: Coords, box: Box) {
+export function inBox(coords: Vector, box: Box) {
     return coords.x > box.p1.x && coords.x < box.p2.x
         && coords.y > box.p1.y && coords.y < box.p2.y;
 }

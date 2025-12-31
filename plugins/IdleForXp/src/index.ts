@@ -43,7 +43,7 @@ api.net.on("DEVICES_STATES_CHANGES", (event) => {
                 answerDeviceId = id;
             }
 
-            const playerId = GL.stores.phaser.mainCharacter.id;
+            const playerId = api.stores.phaser.mainCharacter.id;
 
             if(key === `PLAYER_${playerId}_currentQuestionId`) {
                 currentQuestionId = value;
@@ -53,7 +53,7 @@ api.net.on("DEVICES_STATES_CHANGES", (event) => {
 });
 
 api.net.onLoad(() => {
-    GL.notification.open({ message: "IdleForXp is active" });
+    api.notification.open({ message: "IdleForXp is active" });
     const answerInterval = setInterval(answerQuestion, 30000);
 
     api.onStop(() => clearInterval(answerInterval));

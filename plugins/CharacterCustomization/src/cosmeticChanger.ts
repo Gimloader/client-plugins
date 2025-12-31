@@ -1,6 +1,11 @@
 import atlas from "../assets/gim_atlas.txt";
 import json from "../assets/gim_json.txt";
 
+interface Skin {
+    id: string;
+    editStyles: Record<string, string>;
+}
+
 export default class CosmeticChanger {
     skinType: string = api.storage.getValue("skinType", "default");
     trailType: string = api.storage.getValue("trailType", "default");
@@ -8,7 +13,7 @@ export default class CosmeticChanger {
     trailId: string = api.storage.getValue("trailId", "");
     selectedStyles: Record<string, string> = api.storage.getValue("selectedStyles", {});
 
-    normalSkin: any;
+    normalSkin: Skin | null = null;
     allowNextSkin: boolean = false;
 
     normalTrail: string = "";
@@ -56,11 +61,11 @@ export default class CosmeticChanger {
         const jsonBlob = new Blob([json], { type: "application/json" });
         const jsonUrl = URL.createObjectURL(jsonBlob);
 
-        const fileTypes = (window as any).Phaser.Loader.FileTypes;
+        const fileTypes = Phaser.Loader.FileTypes;
         const imgFile = fileTypes.ImageFile;
 
         class newImgFile extends imgFile {
-            constructor(loader: any, key: string, url: string, config: any) {
+            constructor(loader: Phaser.Loader.LoaderPlugin, key: string, url: string, config: Phaser.Types.Loader.XHRSettingsObject) {
                 if(url === "blob:https://www.gimkit.com/") {
                     url = textureUrl;
                     key = `customSkin-atlas!${textureUrl.split("/").pop()!}`;
@@ -72,7 +77,7 @@ export default class CosmeticChanger {
 
         fileTypes.ImageFile = newImgFile;
 
-        const load = api.stores.phaser.scene.load as any;
+        const load: any = api.stores.phaser.scene.load;
         const jsonRes = load.spineJson("customSkin-data", jsonUrl);
         const atlasRes = load.spineAtlas("customSkin-atlas", atlasUrl);
 
@@ -202,7 +207,7 @@ export default class CosmeticChanger {
                     skin.updateSkin({ id: skinId, editStyles: this.selectedStyles });
                 }, 0);
             } else if(skinType === "default") {
-                skin.updateSkin(this.normalSkin);
+                skin.updateSkin(this.normalSkin!);
             } else {
                 skin.updateSkin({ id: "customSkin" });
             }
@@ -245,7 +250,7 @@ export default class CosmeticChanger {
 
         const skin = api.stores?.phaser?.mainCharacter?.skin;
         if(skin) {
-            skin.updateSkin(this.normalSkin);
+            skin.updateSkin(this.normalSkin!);
         }
 
         if(this.skinUrl) {

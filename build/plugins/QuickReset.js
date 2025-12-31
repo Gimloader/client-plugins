@@ -2,10 +2,11 @@
  * @name QuickReset
  * @description Quickly lets you restart 2d gamemodes
  * @author TheLazySquid
- * @version 0.3.0
+ * @version 0.3.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/QuickReset.js
  * @webpage https://gimloader.github.io/plugins/quickreset
  * @gamemode 2d
+ * @changelog Added Gimloader commands for resetting
  */
 
 // plugins/QuickReset/src/index.ts
@@ -24,19 +25,20 @@ api.hotkeys.addConfigurableHotkey({
     alt: true
   }
 }, () => {
-  if (api.net.type !== "Colyseus" || !GL.net.isHost) return;
+  if (api.net.type !== "Colyseus" || !api.net.isHost) return;
   api.net.send("END_GAME", void 0);
   api.net.send("RESTORE_MAP_EARLIER", void 0);
+  const gameSession = api.net.room.state.session.gameSession;
+  if (gameSession.phase === "countdown") return;
   ignoreNextStart = true;
   const interval = setInterval(() => {
     api.net.send("START_GAME", startMessage);
   }, 100);
-  const unsub = api.net.room.state.session.gameSession.listen("phase", (phase) => {
-    if (phase === "countdown") {
-      ignoreNextStart = false;
-      clearInterval(interval);
-      unsub();
-    }
+  const unsub = gameSession.listen("phase", (phase) => {
+    if (phase !== "countdown") return;
+    ignoreNextStart = false;
+    clearInterval(interval);
+    unsub();
   });
 });
 api.hotkeys.addConfigurableHotkey({
@@ -48,7 +50,7 @@ api.hotkeys.addConfigurableHotkey({
     alt: true
   }
 }, () => {
-  if (api.net.type !== "Colyseus" || !GL.net.isHost) return;
+  if (api.net.type !== "Colyseus" || !api.net.isHost) return;
   api.net.send("END_GAME", void 0);
   api.net.send("RESTORE_MAP_EARLIER", void 0);
 });

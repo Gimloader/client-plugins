@@ -2,7 +2,7 @@ import type AutoKicker from "./autokicker";
 import type { IBlacklistedName } from "./types";
 
 export default function UI({ autoKicker }: { autoKicker: AutoKicker }) {
-    const React = GL.React;
+    const React = api.React;
 
     const [kickDuplicated, setKickDuplicated] = React.useState(autoKicker.kickDuplicateNames);
     const [kickSkinless, setKickSkinless] = React.useState(autoKicker.kickSkinless);

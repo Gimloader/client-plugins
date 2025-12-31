@@ -16,14 +16,14 @@
 
     export function save() {
         for(let gamemode of gamemodes) {
-            (window as any).GL.storage.setValue("Autosplitter", `${gamemode}Data`, data[gamemode]);
+            api.storage.setValue(`${gamemode}Data`, data[gamemode]);
         }
     }
 
     function exportAll() {
         let json: Record<string, Record<string, any>> = {};
         for(let gamemode of gamemodes) {
-            let data = (window as any).GL.storage.getValue("Autosplitter", `${gamemode}Data`);
+            let data = api.storage.getValue(`${gamemode}Data`);
             if(!data) continue;
             json[gamemode] = data;
         }
@@ -38,7 +38,7 @@
                     if(!newData[gamemode]) continue;
                     data[gamemode] = newData[gamemode];
 
-                    (window as any).GL.storage.setValue("Autosplitter", `${gamemode}Data`, newData[gamemode]);
+                    api.storage.setValue(`${gamemode}Data`, newData[gamemode]);
                 }
             });
     }
@@ -52,7 +52,7 @@
         readFile()
             .then((newData) => {
                 data[activeTab] = newData;
-                (window as any).GL.storage.setValue("Autosplitter", `${activeTab}Data`, newData);
+                api.storage.setValue(`${activeTab}Data`, newData);
             });
     }
 </script>

@@ -27,6 +27,12 @@ export function generatePhysicsInput(frame: IFrameInfo, lastFrame?: IFrameInfo) 
     return { angle, jump, _jumpKeyPressed: frame.up };
 }
 
+export const getTickKeys = (input: Gimloader.Stores.TickInput) => ({
+    left: input.angle === 180 || input.angle === 225,
+    right: input.angle === 0 || input.angle === 315,
+    up: input.jump
+});
+
 export function save(frames: IFrameInfo[]) {
     const saveList: IFrameInfo[] = [];
     for(const frame of frames) {

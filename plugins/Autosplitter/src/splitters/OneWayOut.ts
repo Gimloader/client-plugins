@@ -16,9 +16,9 @@ export default class OneWayOutAutosplitter extends SplitsAutosplitter {
 
         const gameSession = api.net.room.state.session.gameSession;
 
-        api.net.on("DEVICES_STATES_CHANGES", (msg: any) => {
+        api.net.on("DEVICES_STATES_CHANGES", (msg) => {
             for(const change of msg.changes) {
-                if(msg.values[change[1][0]] === "apiOBAL_healthPercent") {
+                if(msg.values[change[1][0]] === "GLOBAL_healthPercent") {
                     const device = api.stores.phaser.scene.worldManager.devices.getDeviceById(change[0]);
                     if(device?.propOption.id === "barriers/scifi_barrier_1" && change[2][0] === 0) {
                         this.addAttempt();
@@ -29,7 +29,7 @@ export default class OneWayOutAutosplitter extends SplitsAutosplitter {
             }
         });
 
-        api.net.on("KNOCKOUT", (e: any) => {
+        api.net.on("KNOCKOUT", (e) => {
             if(e.name !== "Evil Plant") return;
             this.knockouts++;
 
@@ -59,7 +59,7 @@ export default class OneWayOutAutosplitter extends SplitsAutosplitter {
             }
         });
 
-        api.net.on("send:MESSAGE_FOR_DEVICE", (e: any) => {
+        api.net.on("send:MESSAGE_FOR_DEVICE", (e) => {
             const id = e?.deviceId;
             if(!id) return;
             const device = api.stores.phaser.scene.worldManager.devices.getDeviceById(id);

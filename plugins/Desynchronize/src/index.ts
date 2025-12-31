@@ -1,9 +1,19 @@
-let enabled = false;
-api.onStop(() => enabled = false);
+export * as DLD from "./dld";
 
-export function enable() {
-    enabled = true;
-}
+api.settings.create([
+    {
+        id: "dldLaserAction",
+        type: "dropdown",
+        options: [
+            { label: "Respawn Character", value: "respawn" },
+            { label: "Show Warning", value: "warn" },
+            { label: "Ignore", value: "ignore" }
+        ],
+        title: "On hitting a laser in DLD",
+        description: "What action should be taken when touching a laser in DLD?",
+        default: "warn"
+    }
+]);
 
 api.net.onLoad(() => {
     let allowNext = false;
@@ -23,7 +33,7 @@ api.net.onLoad(() => {
             allowNext = false;
             return;
         }
-        if(enabled) editFn(null);
+        editFn(null);
     });
 
     api.net.on("send:INPUT", (_, editFn) => editFn(null));

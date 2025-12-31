@@ -1,38 +1,27 @@
 import type { ISharedValues } from "../types";
-import { Keycodes } from "../types";
 import { getMoveSpeed } from "./index";
 import { initLasers, updateLasers } from "./updateLasers";
 import { defaultState, generatePhysicsInput } from "./util";
 
 export default class TASTools {
-    physicsManager: any;
-    nativeStep: Function;
-    physics: any;
-    rb: any;
-    inputManager: any;
-    values: ISharedValues;
-    updateTable: () => void;
-    getPhysicsInput: Function;
-    slowdownAmount: number = 1;
-    slowdownDelayedFrames: number = 0;
+    physicsManager = api.stores.phaser.scene.worldManager.physics;
+    nativeStep = this.physicsManager.physicsStep;
+    physics = api.stores.phaser.mainCharacter.physics;
+    rb = this.physics.getBody().rigidBody;
+    inputManager = api.stores.phaser.scene.inputManager;
+    getPhysicsInput = this.inputManager.getPhysicsInput;
+    slowdownAmount = 1;
+    slowdownDelayedFrames = 0;
+    // hardcoded, for now
+    startPos = { x: 33.87, y: 638.38 };
+    startState = defaultState;
 
-    constructor(values: ISharedValues, updateTable: () => void) {
-        this.physicsManager = api.stores.phaser.scene.worldManager.physics;
-        this.values = values;
-        this.updateTable = updateTable;
-
-        this.nativeStep = this.physicsManager.physicsStep;
+    constructor(public values: ISharedValues, public updateTable: () => void) {
         this.physicsManager.physicsStep = (dt: number) => {
             // only rerender, rather than running the physics loop
             api.stores.phaser.mainCharacter.physics.postUpdate(dt);
         };
         api.onStop(() => this.physicsManager.physicsStep = this.nativeStep);
-
-        this.physics = api.stores.phaser.mainCharacter.physics;
-        this.rb = this.physics.getBody().rigidBody;
-        this.inputManager = api.stores.phaser.scene.inputManager;
-
-        this.getPhysicsInput = this.inputManager.getPhysicsInput;
         api.onStop(() => this.inputManager.getPhysicsInput = this.getPhysicsInput);
 
         this.reset();
@@ -40,13 +29,9 @@ export default class TASTools {
     }
 
     reset() {
-        // hardcoded, for now
-        this.rb.setTranslation({
-            "x": 33.87,
-            "y": 638.38
-        }, true);
+        this.rb.setTranslation(this.startPos, true);
 
-        this.physics.state = JSON.parse(defaultState);
+        this.physics.state = JSON.parse(this.startState);
     }
 
     startPlaying() {
@@ -101,12 +86,14 @@ export default class TASTools {
             if(this.slowdownDelayedFrames < this.slowdownAmount) return;
             this.slowdownDelayedFrames = 0;
 
-            const keys: Set<number> = this.inputManager.keyboard.heldKeys;
+            // Incorrect type
+            const keys = this.inputManager.keyboard.heldKeys as unknown as Set<number>;
+            const { KeyCodes } = Phaser.Input.Keyboard;
 
             // log the inputs and translation/state
-            const left = keys.has(Keycodes.LeftArrow) || keys.has(Keycodes.A);
-            const right = keys.has(Keycodes.RightArrow) || keys.has(Keycodes.D);
-            const up = keys.has(Keycodes.UpArrow) || keys.has(Keycodes.W) || keys.has(Keycodes.Space);
+            const left = keys.has(KeyCodes.LEFT) || keys.has(KeyCodes.A);
+            const right = keys.has(KeyCodes.RIGHT) || keys.has(KeyCodes.D);
+            const up = keys.has(KeyCodes.UP) || keys.has(KeyCodes.W) || keys.has(KeyCodes.SPACE);
 
             const translation = this.rb.translation();
             const state = JSON.stringify(this.physics.state);

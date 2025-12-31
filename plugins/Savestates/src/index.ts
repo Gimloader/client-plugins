@@ -1,7 +1,6 @@
 import { summitCoords } from "$shared/consts";
-import type * as DLDUtils from "libraries/DLDUtils/src";
 
-const dldUtils = api.lib("DLDUtils") as typeof DLDUtils;
+const desync = api.plugin("Desynchronize");
 
 const defaultState =
     '{"gravity":0.001,"velocity":{"x":0,"y":0},"movement":{"direction":"none","xVelocity":0,"accelerationTicks":0},"jump":{"isJumping":false,"jumpsLeft":2,"jumpCounter":0,"jumpTicks":118,"xVelocityAtJumpStart":0},"forces":[],"grounded":true,"groundedTicks":0,"lastGroundedAngle":0}';
@@ -14,12 +13,13 @@ const tp = (summit: number) => {
     const physics = api.stores.phaser.mainCharacter.physics;
     const rb = physics.getBody().rigidBody;
 
-    dldUtils.cancelRespawn();
+    desync.DLD.cancelRespawn();
 
     rb.setTranslation(summitCoords[summit], true);
     physics.state = JSON.parse(defaultState);
 
     stateLoadCallbacks.forEach(cb => cb(summit));
+    desync.DLD.onSummitTeleport(summit);
 };
 
 let lastPos = api.storage.getValue("lastPos", null);
@@ -48,7 +48,7 @@ const loadState = () => {
 
     if(!lastPos || !lastState) return;
 
-    dldUtils.cancelRespawn();
+    desync.DLD.cancelRespawn();
     rb.setTranslation(lastPos, true);
     physics.state = JSON.parse(lastState);
 
