@@ -1,4 +1,4 @@
-import minifiedNavigator from "$shared/minifiedNavigator";
+import { getSection, insert, replaceSection } from "$shared/rewritingUtils";
 import makeGame from "./makeGame";
 
 type Hooks = Record<string, string | number>;
@@ -11,14 +11,15 @@ api.rewriter.addParseHook("App", code => {
     if(!code.includes("Note that deleting a map will also remove it from Creative Discovery")) return code;
 
     // copy the rename item and morph it into a link item
-    let linkItem = minifiedNavigator(code, "{menu:{items:[", ",{key:`delete").inBetween;
-    const idString = minifiedNavigator(linkItem, "rename-${", "}").inBetween;
+    let linkItem = getSection(code, "{menu:{items:[@,{key:`delete");
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: This is just part of the util
+    const idString = getSection(linkItem, "rename-${@}");
     linkItem = linkItem.replace("rename", "link");
     linkItem = linkItem.replace("Rename", "Copy Edit Link");
     linkItem = linkItem.replace("fa-edit", "fa-link");
-    linkItem = minifiedNavigator(linkItem, ".stopPropagation(),", "}").replaceEntireBetween(`${copyUrlWrapper}?.(${idString})`);
+    linkItem = replaceSection(linkItem, ".stopPropagation(),@}", `${copyUrlWrapper}?.(${idString})`);
 
-    return minifiedNavigator(code, ["danger:!0,onClick:", "()}}"]).insertAfterStart(`,${linkItem}`);
+    return insert(code, "danger:!0,onClick:#()}}@#", `,${linkItem}`);
 });
 
 const setLink = (path: string) => history.pushState({}, "", path);
@@ -121,18 +122,16 @@ const closePopupWrapper = api.rewriter.createShared("ClosePopupWrapper", cleanup
 api.rewriter.addParseHook("App", code => {
     // Updates the hooks
     if(code.includes("We're showing this hook for testing purposes")) {
-        const name = minifiedNavigator(code, "state:", ",").inBetween;
+        const name = getSection(code, "state:@,");
         // Updates the hooks
-        return minifiedNavigator(code, ".readOnly]);").insertAfterStart(`${setHooksWrapper}?.(${name});`);
+        return insert(code, ".readOnly]);@#", `${setHooksWrapper}?.(${name});`);
     } else if(code.includes("The more reliable, the easier it is for crewmates to win")) {
-        const gameVarName = minifiedNavigator(code, ".name,description:", ".").inBetween;
+        const gameVarName = getSection(code, ".name,description:@.");
 
         // Triggers manual popup closes
-        code = minifiedNavigator(code, [")=>{const[", "{"]).insertAfterStart(`${closePopupWrapper}?.();`);
+        code = insert(code, ")=>{const[#=()=>{@#", `${closePopupWrapper}?.();`);
         // Updates the selected game
-        return minifiedNavigator(code, '"EXPERIENCE_HOOKS"})').insertAfterStart(
-            `;${setMapDataWrapper}?.(${gameVarName}?._id, ${gameVarName}?.name);`
-        );
+        return insert(code, '"EXPERIENCE_HOOKS"})@}', `;${setMapDataWrapper}?.(${gameVarName}?._id, ${gameVarName}?.name);`);
     }
     return code;
 });
