@@ -12,48 +12,51 @@
  * @changelog Added settings for if the gamemode selector should be updating the tab link and title
  */
 
-// shared/minifiedNavigator.ts
-function minifiedNavigator(code, start, end) {
-  if (typeof start === "string") start = [start];
-  if (typeof end === "string") end = [end];
+// shared/rewritingUtils.ts
+function getRange(code, match) {
+  const snippets = [];
+  let currentWord = "";
+  for (const letter of match) {
+    if (letter === "#") {
+      snippets.push(currentWord);
+      currentWord = "";
+    } else if (letter === "@") {
+      snippets.push(currentWord);
+      currentWord = "";
+      snippets.push("@");
+    } else {
+      currentWord += letter;
+    }
+  }
+  snippets.push(currentWord);
+  const matchIndex = snippets.indexOf("@");
+  const snippetsBeforeMatch = snippets.slice(0, matchIndex);
   let startIndex = 0;
-  if (start) {
-    for (const snippet of start) {
-      startIndex = code.indexOf(snippet, startIndex) + snippet.length;
-    }
+  for (const snippet of snippetsBeforeMatch) {
+    startIndex = code.indexOf(snippet, startIndex) + snippet.length;
   }
-  let endIndex = startIndex;
-  if (end) {
-    for (const snippet in end) {
-      endIndex = code.indexOf(end[snippet], endIndex);
-      if (Number(snippet) < end.length - 1) endIndex += end[snippet].length;
-    }
-  } else {
-    endIndex = code.length - 1;
-  }
-  const startCode = code.slice(0, startIndex);
-  const endCode = code.substring(endIndex);
+  const snippetAfterMatch = snippets[matchIndex + 1];
+  const endIndex = code.indexOf(snippetAfterMatch, startIndex);
   return {
     startIndex,
-    endIndex,
-    inBetween: code.slice(startIndex, endIndex),
-    insertAfterStart(string) {
-      return startCode + string + this.inBetween + endCode;
-    },
-    insertBeforeEnd(string) {
-      return startCode + this.inBetween + string + endCode;
-    },
-    replaceEntireBetween(string) {
-      return startCode + string + endCode;
-    },
-    replaceBetween(...args) {
-      const changedMiddle = this.inBetween.replace(...args);
-      return this.replaceEntireBetween(changedMiddle);
-    },
-    deleteBetween() {
-      return startCode + endCode;
-    }
+    endIndex
   };
+}
+function getSection(code, match) {
+  const { startIndex, endIndex } = getRange(code, match);
+  return code.slice(startIndex, endIndex);
+}
+function replaceSection(code, match, replacement) {
+  const { startIndex, endIndex } = getRange(code, match);
+  const start = code.slice(0, startIndex);
+  const end = code.slice(endIndex);
+  return start + replacement + end;
+}
+function insert(code, match, string) {
+  const { endIndex } = getRange(code, match);
+  const start = code.slice(0, endIndex);
+  const end = code.slice(endIndex);
+  return start + string + end;
 }
 
 // plugins/GamemodeLinks/src/makeGame.ts
@@ -146,13 +149,13 @@ var copyUrlWrapper = api.rewriter.createShared("CopyURLWrapper", (id2) => {
 });
 api.rewriter.addParseHook("App", (code) => {
   if (!code.includes("Note that deleting a map will also remove it from Creative Discovery")) return code;
-  let linkItem = minifiedNavigator(code, "{menu:{items:[", ",{key:`delete").inBetween;
-  const idString = minifiedNavigator(linkItem, "rename-${", "}").inBetween;
+  let linkItem = getSection(code, "{menu:{items:[@,{key:`delete");
+  const idString = getSection(linkItem, "rename-${@}");
   linkItem = linkItem.replace("rename", "link");
   linkItem = linkItem.replace("Rename", "Copy Edit Link");
   linkItem = linkItem.replace("fa-edit", "fa-link");
-  linkItem = minifiedNavigator(linkItem, ".stopPropagation(),", "}").replaceEntireBetween(`${copyUrlWrapper}?.(${idString})`);
-  return minifiedNavigator(code, ["danger:!0,onClick:", "()}}"]).insertAfterStart(`,${linkItem}`);
+  linkItem = replaceSection(linkItem, ".stopPropagation(),@}", `${copyUrlWrapper}?.(${idString})`);
+  return insert(code, "danger:!0,onClick:#()}}@#", `,${linkItem}`);
 });
 var setLink = (path) => history.pushState({}, "", path);
 var { pathname } = location;
@@ -235,14 +238,12 @@ var setMapDataWrapper = api.rewriter.createShared("SetMapDataWrapper", (id2, nam
 var closePopupWrapper = api.rewriter.createShared("ClosePopupWrapper", cleanup);
 api.rewriter.addParseHook("App", (code) => {
   if (code.includes("We're showing this hook for testing purposes")) {
-    const name = minifiedNavigator(code, "state:", ",").inBetween;
-    return minifiedNavigator(code, ".readOnly]);").insertAfterStart(`${setHooksWrapper}?.(${name});`);
+    const name = getSection(code, "state:@,");
+    return insert(code, ".readOnly]);@#", `${setHooksWrapper}?.(${name});`);
   } else if (code.includes("The more reliable, the easier it is for crewmates to win")) {
-    const gameVarName = minifiedNavigator(code, ".name,description:", ".").inBetween;
-    code = minifiedNavigator(code, [")=>{const[", "{"]).insertAfterStart(`${closePopupWrapper}?.();`);
-    return minifiedNavigator(code, '"EXPERIENCE_HOOKS"})').insertAfterStart(
-      `;${setMapDataWrapper}?.(${gameVarName}?._id, ${gameVarName}?.name);`
-    );
+    const gameVarName = getSection(code, ".name,description:@.");
+    code = insert(code, ")=>{const[#=()=>{@#", `${closePopupWrapper}?.();`);
+    return insert(code, '"EXPERIENCE_HOOKS"})@}', `;${setMapDataWrapper}?.(${gameVarName}?._id, ${gameVarName}?.name);`);
   }
   return code;
 });
