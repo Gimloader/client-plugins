@@ -49,29 +49,12 @@ function insert(code, match, string) {
   return start + string + end;
 }
 
-// node_modules/@gimloader/build/dist/index.js
-function singleConfig(config) {
-  return config;
-}
-
-// plugins/KitTimesPlayed/gimloader.config.ts
-var gimloader_config_default = singleConfig({
-  input: "src/index.ts",
-  name: "KitTimesPlayed",
-  description: "Shows the number of times that kits have been played on the kits screen",
-  author: "retrozy",
-  downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/KitTimesPlayed.js",
-  webpage: "https://gimloader.github.io/plugins/kittimesplayed",
-  version: "0.1.0",
-  reloadRequired: "notingame"
-});
-
 // plugins/KitTimesPlayed/src/index.ts
 api.rewriter.addParseHook("Container", (code) => {
   if (!code.includes("There are no kits in this folder.")) return code;
   const name = getSection(code, ".createdAt?`Created ${#(@.");
   const playCountString = `${name}.playCount`;
   const playCountInfo = `, \${${playCountString} ? \`played \${${playCountString}} \${${playCountString} === 1 ? "time" : "times"}\` : "never played"}`;
-  const isEnabledString = `GL.plugins.isEnabled("${gimloader_config_default.name}")`;
+  const isEnabledString = `GL.plugins.isEnabled("KitTimesPlayed")`;
   return insert(code, ".createdAt).fromNow()}@`", `\${${isEnabledString} ? \`${playCountInfo}\` : ""}`);
 });
