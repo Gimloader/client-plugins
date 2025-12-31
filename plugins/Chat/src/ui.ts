@@ -25,10 +25,7 @@ let format: Formatter | null = null;
 api.rewriter.exposeVar("App", {
     check: ">%SPACE_HERE",
     find: /}\);const (\S+)=.=>.{0,175}>%SPACE_HERE%/,
-    callback: (formatter) => {
-        format = formatter;
-        console.log("FORMATTER:", format);
-    }
+    callback: (formatter) => format = formatter
 });
 
 export default class UI {
