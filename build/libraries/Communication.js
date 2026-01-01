@@ -78,12 +78,17 @@ var Runtime = class {
   messageStates = /* @__PURE__ */ new Map();
   messageQue = [];
   callbacks = /* @__PURE__ */ new Map();
+  alternation = 0;
+  // Make sure single-angle messages aren't dropped
+  async sendBytes(bytes) {
+    await this.sendAngle(bytesToFloat([...bytes, this.alternation]));
+    this.alternation === 0 ? this.alternation = 1 : this.alternation = 0;
+  }
   async sendAngle(angle) {
     api.net.send("AIMING", { angle });
     await new Promise((res) => this.angleChangeRes = res);
   }
   async sendRealAngle() {
-    if (this.pendingAngle === 0) return;
     await this.sendAngle(this.pendingAngle);
   }
   handleAngle(char, angle) {
@@ -181,11 +186,11 @@ api.net.onLoad(() => {
     }
   }, false));
   api.onStop(api.net.room.state.characters.onAdd((char) => {
-    const cleanupChar = char.projectiles.listen("aimAngle", (angle) => {
-      runtime.handleAngle(char, angle);
-    });
-    api.onStop(cleanupChar);
-    api.onStop(char.onRemove(cleanupChar));
+    api.onStop(
+      char.projectiles.listen("aimAngle", (angle) => {
+        runtime.handleAngle(char, angle);
+      })
+    );
   }));
 });
 var Communication = class _Communication {
@@ -243,12 +248,11 @@ var Communication = class _Communication {
     switch (typeof message) {
       case "number": {
         if (isUint8(message)) {
-          const bytes = [
+          await runtime.sendBytes([
             ...this.identifier,
             1 /* TransmittingByteInteger */,
             message
-          ];
-          await runtime.sendAngle(bytesToFloat(bytes));
+          ]);
         } else {
           const messages = encodeStringMessage(this.identifier, 3 /* TransmittingNumber */, String(message));
           await runtime.sendMessages(messages);
@@ -261,12 +265,11 @@ var Communication = class _Communication {
         break;
       }
       case "boolean": {
-        const bytes = [
+        await runtime.sendBytes([
           ...this.identifier,
           0 /* TransmittingBoolean */,
           message ? 1 : 0
-        ];
-        await runtime.sendAngle(bytesToFloat(bytes));
+        ]);
         break;
       }
       case "object": {

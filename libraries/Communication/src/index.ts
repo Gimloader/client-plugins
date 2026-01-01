@@ -1,6 +1,6 @@
 import { Op } from "./consts";
 import Runtime from "./core";
-import { bytesToFloat, encodeStringMessage, getIdentifier, isUint8 } from "./encoding";
+import { encodeStringMessage, getIdentifier, isUint8 } from "./encoding";
 import type { EnabledStateCallback, Message, OnMessageCallback } from "./types";
 
 let runtime: Runtime;
@@ -24,16 +24,16 @@ api.net.onLoad(() => {
     }, false));
 
     api.onStop(api.net.room.state.characters.onAdd((char: any) => {
-        const cleanupChar = char.projectiles.listen("aimAngle", (angle: number) => {
-            runtime.handleAngle(char, angle);
-        });
-        api.onStop(cleanupChar);
-        api.onStop(char.onRemove(cleanupChar));
+        api.onStop(
+            char.projectiles.listen("aimAngle", (angle: number) => {
+                runtime.handleAngle(char, angle);
+            })
+        );
     }));
 });
 
 export default class Communication {
-    private identifier: number[];
+    private readonly identifier: number[];
 
     private get identifierString() {
         return this.identifier.join(",");
@@ -103,12 +103,11 @@ export default class Communication {
         switch (typeof message) {
             case "number": {
                 if(isUint8(message)) {
-                    const bytes = [
+                    await runtime.sendBytes([
                         ...this.identifier,
                         Op.TransmittingByteInteger,
                         message
-                    ];
-                    await runtime.sendAngle(bytesToFloat(bytes));
+                    ]);
                 } else {
                     const messages = encodeStringMessage(this.identifier, Op.TransmittingNumber, String(message));
                     await runtime.sendMessages(messages);
@@ -121,12 +120,11 @@ export default class Communication {
                 break;
             }
             case "boolean": {
-                const bytes = [
+                await runtime.sendBytes([
                     ...this.identifier,
                     Op.TransmittingBoolean,
                     message ? 1 : 0
-                ];
-                await runtime.sendAngle(bytesToFloat(bytes));
+                ]);
                 break;
             }
             case "object": {

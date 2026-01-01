@@ -16,4 +16,9 @@ export interface MessageState {
     op: Op;
 }
 
+export interface PendingMessage {
+    messages: number[];
+    resolve?: () => void;
+}
+
 export type EnabledStateCallback = (immediate: boolean) => void;

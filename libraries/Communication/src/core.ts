@@ -1,19 +1,16 @@
 import { Op } from "./consts";
-import { floatToBytes } from "./encoding";
-import type { Message, MessageState, OnMessageCallback } from "./types";
+import { bytesToFloat, floatToBytes } from "./encoding";
+import type { Message, MessageState, OnMessageCallback, PendingMessage } from "./types";
 
 export default class Runtime {
     private sending = false;
     private pendingAngle = 0;
     private ignoreNextAngle = false;
     private angleChangeRes: (() => void) | null = null;
-    private messageStates = new Map<string, MessageState>();
-    private messageQue: {
-        messages: number[];
-        resolve?: () => void;
-    }[] = [];
-
-    callbacks = new Map<string, OnMessageCallback[]>();
+    private readonly messageStates = new Map<string, MessageState>();
+    private readonly messageQue: PendingMessage[] = [];
+    readonly callbacks = new Map<string, OnMessageCallback[]>();
+    private alternation: 0 | 1 = 0;
 
     constructor(private myId: string) {
         api.net.on("send:AIMING", (message, editFn) => {
@@ -29,13 +26,18 @@ export default class Runtime {
         });
     }
 
+    // Make sure single-angle messages aren't dropped
+    async sendBytes(bytes: number[]) {
+        await this.sendAngle(bytesToFloat([...bytes, this.alternation]));
+        this.alternation === 0 ? this.alternation = 1 : this.alternation = 0;
+    }
+
     async sendAngle(angle: number) {
         api.net.send("AIMING", { angle });
         await new Promise<void>(res => this.angleChangeRes = res);
     }
 
     private async sendRealAngle() {
-        if(this.pendingAngle === 0) return;
         await this.sendAngle(this.pendingAngle);
     }
 
