@@ -203,8 +203,8 @@ api.hotkeys.addConfigurableHotkey({
 }, playBackRecording);
 api.net.onLoad(() => {
   recorder = new Recorder(api.stores.phaser.scene.worldManager.physics);
-  api.commands.addCommand({ text: "Start Recording" }, startRecording);
-  api.commands.addCommand({ text: "Play Back Recording" }, playBackRecording);
+  api.commands.addCommand({ text: () => `InputRecorder: ${recorder.recording ? "Stop Recording" : "Start Recording"}` }, startRecording);
+  api.commands.addCommand({ text: "InputRecorder: Play Back Recording" }, playBackRecording);
 });
 function getRecorder() {
   return recorder;

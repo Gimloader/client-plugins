@@ -140,7 +140,7 @@ api.net.onLoad(() => {
   });
   window.addEventListener("wheel", onWheel);
   api.commands.addCommand({
-    text: "Set Zoom",
+    text: "CameraControl: Set Zoom",
     keywords: ["camera", "zoom"]
   }, async (context) => {
     camera.zoom = await context.number({ title: "Zoom" });
