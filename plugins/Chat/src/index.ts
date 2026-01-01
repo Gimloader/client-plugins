@@ -1,4 +1,3 @@
-import type Communication from "libraries/Communication/src";
 import { Ops } from "./consts";
 import UI from "./ui";
 
@@ -12,7 +11,7 @@ api.net.onLoad(() => {
     });
 
     const me = api.net.room.state.characters.get(myId);
-    const Comms = api.lib("Communication") as typeof Communication;
+    const Comms = api.lib("Communication");
     const comms = new Comms("Chat");
     api.onStop(comms.destroy);
 
