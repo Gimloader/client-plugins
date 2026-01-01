@@ -58,12 +58,12 @@ api.hotkeys.addConfigurableHotkey({
 
 api.net.onLoad(() => {
     api.commands.addCommand({
-        text: "Restart Game",
+        text: "QuickReset: Restart Game",
         keywords: ["reset"]
     }, reset);
 
     api.commands.addCommand({
-        text: "Exit to Lobby",
+        text: "QuickReset: Exit to Lobby",
         keywords: ["restart", "reset"]
     }, exitToLobby);
 });

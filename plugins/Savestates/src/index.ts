@@ -102,7 +102,7 @@ api.net.onLoad(() => {
         });
     }
 
-    api.commands.addCommand({ text: "Create State" }, async context => {
+    api.commands.addCommand({ text: "Savestates: Create State" }, async context => {
         const name = await getNewName(context, "Name");
 
         const { pos, state } = getPhysicsState();
@@ -113,7 +113,7 @@ api.net.onLoad(() => {
     api.commands.addCommand({
         text() {
             const { selectedState } = storage();
-            return `Select State (Currently Selected: ${selectedState})`;
+            return `Savestates: Select State (Currently Selected: ${selectedState})`;
         },
         hidden() {
             const { savedStates } = storage();
@@ -123,10 +123,8 @@ api.net.onLoad(() => {
         const { savedStates, selectedState } = storage();
 
         const selected = await context.select({
-            title: `State (${selectedState} is currently selected)`,
-            options: savedStates
-                .filter(state => state.name !== selectedState)
-                .map(({ name }) => ({ label: name, value: name }))
+            title: `Savestates: State (${selectedState} is currently selected)`,
+            options: savedStates.map(({ name }) => ({ label: name, value: name }))
         });
 
         setSelected(selected);
@@ -135,7 +133,7 @@ api.net.onLoad(() => {
     });
 
     api.commands.addCommand({
-        text: "Delete State",
+        text: "Savestates: Delete State",
         hidden() {
             const { savedStates } = storage();
             return savedStates.length === 0;
@@ -155,7 +153,7 @@ api.net.onLoad(() => {
     });
 
     api.commands.addCommand({
-        text: "Rename State",
+        text: "Savestates: Rename State",
         hidden() {
             const { savedStates } = storage();
             return savedStates.length === 0;
@@ -174,12 +172,19 @@ api.net.onLoad(() => {
         const newName = await getNewName(context, "New Name");
         renameState(selected, newName);
     });
+
+    api.commands.addCommand({
+        text() {
+            const { selectedState } = storage();
+            return `Savestates: Save Selected State${selectedState && ` (${selectedState})`}`;
+        }
+    }, saveState);
 });
 
 // saving
 api.hotkeys.addConfigurableHotkey({
     category: "Savestates",
-    title: "Save Current State",
+    title: "Savestates: Save Current State",
     default: {
         key: "Comma",
         alt: true
@@ -189,7 +194,7 @@ api.hotkeys.addConfigurableHotkey({
 // loading
 api.hotkeys.addConfigurableHotkey({
     category: "Savestates",
-    title: "Load Last State",
+    title: "Savestates: Load Last State",
     default: {
         key: "Period",
         alt: true
@@ -200,7 +205,7 @@ api.hotkeys.addConfigurableHotkey({
 for(let i = 0; i <= 6; i++) {
     api.hotkeys.addConfigurableHotkey({
         category: "Savestates",
-        title: `Teleport to Summit ${i}`,
+        title: `Savestates: Teleport to Summit ${i}`,
         default: {
             key: `Digit${i}`,
             shift: true,
