@@ -2,11 +2,11 @@
  * @name CrazyFlag
  * @description Make the flags in capture the flag or creative swing like crazy!
  * @author TheLazySquid
- * @version 1.3.0
+ * @version 1.3.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/CrazyFlag.js
  * @webpage https://gimloader.github.io/plugins/crazyflag
- * @reloadRequired ingame
  * @hasSettings true
+ * @changelog No longer requires a reload to enable mid-game
  */
 
 // plugins/CrazyFlag/src/index.ts
@@ -36,21 +36,15 @@ function applySettings() {
 }
 api.settings.listen("swingSpeed", applySettings);
 api.settings.listen("swingAmount", applySettings);
-var constsCallback = api.rewriter.createShared("FlagConsts", (consts) => {
-  const defaults = Object.assign({}, consts);
-  flagConsts = consts;
-  applySettings();
-  api.onStop(() => {
-    if (!flagConsts) return;
-    Object.assign(flagConsts, defaults);
-  });
-});
-api.rewriter.addParseHook("FlagDevice", (code) => {
-  const index = code.indexOf("FlagOriginX:");
-  if (index === -1) return code;
-  const end = code.lastIndexOf("=", index);
-  const start = code.lastIndexOf(",", end);
-  const name = code.slice(start + 1, end);
-  code += `${constsCallback}?.(${name});`;
-  return code;
+api.rewriter.exposeVar("FlagDevice", {
+  find: /(\w)={FlagOriginX/,
+  callback: (consts) => {
+    const defaults = Object.assign({}, consts);
+    flagConsts = consts;
+    applySettings();
+    api.onStop(() => {
+      if (!flagConsts) return;
+      Object.assign(flagConsts, defaults);
+    });
+  }
 });

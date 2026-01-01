@@ -2,11 +2,11 @@
  * @name Healthbars
  * @description Adds healthbars underneath players' names
  * @author TheLazySquid
- * @version 0.1.4
+ * @version 0.1.5
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Healthbars.js
  * @webpage https://gimloader.github.io/plugins/healthbars
  * @gamemode 2d
- * @changelog Fixed healthbars not updating when health mode changes in Creative
+ * @changelog Fixed potential crash when others join your game
  */
 
 // plugins/Healthbars/src/index.ts
@@ -30,6 +30,7 @@ api.net.onLoad(() => {
     const stateChar = api.net.room.state.characters.get(character.id);
     const hp = stateChar.health;
     const stopUpdate = api.patcher.after(character.nametag, "update", () => {
+      if (!character.nametag.tag) return;
       let { x, y, depth } = character.nametag.tag;
       y += 22;
       bg.visible = health.visible = shield.visible = visible && !stateChar.isRespawning;

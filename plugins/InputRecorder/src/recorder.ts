@@ -1,7 +1,6 @@
 import type { Vector } from "@dimforge/rapier2d-compat";
 import type { IRecording } from "../types";
 import { stopUpdatingLasers, updateLasers } from "./updateLasers";
-import type * as Desynchronize from "plugins/Desynchronize/src";
 
 export default class Recorder {
     nativeStep: Gimloader.Stores.PhysicsManager["physicsStep"];
@@ -84,7 +83,7 @@ export default class Recorder {
     }
 
     async playback(data: IRecording) {
-        const desync = api.plugin("Desynchronize") as typeof Desynchronize;
+        const desync = api.plugin("Desynchronize");
         desync.DLD.cancelRespawn();
 
         this.playing = true;

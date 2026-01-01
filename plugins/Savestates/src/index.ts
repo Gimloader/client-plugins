@@ -1,8 +1,7 @@
 import { summitCoords } from "$shared/consts";
-import type * as Desynchronize from "plugins/Desynchronize/src";
 import { createState, deleteState, getSelectedState, renameState, setSelected, storage, updateState, upgradeFromLegacy } from "./states";
 
-const desync = api.plugin("Desynchronize") as typeof Desynchronize;
+const desync = api.plugin("Desynchronize");
 
 const defaultState =
     '{"gravity":0.001,"velocity":{"x":0,"y":0},"movement":{"direction":"none","xVelocity":0,"accelerationTicks":0},"jump":{"isJumping":false,"jumpsLeft":2,"jumpCounter":0,"jumpTicks":118,"xVelocityAtJumpStart":0},"forces":[],"grounded":true,"groundedTicks":0,"lastGroundedAngle":0}';

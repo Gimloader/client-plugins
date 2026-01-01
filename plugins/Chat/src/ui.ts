@@ -21,20 +21,11 @@ api.hotkeys.addConfigurableHotkey({
 // Get the formatter that is used for formatting the activity feed
 type Formatter = (message: { inputText: string }) => string;
 let format: Formatter | null = null;
-const formatCallback = api.rewriter.createShared("formatActivityFeed", (fmtFn: Formatter) => {
-    format = fmtFn;
-});
 
-api.rewriter.addParseHook("App", (code) => {
-    const index = code.indexOf(">%SPACE_HERE%");
-    if(index === -1) return code;
-
-    const start = code.lastIndexOf("});const", index);
-    const end = code.indexOf("=", start);
-    const name = code.substring(start + 9, end);
-    code += `${formatCallback}?.(${name});`;
-
-    return code;
+api.rewriter.exposeVar("App", {
+    check: ">%SPACE_HERE",
+    find: /}\);const (\S+)=.=>.{0,175}>%SPACE_HERE%/,
+    callback: (formatter) => format = formatter
 });
 
 export default class UI {
