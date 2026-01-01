@@ -56,9 +56,11 @@ api.net.onLoad(() => {
         }
     });
 
-    window.addEventListener("beforeunload", () => {
+    function sendLeave() {
+        if(!Comms.enabled) return;
         comms.send(Ops.Leave);
-    });
+    }
 
-    api.onStop(() => comms.send(Ops.Leave));
+    window.addEventListener("beforeunload", sendLeave);
+    api.onStop(sendLeave);
 });

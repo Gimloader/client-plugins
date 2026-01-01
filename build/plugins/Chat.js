@@ -7,7 +7,6 @@
  * @webpage https://gimloader.github.io/plugins/chat
  * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Fixed chat colors not working when loaded mid-game
  */
 
 // plugins/Chat/src/consts.ts
@@ -204,8 +203,10 @@ api.net.onLoad(() => {
       UI.addMessage("The chat is no longer active");
     }
   });
-  window.addEventListener("beforeunload", () => {
+  function sendLeave() {
+    if (!Comms.enabled) return;
     comms.send(1 /* Leave */);
-  });
-  api.onStop(() => comms.send(1 /* Leave */));
+  }
+  window.addEventListener("beforeunload", sendLeave);
+  api.onStop(sendLeave);
 });
