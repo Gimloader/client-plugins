@@ -19,18 +19,23 @@ api.net.onLoad(() => {
         UI.addMessage(`${me.name}: ${text}`, true);
     });
 
+    const joinedPlayers = new Set<string>();
+
     comms.onMessage<string | Ops>((message, char) => {
         if(typeof message === "string") {
             UI.addMessage(`${char.name}: ${message}`);
         } else {
             if(message === Ops.Join) {
+                if(joinedPlayers.has(char.id)) return;
                 UI.addMessage(`${char.name} connected to the chat`);
+                joinedPlayers.add(char.id);
             } else if(message === Ops.Leave) {
                 UI.addMessage(`${char.name} left the chat`);
             } else if(message === Ops.Greet) {
                 UI.addMessage(`${char.name} connected to the chat`);
                 // resend that we have joined whenever someone joins the chat mid-game
                 comms.send(Ops.Join);
+                joinedPlayers.add(char.id);
             }
         }
     });

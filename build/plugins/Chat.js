@@ -173,17 +173,21 @@ api.net.onLoad(() => {
     await comms.send(text);
     UI.addMessage(`${me.name}: ${text}`, true);
   });
+  const joinedPlayers = /* @__PURE__ */ new Set();
   comms.onMessage((message, char) => {
     if (typeof message === "string") {
       UI.addMessage(`${char.name}: ${message}`);
     } else {
       if (message === 0 /* Join */) {
+        if (joinedPlayers.has(char.id)) return;
         UI.addMessage(`${char.name} connected to the chat`);
+        joinedPlayers.add(char.id);
       } else if (message === 1 /* Leave */) {
         UI.addMessage(`${char.name} left the chat`);
       } else if (message === 2 /* Greet */) {
         UI.addMessage(`${char.name} connected to the chat`);
         comms.send(0 /* Join */);
+        joinedPlayers.add(char.id);
       }
     }
   });
