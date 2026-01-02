@@ -6,19 +6,11 @@ api.net.on("send:START_GAME", (message) => {
     startMessage = message;
 });
 
-api.hotkeys.addConfigurableHotkey({
-    category: "Quick Reset",
-    title: "Reset",
-    preventDefault: false,
-    default: {
-        key: "KeyR",
-        alt: true
-    }
-}, () => {
+export function reset() {
     if(api.net.type !== "Colyseus" || !api.net.isHost) return;
 
-    api.net.send("END_GAME", undefined);
-    api.net.send("RESTORE_MAP_EARLIER", undefined);
+    api.net.send("END_GAME");
+    api.net.send("RESTORE_MAP_EARLIER");
 
     const gameSession = api.net.room.state.session.gameSession;
     if(gameSession.phase === "countdown") return;
@@ -35,7 +27,24 @@ api.hotkeys.addConfigurableHotkey({
         clearInterval(interval);
         unsub();
     });
-});
+}
+
+export function exitToLobby() {
+    if(api.net.type !== "Colyseus" || !api.net.isHost) return;
+
+    api.net.send("END_GAME");
+    api.net.send("RESTORE_MAP_EARLIER");
+}
+
+api.hotkeys.addConfigurableHotkey({
+    category: "Quick Reset",
+    title: "Reset",
+    preventDefault: false,
+    default: {
+        key: "KeyR",
+        alt: true
+    }
+}, reset);
 
 api.hotkeys.addConfigurableHotkey({
     category: "Quick Reset",
@@ -45,9 +54,16 @@ api.hotkeys.addConfigurableHotkey({
         key: "KeyL",
         alt: true
     }
-}, () => {
-    if(api.net.type !== "Colyseus" || !api.net.isHost) return;
+}, exitToLobby);
 
-    api.net.send("END_GAME", undefined);
-    api.net.send("RESTORE_MAP_EARLIER", undefined);
+api.net.onLoad(() => {
+    api.commands.addCommand({
+        text: "QuickReset: Restart Game",
+        keywords: ["reset"]
+    }, reset);
+
+    api.commands.addCommand({
+        text: "QuickReset: Exit to Lobby",
+        keywords: ["restart", "reset"]
+    }, exitToLobby);
 });

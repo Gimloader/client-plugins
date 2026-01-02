@@ -71,8 +71,7 @@ api.net.onLoad(() => {
   api.settings.listen("jumps", (jumps) => updateMapOption("maxJumps", jumps));
   api.settings.listen("jumpheight", (height) => updateMapOption("jumpHeight", height));
   api.settings.listen("speed", (speed) => {
-    const dldTas2 = api.plugin("DLDTAS");
-    dldTas2?.setMoveSpeed(api.settings.speed);
+    dldTas?.setMoveSpeed(api.settings.speed);
     api.stores.me.movementSpeed = speed;
   });
 });

@@ -7,7 +7,7 @@ export default singleConfig({
     author: "TheLazySquid",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/QuickReset.js",
     webpage: "https://gimloader.github.io/plugins/quickreset",
-    version: "0.3.1",
+    version: "0.4.0",
     changelog: ["Added Gimloader commands for resetting"],
     gamemodes: ["2d"]
 });

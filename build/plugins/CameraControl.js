@@ -2,11 +2,12 @@
  * @name CameraControl
  * @description Lets you freely move and zoom your camera
  * @author TheLazySquid
- * @version 0.6.0
+ * @version 0.7.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/CameraControl.js
  * @optionalLib CommandLine | https://raw.githubusercontent.com/Blackhole927/gimkitmods/main/libraries/CommandLine/CommandLine.js
  * @hasSettings true
  * @gamemode 2d
+ * @changelog Added Gimloader commands for setting camera zoom
  */
 
 // plugins/CameraControl/src/index.ts
@@ -138,6 +139,12 @@ api.net.onLoad(() => {
     return changedZoom;
   });
   window.addEventListener("wheel", onWheel);
+  api.commands.addCommand({
+    text: "CameraControl: Set Zoom",
+    keywords: ["camera", "zoom"]
+  }, async (context) => {
+    camera.zoom = await context.number({ title: "Zoom" });
+  });
 });
 var lastInteractiveSlot = 0;
 function stopFreecamming() {
