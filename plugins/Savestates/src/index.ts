@@ -123,7 +123,7 @@ api.net.onLoad(() => {
         const { savedStates, selectedState } = storage();
 
         const selected = await context.select({
-            title: `Savestates: State (${selectedState} is currently selected)`,
+            title: `State (${selectedState} is currently selected)`,
             options: savedStates.map(({ name }) => ({ label: name, value: name }))
         });
 
@@ -179,12 +179,19 @@ api.net.onLoad(() => {
             return `Savestates: Save Selected State${selectedState && ` (${selectedState})`}`;
         }
     }, saveState);
+
+    api.commands.addCommand({
+        text() {
+            const { selectedState } = storage();
+            return `Savestates: Load Selected State${selectedState && ` (${selectedState})`}`;
+        }
+    }, loadState);
 });
 
 // saving
 api.hotkeys.addConfigurableHotkey({
     category: "Savestates",
-    title: "Savestates: Save Current State",
+    title: "Save Current State",
     default: {
         key: "Comma",
         alt: true
@@ -194,7 +201,7 @@ api.hotkeys.addConfigurableHotkey({
 // loading
 api.hotkeys.addConfigurableHotkey({
     category: "Savestates",
-    title: "Savestates: Load Last State",
+    title: "Load Last State",
     default: {
         key: "Period",
         alt: true
