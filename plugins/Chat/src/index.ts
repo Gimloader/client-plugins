@@ -13,7 +13,6 @@ api.net.onLoad(() => {
     const me = api.net.room.state.characters.get(myId);
     const Comms = api.lib("Communication");
     const comms = new Comms("Chat");
-    api.onStop(comms.destroy);
 
     UI.init(async (text: string) => {
         await comms.send(text);
@@ -62,5 +61,8 @@ api.net.onLoad(() => {
     }
 
     window.addEventListener("beforeunload", sendLeave);
-    api.onStop(sendLeave);
+    api.onStop(() => {
+        sendLeave();
+        comms.destroy();
+    });
 });

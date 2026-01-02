@@ -38,6 +38,7 @@ export default class Runtime {
     }
 
     private async sendRealAngle() {
+        if(!this.pendingAngle) return;
         await this.sendAngle(this.pendingAngle);
     }
 

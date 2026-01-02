@@ -89,6 +89,7 @@ var Runtime = class {
     await new Promise((res) => this.angleChangeRes = res);
   }
   async sendRealAngle() {
+    if (!this.pendingAngle) return;
     await this.sendAngle(this.pendingAngle);
   }
   handleAngle(char, angle) {
