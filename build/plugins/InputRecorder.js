@@ -2,13 +2,13 @@
  * @name InputRecorder
  * @description Records your inputs in Don't Look Down
  * @author TheLazySquid
- * @version 0.3.2
+ * @version 0.4.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/InputRecorder.js
  * @webpage https://gimloader.github.io/plugins/inputrecorder
  * @reloadRequired ingame
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
- * @changelog Replace DLDUtils with Desynchronize dependency
+ * @changelog Added Gimloader commands
  */
 
 // plugins/InputRecorder/src/updateLasers.ts
@@ -149,14 +149,7 @@ var Recorder = class {
 
 // plugins/InputRecorder/src/index.ts
 var recorder;
-api.hotkeys.addConfigurableHotkey({
-  category: "Input Recorder",
-  title: "Start Recording",
-  default: {
-    key: "KeyR",
-    alt: true
-  }
-}, () => {
+function startRecording() {
   if (!recorder) return;
   if (recorder.playing) {
     api.notification.open({ message: "Cannot record while playing", type: "error" });
@@ -166,15 +159,8 @@ api.hotkeys.addConfigurableHotkey({
     api.hotkeys.releaseAll();
   }
   recorder.toggleRecording();
-});
-api.hotkeys.addConfigurableHotkey({
-  category: "Input Recorder",
-  title: "Play Back Recording",
-  default: {
-    key: "KeyB",
-    alt: true
-  }
-}, () => {
+}
+function playBackRecording() {
   if (!recorder) return;
   if (recorder.recording) {
     api.notification.open({ message: "Cannot playback while recording", type: "error" });
@@ -198,9 +184,27 @@ api.hotkeys.addConfigurableHotkey({
     };
     input.click();
   }
-});
+}
+api.hotkeys.addConfigurableHotkey({
+  category: "Input Recorder",
+  title: "Start Recording",
+  default: {
+    key: "KeyR",
+    alt: true
+  }
+}, startRecording);
+api.hotkeys.addConfigurableHotkey({
+  category: "Input Recorder",
+  title: "Play Back Recording",
+  default: {
+    key: "KeyB",
+    alt: true
+  }
+}, playBackRecording);
 api.net.onLoad(() => {
   recorder = new Recorder(api.stores.phaser.scene.worldManager.physics);
+  api.commands.addCommand({ text: () => `InputRecorder: ${recorder.recording ? "Stop Recording" : "Start Recording"}` }, startRecording);
+  api.commands.addCommand({ text: "InputRecorder: Play Back Recording" }, playBackRecording);
 });
 function getRecorder() {
   return recorder;

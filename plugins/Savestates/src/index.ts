@@ -1,4 +1,5 @@
 import { summitCoords } from "$shared/consts";
+import { createState, deleteState, getSelectedState, renameState, setSelected, storage, updateState, upgradeFromLegacy } from "./states";
 
 const desync = api.plugin("Desynchronize");
 
@@ -7,6 +8,9 @@ const defaultState =
 
 type StateLoadCallback = (summit: number | "custom") => void;
 let stateLoadCallbacks: StateLoadCallback[] = [];
+
+// Upgrade from v0.4.2
+upgradeFromLegacy();
 
 const tp = (summit: number) => {
     if(!gameLoaded) return;
@@ -22,40 +26,59 @@ const tp = (summit: number) => {
     desync.DLD.onSummitTeleport(summit);
 };
 
-let lastPos = api.storage.getValue("lastPos", null);
-let lastState = api.storage.getValue("lastState", null);
+function getPhysics() {
+    const { physics } = api.stores.phaser.mainCharacter;
+    return { physics, rb: physics.getBody().rigidBody };
+}
+
+function getPhysicsState() {
+    const { physics, rb } = getPhysics();
+    return { pos: rb.translation(), state: JSON.stringify(physics.state) };
+}
+
 let gameLoaded = false;
 
 const saveState = () => {
     if(!gameLoaded) return;
-    const physics = api.stores.phaser.mainCharacter.physics;
-    const rb = physics.getBody().rigidBody;
 
-    lastPos = rb.translation();
-    lastState = JSON.stringify(physics.state);
+    const { pos, state } = getPhysicsState();
 
-    // save to storage
-    api.storage.setValue("lastPos", lastPos);
-    api.storage.setValue("lastState", lastState);
-
-    api.notification.open({ message: "State Saved", duration: 0.75 });
+    const name = updateState(pos, state);
+    api.notification.open({ message: `State Saved to ${name}`, duration: 0.75 });
 };
 
 const loadState = () => {
     if(!gameLoaded) return;
-    const physics = api.stores.phaser.mainCharacter.physics;
-    const rb = physics.getBody().rigidBody;
 
-    if(!lastPos || !lastState) return;
+    const selectedState = getSelectedState();
+    if(!selectedState) {
+        api.notification.error({ message: "You don't have any states, create a state with Gimloader commands", duration: 2 });
+        return;
+    }
+
+    const { rb, physics } = getPhysics();
 
     desync.DLD.cancelRespawn();
-    rb.setTranslation(lastPos, true);
-    physics.state = JSON.parse(lastState);
+    rb.setTranslation(selectedState.pos, true);
+    physics.state = JSON.parse(selectedState.state);
 
-    api.notification.open({ message: "State Loaded", duration: 0.75 });
+    api.notification.open({ message: `State Loaded: ${selectedState.name}`, duration: 0.75 });
 
     stateLoadCallbacks.forEach(cb => cb("custom"));
 };
+
+async function getNewName(context: Gimloader.CommandContext, initial: string) {
+    let name = await context.string({ title: initial });
+
+    while(true) {
+        const { savedStates } = storage();
+
+        if(savedStates.every(s => s.name !== name)) break;
+        name = await context.string({ title: `"${name}" is already taken!` });
+    }
+
+    return name;
+}
 
 api.net.onLoad(() => {
     gameLoaded = true;
@@ -78,6 +101,91 @@ api.net.onLoad(() => {
             commandLine.removeCommand("load");
         });
     }
+
+    api.commands.addCommand({ text: "Savestates: Create State" }, async context => {
+        const name = await getNewName(context, "Name");
+
+        const { pos, state } = getPhysicsState();
+        createState(name, pos, state);
+        api.notification.open({ message: `State Created and Selected: ${name}`, duration: 0.75 });
+    });
+
+    api.commands.addCommand({
+        text() {
+            const { selectedState } = storage();
+            return `Savestates: Select State (Currently Selected: ${selectedState})`;
+        },
+        hidden() {
+            const { savedStates } = storage();
+            return savedStates.length < 2;
+        }
+    }, async context => {
+        const { savedStates, selectedState } = storage();
+
+        const selected = await context.select({
+            title: `State (${selectedState} is currently selected)`,
+            options: savedStates.map(({ name }) => ({ label: name, value: name }))
+        });
+
+        setSelected(selected);
+        loadState();
+        api.notification.open({ message: `Switched to State: ${selected}` });
+    });
+
+    api.commands.addCommand({
+        text: "Savestates: Delete State",
+        hidden() {
+            const { savedStates } = storage();
+            return savedStates.length === 0;
+        }
+    }, async context => {
+        const { savedStates, selectedState } = storage();
+
+        const selected = await context.select({
+            title: "State",
+            options: savedStates
+                .filter(state => state.name !== selectedState)
+                .map(({ name }) => ({ label: name, value: name }))
+        });
+
+        deleteState(selected);
+        api.notification.open({ message: `Deleted State ${selected}` });
+    });
+
+    api.commands.addCommand({
+        text: "Savestates: Rename State",
+        hidden() {
+            const { savedStates } = storage();
+            return savedStates.length === 0;
+        }
+    }, async context => {
+        const { savedStates, selectedState } = storage();
+
+        const selected = await context.select({
+            title: "State",
+            options: savedStates.map(({ name }) => ({
+                label: name === selectedState ? `${name} (selected state)` : name,
+                value: name
+            }))
+        });
+
+        const newName = await getNewName(context, "New Name");
+        renameState(selected, newName);
+    });
+
+    api.commands.addCommand({
+        text() {
+            const { selectedState } = storage();
+            return `Savestates: Save Selected State${selectedState && ` (${selectedState})`}`;
+        }
+    }, saveState);
+
+    api.commands.addCommand({
+        text() {
+            const { selectedState } = storage();
+            return `Savestates: Load Selected State${selectedState && ` (${selectedState})`}`;
+        }
+    }, loadState);
 });
 
 // saving
@@ -104,7 +212,7 @@ api.hotkeys.addConfigurableHotkey({
 for(let i = 0; i <= 6; i++) {
     api.hotkeys.addConfigurableHotkey({
         category: "Savestates",
-        title: `Teleport to Summit ${i}`,
+        title: `Savestates: Teleport to Summit ${i}`,
         default: {
             key: `Digit${i}`,
             shift: true,

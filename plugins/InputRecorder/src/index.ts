@@ -2,14 +2,7 @@ import Recorder from "./recorder";
 
 let recorder: Recorder;
 
-api.hotkeys.addConfigurableHotkey({
-    category: "Input Recorder",
-    title: "Start Recording",
-    default: {
-        key: "KeyR",
-        alt: true
-    }
-}, () => {
+function startRecording() {
     if(!recorder) return;
 
     if(recorder.playing) {
@@ -22,16 +15,9 @@ api.hotkeys.addConfigurableHotkey({
     }
 
     recorder.toggleRecording();
-});
+}
 
-api.hotkeys.addConfigurableHotkey({
-    category: "Input Recorder",
-    title: "Play Back Recording",
-    default: {
-        key: "KeyB",
-        alt: true
-    }
-}, () => {
+function playBackRecording() {
     if(!recorder) return;
 
     if(recorder.recording) {
@@ -60,10 +46,31 @@ api.hotkeys.addConfigurableHotkey({
 
         input.click();
     }
-});
+}
+
+api.hotkeys.addConfigurableHotkey({
+    category: "Input Recorder",
+    title: "Start Recording",
+    default: {
+        key: "KeyR",
+        alt: true
+    }
+}, startRecording);
+
+api.hotkeys.addConfigurableHotkey({
+    category: "Input Recorder",
+    title: "Play Back Recording",
+    default: {
+        key: "KeyB",
+        alt: true
+    }
+}, playBackRecording);
 
 api.net.onLoad(() => {
     recorder = new Recorder(api.stores.phaser.scene.worldManager.physics);
+
+    api.commands.addCommand({ text: () => `InputRecorder: ${recorder.recording ? "Stop Recording" : "Start Recording"}` }, startRecording);
+    api.commands.addCommand({ text: "InputRecorder: Play Back Recording" }, playBackRecording);
 });
 
 export function getRecorder() {

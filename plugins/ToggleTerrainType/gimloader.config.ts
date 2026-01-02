@@ -7,5 +7,6 @@ export default singleConfig({
     author: "TheLazySquid",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/ToggleTerrainType.js",
     webpage: "https://gimloader.github.io/plugins/toggleterraintype",
-    version: "0.1.1"
+    version: "0.2.0",
+    changelog: ["Added a command to toggle the terrain type"]
 });
