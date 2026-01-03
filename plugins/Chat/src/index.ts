@@ -1,30 +1,8 @@
-import { identifier, maxLength, Ops } from "./consts";
-import { bytesToFloat, encodeMessage, floatToBytes } from "./encoding";
+import { Ops } from "./consts";
 import UI from "./ui";
-
-interface MessageState {
-    message: string;
-    charsRemaining: number;
-}
 
 api.net.onLoad(() => {
     const myId = api.stores.network.authId;
-
-    let sending = false;
-    let ignoreNextAngle = false;
-    let realAngle = 0;
-
-    api.net.on("send:AIMING", (message, editFn) => {
-        if(!sending) return;
-
-        if(ignoreNextAngle) {
-            ignoreNextAngle = false;
-            return;
-        }
-
-        realAngle = message.angle;
-        editFn(null);
-    });
 
     // redirect the activity feed to the chat
     api.net.on("ACTIVITY_FEED_MESSAGE", (message: any, editFn) => {
@@ -33,105 +11,67 @@ api.net.onLoad(() => {
     });
 
     const me = api.net.room.state.characters.get(myId);
-    let angleChangeRes: Function | undefined;
-    api.onStop(me.projectiles.listen("aimAngle", (angle: number) => {
-        if(angle === 0) return;
-        angleChangeRes?.();
-    }));
+    const Comms = api.lib("Communication");
+    const comms = new Comms("Chat");
 
     UI.init(async (text: string) => {
-        const messages = encodeMessage(text);
-        if(!messages) return;
-        sending = true;
-
-        for(const message of messages) {
-            ignoreNextAngle = true;
-            send(message);
-            await new Promise((res) => angleChangeRes = res);
-        }
-
-        sending = false;
-        send(realAngle);
+        await comms.send(text);
         UI.addMessage(`${me.name}: ${text}`, true);
     });
 
-    const messageStates = new Map<any, MessageState>();
+    const joinedPlayers = new Set<string>();
 
-    api.onStop(api.net.room.state.characters.onAdd((char: any) => {
-        if(char.id === myId) return;
-
-        // This doesn't get cleaned up when the person leaves but whatever
-        api.onStop(char.projectiles.listen("aimAngle", (angle: number) => {
-            if(angle === 0) return;
-            const bytes = floatToBytes(angle);
-
-            const newPlayer = !messageStates.has(char);
-            if(newPlayer) messageStates.set(char, { message: "", charsRemaining: 0 });
-            const state = messageStates.get(char)!;
-
-            // check if the angle is a message
-            if(bytes[0] === identifier[0] && bytes[1] === identifier[1] && bytes[2] === identifier[2] && bytes[3] === identifier[3]) {
-                const op = bytes[4];
-                if(op === Ops.Transmit) {
-                    const high = bytes[5];
-                    const low = bytes[6];
-                    state.charsRemaining = Math.min(maxLength, (high << 8) + low);
-                    state.message = "";
-                } else if(op === Ops.Join && newPlayer) {
-                    UI.addMessage(`${char.name} connected to the chat`);
-                } else if(op === Ops.Leave && !newPlayer) {
-                    UI.addMessage(`${char.name} left the chat`);
-                    messageStates.delete(char);
-                } else if(op === Ops.Greet && newPlayer) {
-                    UI.addMessage(`${char.name} connected to the chat`);
-                    // resend that we have joined whenever someone joins the chat mid-game
-                    sendOp(Ops.Join);
-                }
-            } else if(state.charsRemaining > 0) {
-                // decode the message
-                for(let i = 0; i < Math.min(7, state.charsRemaining); i++) {
-                    state.message += String.fromCharCode(bytes[i]);
-                }
-                state.charsRemaining -= 7;
-
-                if(state.charsRemaining <= 0) {
-                    UI.addMessage(`${char.name}: ${state.message}`);
-                }
-            }
-        }));
-    }));
-
-    // if we join mid-game request for others to re-send their join message
-    if(api.net.room.state.session.phase === "game") {
-        sendOp(Ops.Greet);
-    }
-
-    api.onStop(api.net.room.state.session.listen("phase", (phase: string) => {
-        UI.setEnabled(phase === "game");
-    }));
-
-    api.onStop(api.net.room.state.session.listen("phase", (phase: string) => {
-        if(phase === "game") {
-            UI.addMessage("The chat is active!");
-            messageStates.clear();
-            sendOp(Ops.Join);
+    comms.onMessage<string | Ops>((message, char) => {
+        if(typeof message === "string") {
+            UI.addMessage(`${char.name}: ${message}`);
         } else {
-            UI.addMessage("The chat is no longer active");
+            if(message === Ops.Join) {
+                if(joinedPlayers.has(char.id)) return;
+                UI.addMessage(`${char.name} connected to the chat`);
+                joinedPlayers.add(char.id);
+            } else if(message === Ops.Leave) {
+                UI.addMessage(`${char.name} left the chat`);
+            } else if(message === Ops.Greet) {
+                UI.addMessage(`${char.name} connected to the chat`);
+                // resend that we have joined whenever someone joins the chat mid-game
+                comms.send(Ops.Join);
+                joinedPlayers.add(char.id);
+            }
         }
-    }, false));
-
-    window.addEventListener("beforeunload", () => {
-        sendOp(Ops.Leave);
     });
 
-    api.onStop(() => sendOp(Ops.Leave));
+    api.onStop(api.net.room.state.characters.onRemove((char: any) => {
+        joinedPlayers.delete(char.id);
+    }));
+
+    comms.onEnabled(immediate => {
+        UI.setEnabled(true);
+
+        if(immediate) {
+            // if we join mid-game request for others to re-send their join message
+            comms.send(Ops.Greet);
+        } else {
+            UI.addMessage("The chat is active!");
+            comms.send(Ops.Join);
+        }
+    });
+
+    comms.onDisabled(immediate => {
+        UI.setEnabled(false);
+
+        if(!immediate) {
+            UI.addMessage("The chat is no longer active");
+        }
+    });
+
+    function sendLeave() {
+        if(!Comms.enabled) return;
+        comms.send(Ops.Leave);
+    }
+
+    window.addEventListener("beforeunload", sendLeave);
+    api.onStop(() => {
+        sendLeave();
+        comms.destroy();
+    });
 });
-
-function sendOp(op: Ops) {
-    const message = [...identifier, op, 0, 0];
-    send(bytesToFloat(message));
-}
-
-function send(message: number) {
-    api.net.send("AIMING", { angle: message });
-}

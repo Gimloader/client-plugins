@@ -5,6 +5,10 @@ declare namespace Gimloader {
         Desynchronize: typeof import("plugins/Desynchronize/src");
         DLDTAS: typeof import("plugins/DLDTAS/src");
     }
+    
+    interface Libraries {
+        Communication: typeof import("libraries/Communication/src").default
+    }
 }
 
 declare module "*.scss" {
