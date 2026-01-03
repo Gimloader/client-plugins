@@ -40,6 +40,10 @@ api.net.onLoad(() => {
         }
     });
 
+    api.onStop(api.net.room.state.characters.onRemove((char: any) => {
+        joinedPlayers.delete(char.id);
+    }));
+
     comms.onEnabled(immediate => {
         UI.setEnabled(true);
 
