@@ -1,6 +1,6 @@
 import { Op } from "./consts";
 import { bytesToFloat, floatToBytes } from "./encoding";
-import type { Message, MessageState, OnMessageCallback, PendingMessage } from "./types";
+import type { Message, MessageState, OnMessageCallback, PendingAngle, PendingMessage } from "./types";
 
 export default class Runtime {
     private sending = false;
@@ -9,6 +9,8 @@ export default class Runtime {
     private angleChangeRes: (() => void) | null = null;
     private readonly messageStates = new Map<string, MessageState>();
     private readonly messageQue: PendingMessage[] = [];
+    private readonly angleQue: PendingAngle[] = [];
+    private sendingAngle = false;
     readonly callbacks = new Map<string, OnMessageCallback[]>();
     private alternation: 0 | 1 = 0;
 
@@ -33,8 +35,28 @@ export default class Runtime {
     }
 
     async sendAngle(angle: number) {
-        api.net.send("AIMING", { angle });
-        await new Promise<void>(res => this.angleChangeRes = res);
+        if(this.sendingAngle) {
+            return new Promise<void>(res => {
+                this.angleQue.push({
+                    angle,
+                    resolve: res
+                });
+            });
+        }
+
+        this.sendingAngle = true;
+        this.angleQue.unshift({ angle });
+
+        while(this.angleQue.length) {
+            const pendingAngle = this.angleQue.shift()!;
+
+            api.net.send("AIMING", { angle: pendingAngle.angle });
+            await new Promise<void>(res => this.angleChangeRes = res);
+            this.angleChangeRes = null;
+            pendingAngle.resolve?.();
+        }
+
+        this.sendingAngle = false;
     }
 
     private async sendRealAngle() {

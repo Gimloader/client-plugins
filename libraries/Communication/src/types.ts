@@ -21,4 +21,9 @@ export interface PendingMessage {
     resolve?: () => void;
 }
 
+export interface PendingAngle {
+    angle: number;
+    resolve?: () => void;
+}
+
 export type EnabledStateCallback = (immediate: boolean) => void;

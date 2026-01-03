@@ -77,6 +77,8 @@ var Runtime = class {
   angleChangeRes = null;
   messageStates = /* @__PURE__ */ new Map();
   messageQue = [];
+  angleQue = [];
+  sendingAngle = false;
   callbacks = /* @__PURE__ */ new Map();
   alternation = 0;
   // Make sure single-angle messages aren't dropped
@@ -85,8 +87,24 @@ var Runtime = class {
     this.alternation === 0 ? this.alternation = 1 : this.alternation = 0;
   }
   async sendAngle(angle) {
-    api.net.send("AIMING", { angle });
-    await new Promise((res) => this.angleChangeRes = res);
+    if (this.sendingAngle) {
+      return new Promise((res) => {
+        this.angleQue.push({
+          angle,
+          resolve: res
+        });
+      });
+    }
+    this.sendingAngle = true;
+    this.angleQue.unshift({ angle });
+    while (this.angleQue.length) {
+      const pendingAngle = this.angleQue.shift();
+      api.net.send("AIMING", { angle: pendingAngle.angle });
+      await new Promise((res) => this.angleChangeRes = res);
+      this.angleChangeRes = null;
+      pendingAngle.resolve?.();
+    }
+    this.sendingAngle = false;
   }
   async sendRealAngle() {
     if (!this.pendingAngle) return;
