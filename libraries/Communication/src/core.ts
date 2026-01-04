@@ -52,7 +52,6 @@ export default class Runtime {
             this.ignoreNextAngle = true;
             api.net.send("AIMING", { angle: pendingAngle.angle });
             await new Promise<void>(res => this.angleChangeRes = res);
-            this.ignoreNextAngle = false;
 
             pendingAngle.resolve?.();
         }
