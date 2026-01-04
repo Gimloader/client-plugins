@@ -63,7 +63,7 @@ var Runtime = class {
   constructor(myId) {
     this.myId = myId;
     api.net.on("send:AIMING", (message, editFn) => {
-      if (!this.sending) return;
+      if (!this.messageSendingAmount) return;
       if (this.ignoreNextAngle) {
         this.ignoreNextAngle = false;
         return;
@@ -72,12 +72,11 @@ var Runtime = class {
       editFn(null);
     });
   }
-  sending = false;
   pendingAngle = 0;
   ignoreNextAngle = false;
   angleChangeRes = null;
   messageStates = /* @__PURE__ */ new Map();
-  messageQueue = [];
+  messageSendingAmount = 0;
   angleQueue = [];
   sendingAngle = false;
   callbacks = /* @__PURE__ */ new Map();
@@ -100,9 +99,10 @@ var Runtime = class {
     this.angleQueue.unshift({ angle });
     while (this.angleQueue.length) {
       const pendingAngle = this.angleQueue.shift();
+      this.ignoreNextAngle = true;
       api.net.send("AIMING", { angle: pendingAngle.angle });
       await new Promise((res) => this.angleChangeRes = res);
-      this.angleChangeRes = null;
+      this.ignoreNextAngle = false;
       pendingAngle.resolve?.();
     }
     this.sendingAngle = false;
@@ -164,27 +164,12 @@ var Runtime = class {
     }
   }
   async sendMessages(messages) {
-    if (this.sending) {
-      return new Promise(
-        (res) => this.messageQueue.push({
-          messages,
-          resolve: res
-        })
-      );
-    }
-    this.sending = true;
-    this.messageQueue.unshift({ messages });
-    while (this.messageQueue.length) {
-      const pendingMessage = this.messageQueue.shift();
-      for (const message of pendingMessage.messages) {
-        this.ignoreNextAngle = true;
-        await this.sendAngle(message);
-      }
-      pendingMessage.resolve?.();
-      this.ignoreNextAngle = true;
-      await this.sendRealAngle();
-    }
-    this.sending = false;
+    this.messageSendingAmount++;
+    await Promise.all([
+      ...messages.map((message) => this.sendAngle(message)),
+      this.sendRealAngle
+    ]);
+    this.messageSendingAmount--;
   }
 };
 
@@ -215,11 +200,10 @@ api.net.onLoad(() => {
 });
 var Communication = class _Communication {
   identifier;
-  get identifierString() {
-    return this.identifier.join(",");
-  }
+  identifierString;
   constructor(name) {
     this.identifier = getIdentifier(name);
+    this.identifierString = this.identifier.join(",");
   }
   get scriptCallbacks() {
     return runtime.callbacks.get(this.identifierString);

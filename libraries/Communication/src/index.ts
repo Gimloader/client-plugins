@@ -34,13 +34,11 @@ api.net.onLoad(() => {
 
 export default class Communication {
     private readonly identifier: number[];
-
-    private get identifierString() {
-        return this.identifier.join(",");
-    }
+    private readonly identifierString: string;
 
     constructor(name: string) {
         this.identifier = getIdentifier(name);
+        this.identifierString = this.identifier.join(",");
     }
 
     private get scriptCallbacks() {

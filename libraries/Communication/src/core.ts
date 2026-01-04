@@ -1,14 +1,13 @@
 import { Op } from "./consts";
 import { bytesToFloat, floatToBytes } from "./encoding";
-import type { Message, MessageState, OnMessageCallback, PendingAngle, PendingMessage } from "./types";
+import type { Message, MessageState, OnMessageCallback, PendingAngle } from "./types";
 
 export default class Runtime {
-    private sending = false;
     private pendingAngle = 0;
     private ignoreNextAngle = false;
     private angleChangeRes: (() => void) | null = null;
     private readonly messageStates = new Map<string, MessageState>();
-    private readonly messageQueue: PendingMessage[] = [];
+    private messageSendingAmount = 0;
     private readonly angleQueue: PendingAngle[] = [];
     private sendingAngle = false;
     readonly callbacks = new Map<string, OnMessageCallback[]>();
@@ -16,7 +15,7 @@ export default class Runtime {
 
     constructor(private myId: string) {
         api.net.on("send:AIMING", (message, editFn) => {
-            if(!this.sending) return;
+            if(!this.messageSendingAmount) return;
 
             if(this.ignoreNextAngle) {
                 this.ignoreNextAngle = false;
@@ -50,9 +49,11 @@ export default class Runtime {
         while(this.angleQueue.length) {
             const pendingAngle = this.angleQueue.shift()!;
 
+            this.ignoreNextAngle = true;
             api.net.send("AIMING", { angle: pendingAngle.angle });
             await new Promise<void>(res => this.angleChangeRes = res);
-            this.angleChangeRes = null;
+            this.ignoreNextAngle = false;
+
             pendingAngle.resolve?.();
         }
 
@@ -127,33 +128,11 @@ export default class Runtime {
     }
 
     async sendMessages(messages: number[]) {
-        if(this.sending) {
-            return new Promise<void>(res =>
-                this.messageQueue.push({
-                    messages,
-                    resolve: res
-                })
-            );
-        }
-
-        this.sending = true;
-
-        this.messageQueue.unshift({ messages });
-
-        while(this.messageQueue.length) {
-            const pendingMessage = this.messageQueue.shift()!;
-
-            for(const message of pendingMessage.messages) {
-                this.ignoreNextAngle = true;
-                await this.sendAngle(message);
-            }
-
-            pendingMessage.resolve?.();
-
-            this.ignoreNextAngle = true;
-            await this.sendRealAngle();
-        }
-
-        this.sending = false;
+        this.messageSendingAmount++;
+        await Promise.all([
+            ...messages.map(message => this.sendAngle(message)),
+            this.sendRealAngle
+        ]);
+        this.messageSendingAmount--;
     }
 }
