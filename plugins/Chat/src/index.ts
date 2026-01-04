@@ -12,7 +12,7 @@ api.net.onLoad(() => {
 
     const me = api.net.room.state.characters.get(myId);
     const Comms = api.lib("Communication");
-    const comms = new Comms("Chat");
+    const comms = new Comms<string | Ops>("Chat");
 
     UI.init(async (text: string) => {
         await comms.send(text);
@@ -21,7 +21,7 @@ api.net.onLoad(() => {
 
     const joinedPlayers = new Set<string>();
 
-    comms.onMessage<string | Ops>((message, char) => {
+    comms.onMessage((message, char) => {
         if(typeof message === "string") {
             UI.addMessage(`${char.name}: ${message}`);
         } else {
