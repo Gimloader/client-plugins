@@ -63,22 +63,17 @@ var Runtime = class {
   constructor(myId) {
     this.myId = myId;
     api.net.on("send:AIMING", (message, editFn) => {
-      if (!this.messageSendingAmount) return;
-      if (this.ignoreNextAngle) {
-        this.ignoreNextAngle = false;
-        return;
-      }
+      if (this.sending) return;
       this.pendingAngle = message.angle;
       editFn(null);
     });
   }
   pendingAngle = 0;
-  ignoreNextAngle = false;
+  sending = false;
   angleChangeRes = null;
   messageStates = /* @__PURE__ */ new Map();
   messageSendingAmount = 0;
   angleQueue = [];
-  sendingAngle = false;
   callbacks = /* @__PURE__ */ new Map();
   alternation = 0;
   // Make sure single-angle messages aren't dropped
@@ -87,7 +82,7 @@ var Runtime = class {
     this.alternation === 0 ? this.alternation = 1 : this.alternation = 0;
   }
   async sendAngle(angle) {
-    if (this.sendingAngle) {
+    if (this.sending) {
       return new Promise((res) => {
         this.angleQueue.push({
           angle,
@@ -95,17 +90,15 @@ var Runtime = class {
         });
       });
     }
-    this.sendingAngle = true;
     this.angleQueue.unshift({ angle });
     while (this.angleQueue.length) {
       const pendingAngle = this.angleQueue.shift();
-      this.ignoreNextAngle = true;
+      this.sending = true;
       api.net.send("AIMING", { angle: pendingAngle.angle });
       await new Promise((res) => this.angleChangeRes = res);
-      this.ignoreNextAngle = false;
+      this.sending = false;
       pendingAngle.resolve?.();
     }
-    this.sendingAngle = false;
   }
   async sendRealAngle() {
     if (!this.pendingAngle) return;
@@ -165,11 +158,9 @@ var Runtime = class {
   }
   async sendMessages(messages) {
     this.messageSendingAmount++;
-    await Promise.all([
-      ...messages.map((message) => this.sendAngle(message)),
-      this.sendRealAngle()
-    ]);
+    await Promise.all(messages.map((message) => this.sendAngle(message)));
     this.messageSendingAmount--;
+    if (!this.messageSendingAmount) this.sendRealAngle();
   }
 };
 

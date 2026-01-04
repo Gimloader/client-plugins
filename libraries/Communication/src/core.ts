@@ -4,23 +4,17 @@ import type { Message, MessageState, OnMessageCallback, PendingAngle } from "./t
 
 export default class Runtime {
     private pendingAngle = 0;
-    private ignoreNextAngle = false;
+    private sending = false;
     private angleChangeRes: (() => void) | null = null;
     private readonly messageStates = new Map<string, MessageState>();
     private messageSendingAmount = 0;
     private readonly angleQueue: PendingAngle[] = [];
-    private sendingAngle = false;
     readonly callbacks = new Map<string, OnMessageCallback[]>();
     private alternation: 0 | 1 = 0;
 
     constructor(private myId: string) {
         api.net.on("send:AIMING", (message, editFn) => {
-            if(!this.messageSendingAmount) return;
-
-            if(this.ignoreNextAngle) {
-                this.ignoreNextAngle = false;
-                return;
-            }
+            if(this.sending) return;
 
             this.pendingAngle = message.angle;
             editFn(null);
@@ -34,7 +28,7 @@ export default class Runtime {
     }
 
     async sendAngle(angle: number) {
-        if(this.sendingAngle) {
+        if(this.sending) {
             return new Promise<void>(res => {
                 this.angleQueue.push({
                     angle,
@@ -43,20 +37,18 @@ export default class Runtime {
             });
         }
 
-        this.sendingAngle = true;
         this.angleQueue.unshift({ angle });
 
         while(this.angleQueue.length) {
             const pendingAngle = this.angleQueue.shift()!;
 
-            this.ignoreNextAngle = true;
+            this.sending = true;
             api.net.send("AIMING", { angle: pendingAngle.angle });
             await new Promise<void>(res => this.angleChangeRes = res);
+            this.sending = false;
 
             pendingAngle.resolve?.();
         }
-
-        this.sendingAngle = false;
     }
 
     private async sendRealAngle() {
@@ -128,10 +120,8 @@ export default class Runtime {
 
     async sendMessages(messages: number[]) {
         this.messageSendingAmount++;
-        await Promise.all([
-            ...messages.map(message => this.sendAngle(message)),
-            this.sendRealAngle()
-        ]);
+        await Promise.all(messages.map(message => this.sendAngle(message)));
         this.messageSendingAmount--;
+        if(!this.messageSendingAmount) this.sendRealAngle();
     }
 }
