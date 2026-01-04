@@ -1,19 +1,15 @@
-import EventEmitter from "eventemitter3";
+type OnUpdateCallback = (value: string) => void;
 
-export default abstract class BaseLine extends EventEmitter<{
-    stop: [];
-    update: [string];
-    frame: [];
-    physicsTick: [];
-}> {
+export default abstract class BaseLine {
     abstract name: string;
     abstract enabledDefault: boolean;
-    abstract init(): void;
+    private onStopCallbacks: (() => void)[] = [];
+    private onUpdateCallbacks: OnUpdateCallback[] = [];
     settings?: Gimloader.PluginSetting[];
 
     protected net = {
         on: (...args: Parameters<Gimloader.NetApi["on"]>) => {
-            this.on("stop", () => {
+            this.onStop(() => {
                 api.net.off(args[0], args[1]);
             });
             return api.net.on(...args);
@@ -22,29 +18,42 @@ export default abstract class BaseLine extends EventEmitter<{
 
     protected patcher = {
         before: (...args: Parameters<Gimloader.Api["patcher"]["before"]>) => {
-            this.on("stop", api.patcher.before(...args));
+            this.onStop(api.patcher.before(...args));
         },
         after: (...args: Parameters<Gimloader.Api["patcher"]["after"]>) => {
-            this.on("stop", api.patcher.after(...args));
+            this.onStop(api.patcher.after(...args));
         }
     };
 
     enable() {
-        const { worldManager } = api.stores.phaser.scene;
-
-        this.patcher.after(worldManager, "update", () => this.emit("frame"));
-        this.patcher.after(worldManager.physics, "physicsStep", () => this.emit("physicsTick"));
-
-        this.init();
+        api.net.onLoad(() => {
+            if(this.onFrame) {
+                this.patcher.after(api.stores.phaser.scene.worldManager, "update", () => this.onFrame?.());
+            }
+            if(this.onPhysicsTick) {
+                this.patcher.after(api.stores.phaser.scene.worldManager.physics, "physicsStep", () => this.onPhysicsTick?.());
+            }
+            this.init?.();
+        });
     }
 
     disable() {
-        this.emit("stop");
-        this.removeAllListeners("frame");
-        this.removeAllListeners("physicsTick");
+        this.onStopCallbacks.forEach(cb => cb());
+    }
+
+    onStop(cb: () => void) {
+        this.onStopCallbacks.push(cb);
+    }
+
+    onUpdate(cb: OnUpdateCallback) {
+        this.onUpdateCallbacks.push(cb);
     }
 
     update(value: string) {
-        this.emit("update", value);
+        this.onUpdateCallbacks.forEach(cb => cb(value));
     }
+
+    protected onPhysicsTick?(): void;
+    protected onFrame?(): void;
+    protected init?(): void;
 }

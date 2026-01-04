@@ -30,12 +30,12 @@ export default class Ping extends BaseLine {
         });
 
         const interval = setInterval(async () => {
-            api.net.send("REQUEST_INITIAL_WORLD", undefined);
+            api.net.send("REQUEST_INITIAL_WORLD");
             const start = Date.now();
             await new Promise<void>(res => deviceChangeRes = res);
             this.update(`ping: ${Date.now() - start} ms`);
         }, 5000);
 
-        this.on("stop", () => clearInterval(interval));
+        this.onStop(() => clearInterval(interval));
     }
 }
