@@ -1,3 +1,4 @@
+import type { RigidBody } from "@dimforge/rapier2d-compat";
 import BaseLine from "../baseLine";
 
 export default class PhysicsCoordinates extends BaseLine {
@@ -13,17 +14,18 @@ export default class PhysicsCoordinates extends BaseLine {
         default: 2
     }];
 
+    private rb?: RigidBody;
+
     init() {
-        const { physics } = api.stores.phaser.mainCharacter;
-        const rb = physics.getBody().rigidBody;
+        this.rb = api.stores.phaser.mainCharacter.physics.getBody().rigidBody;
+    }
 
-        this.on("physicsTick", () => {
-            const translation = rb?.translation();
-            if(!translation) return;
+    onPhysicsTick() {
+        const translation = this.rb?.translation();
+        if(!translation) return;
 
-            const decimals = api.settings.physicsCoordsDecimalPlaces;
+        const decimals = api.settings.physicsCoordsDecimalPlaces;
 
-            this.update(`physics x: ${translation.x.toFixed(decimals)}, y: ${translation.y.toFixed(decimals)}`);
-        });
+        this.update(`physics x: ${translation.x.toFixed(decimals)}, y: ${translation.y.toFixed(decimals)}`);
     }
 }

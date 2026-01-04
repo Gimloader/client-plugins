@@ -13,11 +13,9 @@ export default class VisualCoordinates extends BaseLine {
         default: 2
     }];
 
-    init() {
-        this.on("frame", () => {
-            const { body } = api.stores.phaser.mainCharacter;
-            const decimals = api.settings.visualCoordsDecimalPlaces;
-            this.update(`visual x: ${body.x.toFixed(decimals)}, y: ${body.y.toFixed(decimals)}`);
-        });
+    onFrame() {
+        const { body } = api.stores.phaser.mainCharacter;
+        const decimals = api.settings.visualCoordsDecimalPlaces;
+        this.update(`visual x: ${body.x.toFixed(decimals)}, y: ${body.y.toFixed(decimals)}`);
     }
 }
