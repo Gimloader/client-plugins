@@ -167,7 +167,7 @@ var Runtime = class {
     this.messageSendingAmount++;
     await Promise.all([
       ...messages.map((message) => this.sendAngle(message)),
-      this.sendRealAngle
+      this.sendRealAngle()
     ]);
     this.messageSendingAmount--;
   }
