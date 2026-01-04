@@ -188,7 +188,6 @@ var Ping = class extends BaseLine {
     });
     const interval = setInterval(async () => {
       api.net.send("REQUEST_INITIAL_WORLD");
-      api.net.send("REQUEST_INITIAL_WORLD");
       const start = Date.now();
       await new Promise((res) => deviceChangeRes = res);
       this.update(`ping: ${Date.now() - start} ms`);
