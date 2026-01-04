@@ -32,7 +32,7 @@ api.net.onLoad(() => {
     }));
 });
 
-export default class Communication {
+export default class Communication<T extends Message = Message> {
     private readonly identifier: number[];
 
     private get identifierString() {
@@ -95,7 +95,7 @@ export default class Communication {
         };
     }
 
-    async send(message: Message) {
+    async send(message: T) {
         if(!Communication.enabled) {
             throw new Error("Communication can only be used after the game is started");
         }
@@ -134,7 +134,7 @@ export default class Communication {
         }
     }
 
-    onMessage<T extends Message = Message>(callback: OnMessageCallback<T>) {
+    onMessage(callback: OnMessageCallback<T>) {
         if(!this.scriptCallbacks) {
             runtime.callbacks.set(this.identifierString, []);
         }
