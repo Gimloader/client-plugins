@@ -19,7 +19,7 @@ export class InfoLines {
     element?: HTMLElement;
 
     constructor() {
-        api.settings.create([
+        const settings: Gimloader.PluginSettingsDescription = [
             {
                 type: "dropdown",
                 id: "position",
@@ -31,21 +31,20 @@ export class InfoLines {
                     { label: "Bottom Right", value: "bottom right" }
                 ],
                 default: "top right"
-            },
-            ...this.lines.map(line => ({
-                type: "group" as const,
+            }
+        ];
+
+        for(const line of this.lines) {
+            settings.push({
+                type: "toggle",
+                id: line.name,
                 title: line.name,
-                settings: [
-                    {
-                        type: "toggle" as const,
-                        id: line.name,
-                        title: line.name,
-                        default: line.enabledDefault
-                    },
-                    ...line.settings ?? []
-                ]
-            }))
-        ]);
+                default: line.enabledDefault
+            });
+            if(line.settings) settings.push(...line.settings);
+        }
+
+        api.settings.create(settings);
 
         api.net.onLoad(() => {
             this.create();
@@ -55,27 +54,20 @@ export class InfoLines {
     create() {
         this.element = document.createElement("div");
         this.element.id = "infoLines";
-        this.element!.className = api.settings.position;
-        api.settings.listen("position", (value: string) => this.element!.className = value);
+        api.settings.listen("position", (value: string) => this.element!.className = value, true);
 
         for(const line of this.lines) {
             const lineElement = document.createElement("div");
             lineElement.classList.add("line");
             this.element.appendChild(lineElement);
 
-            line.on("update", value => {
-                lineElement.innerText = value;
-            });
-
-            line.on("stop", () => {
+            line.onUpdate(value => lineElement.innerText = value);
+            line.onStop(() => {
                 // The line still exists, but it's blank lol
                 lineElement.innerText = "";
             });
 
-            api.net.onLoad(() => {
-                if(api.settings[line.name]) line.enable();
-                api.settings.listen(line.name, value => value ? line.enable() : line.disable());
-            });
+            api.settings.listen(line.name, value => value ? line.enable() : line.disable(), true);
         }
 
         document.body.appendChild(this.element);
