@@ -2,9 +2,10 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.1.0
+ * @version 0.1.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
+ * @changelog Fixed messages sent at the same time being dropped
  * @isLibrary true
  */
 
@@ -76,8 +77,8 @@ var Runtime = class {
   ignoreNextAngle = false;
   angleChangeRes = null;
   messageStates = /* @__PURE__ */ new Map();
-  messageQue = [];
-  angleQue = [];
+  messageQueue = [];
+  angleQueue = [];
   sendingAngle = false;
   callbacks = /* @__PURE__ */ new Map();
   alternation = 0;
@@ -89,16 +90,16 @@ var Runtime = class {
   async sendAngle(angle) {
     if (this.sendingAngle) {
       return new Promise((res) => {
-        this.angleQue.push({
+        this.angleQueue.push({
           angle,
           resolve: res
         });
       });
     }
     this.sendingAngle = true;
-    this.angleQue.unshift({ angle });
-    while (this.angleQue.length) {
-      const pendingAngle = this.angleQue.shift();
+    this.angleQueue.unshift({ angle });
+    while (this.angleQueue.length) {
+      const pendingAngle = this.angleQueue.shift();
       api.net.send("AIMING", { angle: pendingAngle.angle });
       await new Promise((res) => this.angleChangeRes = res);
       this.angleChangeRes = null;
@@ -165,16 +166,16 @@ var Runtime = class {
   async sendMessages(messages) {
     if (this.sending) {
       return new Promise(
-        (res) => this.messageQue.push({
+        (res) => this.messageQueue.push({
           messages,
           resolve: res
         })
       );
     }
     this.sending = true;
-    this.messageQue.unshift({ messages });
-    while (this.messageQue.length) {
-      const pendingMessage = this.messageQue.shift();
+    this.messageQueue.unshift({ messages });
+    while (this.messageQueue.length) {
+      const pendingMessage = this.messageQueue.shift();
       for (const message of pendingMessage.messages) {
         this.ignoreNextAngle = true;
         await this.sendAngle(message);

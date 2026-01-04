@@ -8,8 +8,8 @@ export default class Runtime {
     private ignoreNextAngle = false;
     private angleChangeRes: (() => void) | null = null;
     private readonly messageStates = new Map<string, MessageState>();
-    private readonly messageQue: PendingMessage[] = [];
-    private readonly angleQue: PendingAngle[] = [];
+    private readonly messageQueue: PendingMessage[] = [];
+    private readonly angleQueue: PendingAngle[] = [];
     private sendingAngle = false;
     readonly callbacks = new Map<string, OnMessageCallback[]>();
     private alternation: 0 | 1 = 0;
@@ -37,7 +37,7 @@ export default class Runtime {
     async sendAngle(angle: number) {
         if(this.sendingAngle) {
             return new Promise<void>(res => {
-                this.angleQue.push({
+                this.angleQueue.push({
                     angle,
                     resolve: res
                 });
@@ -45,10 +45,10 @@ export default class Runtime {
         }
 
         this.sendingAngle = true;
-        this.angleQue.unshift({ angle });
+        this.angleQueue.unshift({ angle });
 
-        while(this.angleQue.length) {
-            const pendingAngle = this.angleQue.shift()!;
+        while(this.angleQueue.length) {
+            const pendingAngle = this.angleQueue.shift()!;
 
             api.net.send("AIMING", { angle: pendingAngle.angle });
             await new Promise<void>(res => this.angleChangeRes = res);
@@ -129,7 +129,7 @@ export default class Runtime {
     async sendMessages(messages: number[]) {
         if(this.sending) {
             return new Promise<void>(res =>
-                this.messageQue.push({
+                this.messageQueue.push({
                     messages,
                     resolve: res
                 })
@@ -138,10 +138,10 @@ export default class Runtime {
 
         this.sending = true;
 
-        this.messageQue.unshift({ messages });
+        this.messageQueue.unshift({ messages });
 
-        while(this.messageQue.length) {
-            const pendingMessage = this.messageQue.shift()!;
+        while(this.messageQueue.length) {
+            const pendingMessage = this.messageQueue.shift()!;
 
             for(const message of pendingMessage.messages) {
                 this.ignoreNextAngle = true;
