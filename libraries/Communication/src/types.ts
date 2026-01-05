@@ -1,4 +1,4 @@
-import type { Op } from "./consts";
+import type { Type } from "./consts";
 
 export type Message =
     | string
@@ -13,12 +13,10 @@ export interface MessageState {
     message: string;
     charsRemaining: number;
     identifierString: string;
-    op: Op;
+    type: Type;
 }
 
 export interface PendingAngle {
     angle: number;
     resolve?: () => void;
 }
-
-export type EnabledStateCallback = (immediate: boolean) => void;
