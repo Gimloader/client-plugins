@@ -46,6 +46,9 @@ api.net.onLoad(() => {
 
     if(Comms.enabled) {
         comms.send(Ops.Greet);
+        UI.setEnabled(true);
+    } else {
+        UI.setEnabled(false);
     }
 
     comms.onEnabledChanged(() => {

@@ -197,6 +197,9 @@ api.net.onLoad(() => {
   }));
   if (Comms.enabled) {
     comms.send(2 /* Greet */);
+    UI.setEnabled(true);
+  } else {
+    UI.setEnabled(false);
   }
   comms.onEnabledChanged(() => {
     UI.setEnabled(Comms.enabled);
