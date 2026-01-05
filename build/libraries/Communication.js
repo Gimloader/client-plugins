@@ -2,9 +2,10 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.1.0
+ * @version 0.1.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
+ * @changelog Fixed messages sent at the same time being dropped
  * @isLibrary true
  */
 
@@ -62,21 +63,17 @@ var Runtime = class {
   constructor(myId) {
     this.myId = myId;
     api.net.on("send:AIMING", (message, editFn) => {
-      if (!this.sending) return;
-      if (this.ignoreNextAngle) {
-        this.ignoreNextAngle = false;
-        return;
-      }
+      if (this.sending) return;
       this.pendingAngle = message.angle;
       editFn(null);
     });
   }
-  sending = false;
   pendingAngle = 0;
-  ignoreNextAngle = false;
+  sending = false;
   angleChangeRes = null;
   messageStates = /* @__PURE__ */ new Map();
-  messageQue = [];
+  messageSendingAmount = 0;
+  angleQueue = [];
   callbacks = /* @__PURE__ */ new Map();
   alternation = 0;
   // Make sure single-angle messages aren't dropped
@@ -85,8 +82,23 @@ var Runtime = class {
     this.alternation === 0 ? this.alternation = 1 : this.alternation = 0;
   }
   async sendAngle(angle) {
-    api.net.send("AIMING", { angle });
-    await new Promise((res) => this.angleChangeRes = res);
+    if (this.sending) {
+      return new Promise((res) => {
+        this.angleQueue.push({
+          angle,
+          resolve: res
+        });
+      });
+    }
+    this.angleQueue.unshift({ angle });
+    while (this.angleQueue.length) {
+      const pendingAngle = this.angleQueue.shift();
+      this.sending = true;
+      api.net.send("AIMING", { angle: pendingAngle.angle });
+      await new Promise((res) => this.angleChangeRes = res);
+      this.sending = false;
+      pendingAngle.resolve?.();
+    }
   }
   async sendRealAngle() {
     if (!this.pendingAngle) return;
@@ -145,27 +157,10 @@ var Runtime = class {
     }
   }
   async sendMessages(messages) {
-    if (this.sending) {
-      return new Promise(
-        (res) => this.messageQue.push({
-          messages,
-          resolve: res
-        })
-      );
-    }
-    this.sending = true;
-    this.messageQue.unshift({ messages });
-    while (this.messageQue.length) {
-      const pendingMessage = this.messageQue.shift();
-      for (const message of pendingMessage.messages) {
-        this.ignoreNextAngle = true;
-        await this.sendAngle(message);
-      }
-      pendingMessage.resolve?.();
-      this.ignoreNextAngle = true;
-      await this.sendRealAngle();
-    }
-    this.sending = false;
+    this.messageSendingAmount++;
+    await Promise.all(messages.map((message) => this.sendAngle(message)));
+    this.messageSendingAmount--;
+    if (!this.messageSendingAmount) this.sendRealAngle();
   }
 };
 
@@ -196,11 +191,10 @@ api.net.onLoad(() => {
 });
 var Communication = class _Communication {
   identifier;
-  get identifierString() {
-    return this.identifier.join(",");
-  }
+  identifierString;
   constructor(name) {
     this.identifier = getIdentifier(name);
+    this.identifierString = this.identifier.join(",");
   }
   get scriptCallbacks() {
     return runtime.callbacks.get(this.identifierString);

@@ -16,8 +16,8 @@ export interface MessageState {
     op: Op;
 }
 
-export interface PendingMessage {
-    messages: number[];
+export interface PendingAngle {
+    angle: number;
     resolve?: () => void;
 }
 
