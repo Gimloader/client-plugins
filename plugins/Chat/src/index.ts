@@ -44,22 +44,16 @@ api.net.onLoad(() => {
         joinedPlayers.delete(char.id);
     }));
 
-    comms.onEnabled(immediate => {
-        UI.setEnabled(true);
+    if(Comms.enabled) {
+        comms.send(Ops.Greet);
+    }
 
-        if(immediate) {
-            // if we join mid-game request for others to re-send their join message
-            comms.send(Ops.Greet);
-        } else {
+    comms.onEnabledChanged(() => {
+        UI.setEnabled(Comms.enabled);
+        if(Comms.enabled) {
             UI.addMessage("The chat is active!");
             comms.send(Ops.Join);
-        }
-    });
-
-    comms.onDisabled(immediate => {
-        UI.setEnabled(false);
-
-        if(!immediate) {
+        } else {
             UI.addMessage("The chat is no longer active");
         }
     });

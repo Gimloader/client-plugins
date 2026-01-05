@@ -1,5 +1,5 @@
 import { Type } from "./consts";
-import { bytesToFloat, floatToBytes, getUint16, splitUint16 } from "./encoding";
+import { bytesToFloat, floatToBytes, getUint16 } from "./encoding";
 import type { Message, MessageState, OnMessageCallback, PendingAngle } from "./types";
 
 export default class Runtime {

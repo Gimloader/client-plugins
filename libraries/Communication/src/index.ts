@@ -5,9 +5,6 @@ import type { Message, OnMessageCallback } from "./types";
 
 let runtime: Runtime;
 
-const onEnabledCallbacks = new Map<string, (() => void)[]>();
-const onDisabledCallbacks = new Map<string, (() => void)[]>();
-
 api.net.onLoad(() => {
     runtime = new Runtime(api.stores.network.authId);
 
