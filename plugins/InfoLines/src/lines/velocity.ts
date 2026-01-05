@@ -1,29 +1,30 @@
-import BaseLine, { type Settings } from "../baseLine";
+import type { RigidBody } from "@dimforge/rapier2d-compat";
+import BaseLine from "../baseLine";
 
 export default class Velocity extends BaseLine {
-    enabledDefault = true;
     name = "Velocity";
-    settings: Settings = {
-        "velocityDecimalPlaces": {
-            label: "Velocity decimal places",
-            min: 0,
-            max: 10,
-            default: 2
-        }
-    };
+    enabledDefault = true;
+    settings: Gimloader.PluginSetting[] = [{
+        type: "slider",
+        id: "velocityDecimalPlaces",
+        title: "Velocity decimal places",
+        min: 0,
+        max: 10,
+        step: 1,
+        default: 2
+    }];
 
-    rb: any;
+    private rb?: RigidBody;
 
     init() {
-        const physics = api.stores.phaser.mainCharacter.physics;
-        this.rb = physics.getBody().rigidBody;
+        this.rb = api.stores.phaser.mainCharacter.physics.getBody().rigidBody;
     }
 
     onPhysicsTick() {
         const velocity = this.rb?.linvel();
         if(!velocity) return;
 
-        const decimals = this.settings.velocityDecimalPlaces.value;
+        const decimals = api.settings.velocityDecimalPlaces;
 
         this.update(`velocity x: ${velocity.x.toFixed(decimals)}, y: ${velocity.y.toFixed(decimals)}`);
     }

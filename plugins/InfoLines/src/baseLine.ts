@@ -1,96 +1,59 @@
-const frameCallbacks: (() => void)[] = [];
-const physicsTickCallbacks: (() => void)[] = [];
-
-api.net.onLoad(() => {
-    const worldManager = api.stores.phaser.scene.worldManager;
-
-    // whenever a frame passes
-    api.patcher.after(worldManager, "update", () => {
-        for(const callback of frameCallbacks) {
-            callback();
-        }
-    });
-
-    // whenever a physics tick passes
-    api.patcher.after(worldManager.physics, "physicsStep", () => {
-        for(const callback of physicsTickCallbacks) {
-            callback();
-        }
-    });
-});
-
-export interface Setting {
-    label: string;
-    min: number;
-    max: number;
-    default: number;
-    value?: number;
-}
-
-export type Settings = Record<string, Setting>;
+type OnUpdateCallback = (value: string) => void;
 
 export default abstract class BaseLine {
     abstract name: string;
     abstract enabledDefault: boolean;
-    enabled = false;
-    settings?: Settings;
+    private onStopCallbacks: (() => void)[] = [];
+    private onUpdateCallbacks: OnUpdateCallback[] = [];
+    settings?: Gimloader.PluginSetting[];
 
-    subscribedCallbacks: ((value: string) => void)[] = [];
-
-    constructor() {
-        // scuffed way to make sure settings are loaded after the constructor has run
-        setTimeout(() => {
-            this.enabled = api.storage.getValue(this.name, this.enabledDefault);
-            this.setupSettings();
-
-            if(this.onFrame) {
-                frameCallbacks.push(() => {
-                    if(!this.enabled) return;
-                    this.onFrame?.();
-                });
-            }
-
-            if(this.onPhysicsTick) {
-                physicsTickCallbacks.push(() => {
-                    if(!this.enabled) return;
-                    this.onPhysicsTick?.();
-                });
-            }
-
-            api.net.onLoad(() => {
-                if(this.init) this.init();
+    protected net = {
+        on: (...args: Parameters<Gimloader.NetApi["on"]>) => {
+            this.onStop(() => {
+                api.net.off(args[0], args[1]);
             });
-        }, 0);
-    }
-
-    setupSettings() {
-        if(this.settings) {
-            for(const id in this.settings) {
-                const setting = this.settings[id];
-                setting.value = api.storage.getValue(id, setting.default);
-            }
+            return api.net.on(...args);
         }
+    };
+
+    protected patcher = {
+        before: (...args: Parameters<Gimloader.Api["patcher"]["before"]>) => {
+            this.onStop(api.patcher.before(...args));
+        },
+        after: (...args: Parameters<Gimloader.Api["patcher"]["after"]>) => {
+            this.onStop(api.patcher.after(...args));
+        }
+    };
+
+    enable() {
+        api.net.onLoad(() => {
+            if(this.onFrame) {
+                this.patcher.after(api.stores.phaser.scene.worldManager, "update", () => this.onFrame?.());
+            }
+            if(this.onPhysicsTick) {
+                this.patcher.after(api.stores.phaser.scene.worldManager.physics, "physicsStep", () => this.onPhysicsTick?.());
+            }
+            this.init?.();
+        });
     }
 
-    subscribe(callback: (value: string) => void) {
-        this.subscribedCallbacks.push(callback);
+    disable() {
+        this.onStopCallbacks.forEach(cb => cb());
+    }
+
+    onStop(cb: () => void) {
+        this.onStopCallbacks.push(cb);
+    }
+
+    onUpdate(cb: OnUpdateCallback) {
+        this.onUpdateCallbacks.push(cb);
     }
 
     update(value: string) {
-        for(const callback of this.subscribedCallbacks) {
-            callback(value);
-        }
+        this.onUpdateCallbacks.forEach(cb => cb(value));
     }
 
-    enable() {}
-
-    disable() {
-        // The line still exists, but it's blank lol
-        this.update("");
-    }
-
-    init?(): void;
-    onSettingsChange?(): void;
-    onFrame?(): void;
-    onPhysicsTick?(): void;
+    protected onPhysicsTick?(): void;
+    protected onFrame?(): void;
+    protected init?(): void;
 }

@@ -10,15 +10,3 @@
     &.left { left: 4px; }
     &.right { right: 4px; }
 }
-
-#il-settings {    
-    .setting, .position {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .setting input {
-        flex-grow: 1;
-    }
-}
