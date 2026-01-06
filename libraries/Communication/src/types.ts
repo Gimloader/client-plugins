@@ -10,10 +10,9 @@ export type Message =
 export type OnMessageCallback<T extends Message = Message> = (message: T, player: any) => void;
 
 export interface MessageState {
-    message: string;
-    charsRemaining: number;
-    identifierString: string;
     type: Type;
+    identifierString: string;
+    recieved: number[];
 }
 
 export interface PendingAngle {

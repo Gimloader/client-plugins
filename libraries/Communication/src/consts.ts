@@ -1,8 +1,9 @@
 export enum Type {
     Boolean,
-    Uint16,
-    Number,
-    TwoCharacters,
+    PositiveUint24,
+    NegativeUint24,
+    Float,
+    ThreeCharacters,
     String,
     Object
 }

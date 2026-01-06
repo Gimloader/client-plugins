@@ -38,7 +38,8 @@
 			"complexity": {
 				"noArguments": "off",
 				"noBannedTypes": "off",
-				"noStaticOnlyClass": "off"
+				"noStaticOnlyClass": "off",
+				"noThisInStatic": "off"
 			},
 			"suspicious": {
 				"noConfusingVoidType": "off",

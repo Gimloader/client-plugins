@@ -1,11 +1,10 @@
-import type { Type } from "./consts";
-
-export const isUint16 = (n: number) => Number.isInteger(n) && n >= 0 && n <= 65535;
-export const splitUint16 = (int: number) => [
+export const isUint24 = (n: number) => Number.isInteger(n) && n >= 0 && n <= 0xFFFFFF;
+export const splitUint24 = (int: number) => [
+    (int >> 16) & 0xFF,
     (int >> 8) & 0xFF,
     int & 0xFF
 ];
-export const getUint16 = (int1: number, int2: number) => (int1 << 8) | int2;
+export const joinUint24 = (int1: number, int2: number, int3: number) => (int1 << 16) | (int2 << 8) | int3;
 
 export function bytesToFloat(bytes: number[]) {
     const buffer = new ArrayBuffer(8);
@@ -48,26 +47,4 @@ export const encodeCharacters = (characters: string) =>
     characters
         .split("")
         .map((c) => c.charCodeAt(0))
-        .filter((c) => c < 256);
-
-export function encodeStringMessage(identifier: number[], type: Type, message: string) {
-    const codes = encodeCharacters(message);
-
-    const charsLow = codes.length & 255;
-    const charsHigh = (codes.length & 65280) >> 8;
-
-    const header = [...identifier, type, charsHigh, charsLow];
-    const messages = [header];
-
-    while(codes.length % 7 !== 0) codes.push(0);
-
-    for(let i = 0; i < codes.length; i += 7) {
-        const msg = [];
-        for(let j = 0; j < 7; j++) {
-            msg[j] = codes[i + j];
-        }
-        messages.push(msg);
-    }
-
-    return messages;
-}
+        .filter((c) => c < 256 && c > 0);
