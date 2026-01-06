@@ -145,7 +145,6 @@ var Runtime = class {
       queuedAngle.resolve?.();
     }
     this.sending = false;
-    console.log("Sending done, pending angle is", this.pendingAngle);
     if (!this.pendingAngle) return;
     api.net.send("AIMING", { angle: this.pendingAngle });
   }

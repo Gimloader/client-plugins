@@ -125,7 +125,6 @@ export default class Runtime {
         this.sending = false;
 
         // Send the real angle afterwards (we don't care about this being dropped)
-        console.log("Sending done, pending angle is", this.pendingAngle);
         if(!this.pendingAngle) return;
         api.net.send("AIMING", { angle: this.pendingAngle });
     }
