@@ -43,8 +43,9 @@ export function getIdentifier(str: string) {
     ];
 }
 
-export const encodeCharacters = (characters: string) =>
-    characters
+export function encodeCharacters(characters: string) {
+    return characters
         .split("")
         .map((c) => c.charCodeAt(0))
         .filter((c) => c < 256 && c > 0);
+}

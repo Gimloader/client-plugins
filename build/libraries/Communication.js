@@ -46,7 +46,9 @@ function getIdentifier(str) {
     uInt32Hash & 255
   ];
 }
-var encodeCharacters = (characters) => characters.split("").map((c) => c.charCodeAt(0)).filter((c) => c < 256 && c > 0);
+function encodeCharacters(characters) {
+  return characters.split("").map((c) => c.charCodeAt(0)).filter((c) => c < 256 && c > 0);
+}
 
 // libraries/Communication/src/core.ts
 var Runtime = class {

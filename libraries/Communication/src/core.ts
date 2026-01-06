@@ -111,23 +111,23 @@ export default class Runtime {
 
         this.angleQueue.unshift({ angle });
         this.sending = true;
-        
+
         while(this.angleQueue.length) {
             const queuedAngle = this.angleQueue.shift()!;
-            
+
             this.ignoreNextAngle = true;
             api.net.send("AIMING", { angle: queuedAngle.angle });
             await new Promise<void>(res => this.angleChangeRes = res);
-            
+
             queuedAngle.resolve?.();
         }
-        
+
         this.sending = false;
-        
+
         // Send the real angle afterwards (we don't care about this being dropped)
         console.log("Sending done, pending angle is", this.pendingAngle);
         if(!this.pendingAngle) return;
-        api.net.send("AIMING", { angle: this.pendingAngle })
+        api.net.send("AIMING", { angle: this.pendingAngle });
     }
 
     static handleAngle(char: any, angle: number) {
