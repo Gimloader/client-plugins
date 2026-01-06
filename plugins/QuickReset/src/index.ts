@@ -30,7 +30,7 @@ export function reset() {
 }
 
 export function exitToLobby() {
-    if(api.net.type !== "Colyseus" || !api.net.isHost) return;
+    if(api.net.type !== "Colyseus" || !api.stores.session.amIGameOwner) return;
 
     api.net.send("END_GAME");
     api.net.send("RESTORE_MAP_EARLIER");
