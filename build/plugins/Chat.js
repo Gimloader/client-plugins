@@ -2,11 +2,12 @@
  * @name Chat
  * @description Adds an in-game chat to 2d gamemodes
  * @author TheLazySquid
- * @version 0.2.5
+ * @version 0.2.6
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Chat.js
  * @webpage https://gimloader.github.io/plugins/chat
  * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @gamemode 2d
+ * @changelog Updated to new Communication protocol
  */
 
 // plugins/Chat/src/consts.ts
@@ -194,18 +195,18 @@ api.net.onLoad(() => {
   api.onStop(api.net.room.state.characters.onRemove((char) => {
     joinedPlayers.delete(char.id);
   }));
-  comms.onEnabled((immediate) => {
+  if (Comms.enabled) {
+    comms.send(2 /* Greet */);
     UI.setEnabled(true);
-    if (immediate) {
-      comms.send(2 /* Greet */);
-    } else {
+  } else {
+    UI.setEnabled(false);
+  }
+  comms.onEnabledChanged(() => {
+    UI.setEnabled(Comms.enabled);
+    if (Comms.enabled) {
       UI.addMessage("The chat is active!");
       comms.send(0 /* Join */);
-    }
-  });
-  comms.onDisabled((immediate) => {
-    UI.setEnabled(false);
-    if (!immediate) {
+    } else {
       UI.addMessage("The chat is no longer active");
     }
   });

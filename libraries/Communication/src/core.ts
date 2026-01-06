@@ -1,5 +1,5 @@
-import { Op } from "./consts";
-import { bytesToFloat, floatToBytes } from "./encoding";
+import { Type } from "./consts";
+import { bytesToFloat, floatToBytes, getUint16 } from "./encoding";
 import type { Message, MessageState, OnMessageCallback, PendingAngle } from "./types";
 
 export default class Runtime {
@@ -10,7 +10,7 @@ export default class Runtime {
     private messageSendingAmount = 0;
     private readonly angleQueue: PendingAngle[] = [];
     readonly callbacks = new Map<string, OnMessageCallback[]>();
-    private alternation: 0 | 1 = 0;
+    private altType = false;
 
     constructor(private myId: string) {
         api.net.on("send:AIMING", (message, editFn) => {
@@ -21,13 +21,14 @@ export default class Runtime {
         });
     }
 
-    // Make sure single-angle messages aren't dropped
+    // Make sure messages with an Op are different from the last so they don't get dropped
     async sendBytes(bytes: number[]) {
-        await this.sendAngle(bytesToFloat([...bytes, this.alternation]));
-        this.alternation === 0 ? this.alternation = 1 : this.alternation = 0;
+        this.altType = !this.altType;
+        if(this.altType) bytes[4] += 10;
+        await this.sendAngle(bytesToFloat(bytes));
     }
 
-    async sendAngle(angle: number) {
+    private async sendAngle(angle: number) {
         if(this.sending) {
             return new Promise<void>(res => {
                 this.angleQueue.push({
@@ -69,15 +70,19 @@ export default class Runtime {
         const state = this.messageStates.get(char);
 
         if(callbacksForIdentifier) {
-            const op = bytes[4];
+            const type = bytes[4] >= 10 ? bytes[4] - 10 : bytes[4];
 
-            if(op === Op.TransmittingBoolean) {
+            if(type === Type.Boolean) {
                 callbacksForIdentifier.forEach(callback => {
                     callback(bytes[5] === 1, char);
                 });
-            } else if(op === Op.TransmittingByteInteger) {
+            } else if(type === Type.Uint16) {
                 callbacksForIdentifier.forEach(callback => {
-                    callback(bytes[5], char);
+                    callback(getUint16(bytes[5], bytes[6]), char);
+                });
+            } else if(type === Type.TwoCharacters) {
+                callbacksForIdentifier.forEach(callback => {
+                    callback(String.fromCharCode(bytes[5], bytes[6]), char);
                 });
             } else {
                 const high = bytes[5];
@@ -87,7 +92,7 @@ export default class Runtime {
                     message: "",
                     charsRemaining: Math.min(1e3, (high << 8) + low),
                     identifierString,
-                    op
+                    type
                 });
             }
         } else if(state) {
@@ -101,14 +106,14 @@ export default class Runtime {
                 if(!stateCallbacks) return;
 
                 let message: Message;
-                switch (state.op) {
-                    case Op.TransmittingNumber:
+                switch (state.type) {
+                    case Type.Number:
                         message = Number(state.message);
                         break;
-                    case Op.TransmittingObject:
+                    case Type.Object:
                         message = JSON.parse(state.message);
                         break;
-                    case Op.TransmittingString:
+                    case Type.String:
                         message = state.message;
                         break;
                 }

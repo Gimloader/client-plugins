@@ -1,27 +1,12 @@
-import { Op } from "./consts";
+import { Type } from "./consts";
 import Runtime from "./core";
-import { encodeStringMessage, getIdentifier, isUint8 } from "./encoding";
-import type { EnabledStateCallback, Message, OnMessageCallback } from "./types";
+import { encodeCharacters, encodeStringMessage, getIdentifier, isUint16, splitUint16 } from "./encoding";
+import type { Message, OnMessageCallback } from "./types";
 
 let runtime: Runtime;
 
-const onEnabledCallbacks = new Map<string, (() => void)[]>();
-const onDisabledCallbacks = new Map<string, (() => void)[]>();
-
 api.net.onLoad(() => {
     runtime = new Runtime(api.stores.network.authId);
-
-    api.onStop(api.net.room.state.session.listen("phase", (phase: string) => {
-        if(phase === "game") {
-            for(const callbacks of onEnabledCallbacks.values()) {
-                callbacks.forEach(cb => cb());
-            }
-        } else {
-            for(const callbacks of onDisabledCallbacks.values()) {
-                callbacks.forEach(cb => cb());
-            }
-        }
-    }, false));
 
     api.onStop(api.net.room.state.characters.onAdd((char: any) => {
         api.onStop(
@@ -33,64 +18,30 @@ api.net.onLoad(() => {
 });
 
 export default class Communication<T extends Message = Message> {
-    private readonly identifier: number[];
-    private readonly identifierString: string;
+    readonly #identifier: number[];
+    readonly #identifierString: string;
+    readonly #onDisabledCallbacks: (() => void)[] = [];
 
     constructor(name: string) {
-        this.identifier = getIdentifier(name);
-        this.identifierString = this.identifier.join(",");
+        this.#identifier = getIdentifier(name);
+        this.#identifierString = this.#identifier.join(",");
     }
 
-    private get scriptCallbacks() {
-        return runtime.callbacks.get(this.identifierString);
+    get #onMessageCallbacks() {
+        if(!runtime.callbacks.has(this.#identifierString)) {
+            runtime.callbacks.set(this.#identifierString, []);
+        }
+        return runtime.callbacks.get(this.#identifierString)!;
     }
 
     static get enabled() {
         return api.net.room?.state.session.phase === "game";
     }
 
-    private get onEnabledCallbacks() {
-        if(!onEnabledCallbacks.has(this.identifierString)) {
-            onEnabledCallbacks.set(this.identifierString, []);
-        }
-
-        return onEnabledCallbacks.get(this.identifierString)!;
-    }
-
-    private get onDisabledCallbacks() {
-        if(!onDisabledCallbacks.has(this.identifierString)) {
-            onDisabledCallbacks.set(this.identifierString, []);
-        }
-
-        return onDisabledCallbacks.get(this.identifierString)!;
-    }
-
-    onEnabled(callback: EnabledStateCallback, immediate = true) {
-        if(Communication.enabled && immediate) callback(true);
-
-        const listenerCallback = () => callback(false);
-        this.onEnabledCallbacks.push(listenerCallback);
-
-        return () => {
-            onEnabledCallbacks.set(
-                this.identifierString,
-                this.onEnabledCallbacks.filter(cb => cb !== listenerCallback)
-            );
-        };
-    }
-
-    onDisabled(callback: EnabledStateCallback, immediate = true) {
-        if(!Communication.enabled && immediate) callback(true);
-
-        const listenerCallback = () => callback(false);
-        this.onDisabledCallbacks.push(listenerCallback);
-
-        return () => {
-            onDisabledCallbacks.set(
-                this.identifierString,
-                this.onDisabledCallbacks.filter(cb => cb !== listenerCallback)
-            );
-        };
+    onEnabledChanged(callback: () => void) {
+        const unsub: () => void = api.net.room.state.session.listen("phase", () => callback(), false);
+        this.#onDisabledCallbacks.push(unsub);
+        return unsub;
     }
 
     async send(message: T) {
@@ -100,53 +51,53 @@ export default class Communication<T extends Message = Message> {
 
         switch (typeof message) {
             case "number": {
-                if(isUint8(message)) {
-                    await runtime.sendBytes([
-                        ...this.identifier,
-                        Op.TransmittingByteInteger,
-                        message
+                if(isUint16(message)) {
+                    return await runtime.sendBytes([
+                        ...this.#identifier,
+                        Type.Uint16,
+                        ...splitUint16(message)
                     ]);
-                } else {
-                    const messages = encodeStringMessage(this.identifier, Op.TransmittingNumber, String(message));
-                    await runtime.sendMessages(messages);
                 }
-                break;
+                const messages = encodeStringMessage(this.#identifier, Type.Number, String(message));
+                return await runtime.sendMessages(messages);
             }
             case "string": {
-                const messages = encodeStringMessage(this.identifier, Op.TransmittingString, message);
-                if(messages) await runtime.sendMessages(messages);
-                break;
+                if(message.length <= 2) {
+                    return await runtime.sendBytes([
+                        ...this.#identifier,
+                        Type.TwoCharacters,
+                        ...encodeCharacters(message)
+                    ]);
+                }
+                const messages = encodeStringMessage(this.#identifier, Type.String, message);
+                return await runtime.sendMessages(messages);
             }
             case "boolean": {
-                await runtime.sendBytes([
-                    ...this.identifier,
-                    Op.TransmittingBoolean,
+                return await runtime.sendBytes([
+                    ...this.#identifier,
+                    Type.Boolean,
                     message ? 1 : 0
                 ]);
-                break;
             }
             case "object": {
-                const messages = encodeStringMessage(this.identifier, Op.TransmittingObject, JSON.stringify(message));
-                await runtime.sendMessages(messages);
+                const messages = encodeStringMessage(this.#identifier, Type.Object, JSON.stringify(message));
+                return await runtime.sendMessages(messages);
             }
         }
     }
 
     onMessage(callback: OnMessageCallback<T>) {
-        if(!this.scriptCallbacks) {
-            runtime.callbacks.set(this.identifierString, []);
-        }
-
-        this.scriptCallbacks!.push(callback as OnMessageCallback<Message>);
+        const cb = callback as OnMessageCallback<Message>;
+        this.#onMessageCallbacks.push(cb);
 
         return () => {
-            runtime.callbacks.set(this.identifierString, this.scriptCallbacks!.filter(cb => cb !== callback));
+            const index = this.#onMessageCallbacks.indexOf(cb);
+            if(index !== -1) this.#onMessageCallbacks.slice(index, 1);
         };
     }
 
     destroy() {
-        runtime.callbacks.delete(this.identifierString);
-        onEnabledCallbacks.delete(this.identifierString);
-        onDisabledCallbacks.delete(this.identifierString);
+        runtime.callbacks.delete(this.#identifierString);
+        this.#onDisabledCallbacks.forEach(cb => cb());
     }
 }

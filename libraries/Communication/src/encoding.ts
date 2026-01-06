@@ -1,6 +1,11 @@
-import type { Op } from "./consts";
+import type { Type } from "./consts";
 
-export const isUint8 = (n: number) => Number.isInteger(n) && n >= 0 && n <= 255;
+export const isUint16 = (n: number) => Number.isInteger(n) && n >= 0 && n <= 65535;
+export const splitUint16 = (int: number) => [
+    (int >> 8) & 0xFF,
+    int & 0xFF
+];
+export const getUint16 = (int1: number, int2: number) => (int1 << 8) | int2;
 
 export function bytesToFloat(bytes: number[]) {
     const buffer = new ArrayBuffer(8);
@@ -39,14 +44,19 @@ export function getIdentifier(str: string) {
     ];
 }
 
-export function encodeStringMessage(identifier: number[], op: Op, message: string) {
-    let codes = message.split("").map((c) => c.charCodeAt(0));
-    codes = codes.filter((c) => c < 256);
+export const encodeCharacters = (characters: string) =>
+    characters
+        .split("")
+        .map((c) => c.charCodeAt(0))
+        .filter((c) => c < 256);
+
+export function encodeStringMessage(identifier: number[], type: Type, message: string) {
+    const codes = encodeCharacters(message);
 
     const charsLow = codes.length & 255;
     const charsHigh = (codes.length & 65280) >> 8;
 
-    const header = [...identifier, op, charsHigh, charsLow];
+    const header = [...identifier, type, charsHigh, charsLow];
     const messages = [bytesToFloat(header)];
 
     while(codes.length % 7 !== 0) codes.push(0);
