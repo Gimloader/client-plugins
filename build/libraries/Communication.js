@@ -2,10 +2,10 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.2.2
+ * @version 0.2.3
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Improve message efficiency
+ * @changelog Fixed real angle not being sent
  * @isLibrary true
  */
 
@@ -54,17 +54,20 @@ var Runtime = class {
   static sending = false;
   static angleChangeRes = null;
   static messageStates = /* @__PURE__ */ new Map();
-  static messageSendingAmount = 0;
   static angleQueue = [];
   static callbacks = /* @__PURE__ */ new Map();
   static alternate = false;
   static myId = "";
+  static ignoreNextAngle = false;
   static init(myId) {
     this.myId = myId;
     api.net.on("send:AIMING", (message, editFn) => {
-      if (this.sending) return;
+      if (this.ignoreNextAngle) {
+        this.ignoreNextAngle = false;
+        return;
+      }
       this.pendingAngle = message.angle;
-      editFn(null);
+      if (this.sending) editFn(null);
     });
   }
   static async sendBoolean(identifier, value) {
@@ -115,6 +118,7 @@ var Runtime = class {
     if (this.alternate) header[7] |= 128;
     await this.sendAngle(bytesToFloat(header));
   }
+  // Maxmium of 7 bytes
   static async sendBytes(bytes) {
     this.alternate = !this.alternate;
     if (this.alternate) bytes[7] = 1;
@@ -130,18 +134,18 @@ var Runtime = class {
       });
     }
     this.angleQueue.unshift({ angle });
+    this.sending = true;
     while (this.angleQueue.length) {
-      const pendingAngle = this.angleQueue.shift();
-      this.sending = true;
-      api.net.send("AIMING", { angle: pendingAngle.angle });
+      const queuedAngle = this.angleQueue.shift();
+      this.ignoreNextAngle = true;
+      api.net.send("AIMING", { angle: queuedAngle.angle });
       await new Promise((res) => this.angleChangeRes = res);
-      this.sending = false;
-      pendingAngle.resolve?.();
+      queuedAngle.resolve?.();
     }
-  }
-  static async sendRealAngle() {
+    this.sending = false;
+    console.log("Sending done, pending angle is", this.pendingAngle);
     if (!this.pendingAngle) return;
-    await this.sendAngle(this.pendingAngle);
+    api.net.send("AIMING", { angle: this.pendingAngle });
   }
   static handleAngle(char, angle) {
     if (!angle) return;
@@ -184,6 +188,7 @@ var Runtime = class {
       const callbacksForIdentifier2 = this.callbacks.get(state.identifierString);
       if (!callbacksForIdentifier2) return;
       const gotValue = (value) => {
+        this.messageStates.delete(char);
         callbacksForIdentifier2.forEach((callback) => {
           callback(value, char);
         });
@@ -210,15 +215,10 @@ var Runtime = class {
           const obj = JSON.parse(string);
           gotValue(obj);
         } catch {
+          this.messageStates.delete(char);
         }
       }
     }
-  }
-  static async sendMessages(messages) {
-    this.messageSendingAmount++;
-    await Promise.all(messages.map((message) => this.sendBytes(message)));
-    this.messageSendingAmount--;
-    if (!this.messageSendingAmount) this.sendRealAngle();
   }
 };
 
