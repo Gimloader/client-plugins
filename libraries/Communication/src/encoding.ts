@@ -11,7 +11,7 @@ export function bytesToFloat(bytes: number[]) {
     const buffer = new ArrayBuffer(8);
     const view = new Uint8Array(buffer);
 
-    for(let i = 0; i < 7; i++) {
+    for(let i = 0; i < 8; i++) {
         view[i] = bytes[i] ?? 0;
     }
 
@@ -57,7 +57,7 @@ export function encodeStringMessage(identifier: number[], type: Type, message: s
     const charsHigh = (codes.length & 65280) >> 8;
 
     const header = [...identifier, type, charsHigh, charsLow];
-    const messages = [bytesToFloat(header)];
+    const messages = [header];
 
     while(codes.length % 7 !== 0) codes.push(0);
 
@@ -66,7 +66,7 @@ export function encodeStringMessage(identifier: number[], type: Type, message: s
         for(let j = 0; j < 7; j++) {
             msg[j] = codes[i + j];
         }
-        messages.push(bytesToFloat(msg));
+        messages.push(msg);
     }
 
     return messages;

@@ -10,7 +10,7 @@ export default class Runtime {
     private messageSendingAmount = 0;
     private readonly angleQueue: PendingAngle[] = [];
     readonly callbacks = new Map<string, OnMessageCallback[]>();
-    private altType = false;
+    private alternate = false;
 
     constructor(private myId: string) {
         api.net.on("send:AIMING", (message, editFn) => {
@@ -21,10 +21,11 @@ export default class Runtime {
         });
     }
 
-    // Make sure messages with an Op are different from the last so they don't get dropped
     async sendBytes(bytes: number[]) {
-        this.altType = !this.altType;
-        if(this.altType) bytes[4] += 10;
+        // Make sure messages with an Op are different from the last so they don't get dropped
+        this.alternate = !this.alternate;
+        if(this.alternate) bytes[7] = 1;
+
         await this.sendAngle(bytesToFloat(bytes));
     }
 
@@ -70,7 +71,7 @@ export default class Runtime {
         const state = this.messageStates.get(char);
 
         if(callbacksForIdentifier) {
-            const type = bytes[4] >= 10 ? bytes[4] - 10 : bytes[4];
+            const type = bytes[4];
 
             if(type === Type.Boolean) {
                 callbacksForIdentifier.forEach(callback => {
@@ -123,9 +124,9 @@ export default class Runtime {
         }
     }
 
-    async sendMessages(messages: number[]) {
+    async sendMessages(messages: number[][]) {
         this.messageSendingAmount++;
-        await Promise.all(messages.map(message => this.sendAngle(message)));
+        await Promise.all(messages.map(message => this.sendBytes(message)));
         this.messageSendingAmount--;
         if(!this.messageSendingAmount) this.sendRealAngle();
     }

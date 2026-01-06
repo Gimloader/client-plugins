@@ -2,12 +2,10 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.2.0
+ * @version 0.2.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Allowed unsigned 16-bit integers to be sent in a single message
- * @changelog Allowed strings with a length of 1-2 to be sent in a single message
- * @changelog Simplified onEnabled/onDisabled to only onEnabledChange
+ * @changelog Better handling of repeated messages
  * @isLibrary true
  */
 
@@ -21,7 +19,7 @@ var getUint16 = (int1, int2) => int1 << 8 | int2;
 function bytesToFloat(bytes) {
   const buffer = new ArrayBuffer(8);
   const view = new Uint8Array(buffer);
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 8; i++) {
     view[i] = bytes[i] ?? 0;
   }
   return new Float64Array(buffer)[0];
@@ -53,14 +51,14 @@ function encodeStringMessage(identifier, type, message) {
   const charsLow = codes.length & 255;
   const charsHigh = (codes.length & 65280) >> 8;
   const header = [...identifier, type, charsHigh, charsLow];
-  const messages = [bytesToFloat(header)];
+  const messages = [header];
   while (codes.length % 7 !== 0) codes.push(0);
   for (let i = 0; i < codes.length; i += 7) {
     const msg = [];
     for (let j = 0; j < 7; j++) {
       msg[j] = codes[i + j];
     }
-    messages.push(bytesToFloat(msg));
+    messages.push(msg);
   }
   return messages;
 }
@@ -82,11 +80,10 @@ var Runtime = class {
   messageSendingAmount = 0;
   angleQueue = [];
   callbacks = /* @__PURE__ */ new Map();
-  altType = false;
-  // Make sure messages with an Op are different from the last so they don't get dropped
+  alternate = false;
   async sendBytes(bytes) {
-    this.altType = !this.altType;
-    if (this.altType) bytes[4] += 10;
+    this.alternate = !this.alternate;
+    if (this.alternate) bytes[7] = 1;
     await this.sendAngle(bytesToFloat(bytes));
   }
   async sendAngle(angle) {
@@ -121,7 +118,7 @@ var Runtime = class {
     const callbacksForIdentifier = this.callbacks.get(identifierString);
     const state = this.messageStates.get(char);
     if (callbacksForIdentifier) {
-      const type = bytes[4] >= 10 ? bytes[4] - 10 : bytes[4];
+      const type = bytes[4];
       if (type === 0 /* Boolean */) {
         callbacksForIdentifier.forEach((callback) => {
           callback(bytes[5] === 1, char);
@@ -170,7 +167,7 @@ var Runtime = class {
   }
   async sendMessages(messages) {
     this.messageSendingAmount++;
-    await Promise.all(messages.map((message) => this.sendAngle(message)));
+    await Promise.all(messages.map((message) => this.sendBytes(message)));
     this.messageSendingAmount--;
     if (!this.messageSendingAmount) this.sendRealAngle();
   }
