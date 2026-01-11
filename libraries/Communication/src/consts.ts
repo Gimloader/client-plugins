@@ -1,7 +1,7 @@
 export enum Type {
     Boolean,
-    PositiveUint24,
-    NegativeUint24,
+    PositiveInt24,
+    NegativeInt24,
     Float,
     ThreeCharacters,
     String,
