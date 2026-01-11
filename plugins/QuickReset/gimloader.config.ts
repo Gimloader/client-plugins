@@ -7,7 +7,7 @@ export default singleConfig({
     author: "TheLazySquid",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/QuickReset.js",
     webpage: "https://gimloader.github.io/plugins/quickreset",
-    version: "0.4.0",
-    changelog: ["Added Gimloader commands for resetting"],
+    version: "0.4.1",
+    changelog: ["Supported restarting to lobby with GuestControls enabled"],
     gamemodes: ["2d"]
 });
