@@ -7,6 +7,7 @@ export default singleConfig({
     author: "TheLazySquid",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js",
     webpage: "https://gimloader.github.io/plugins/desynchronize",
-    version: "0.1.1",
-    changelog: ["Added setting for what to do when touching laser in DLD"]
+    gamemodes: ["2d"],
+    version: "0.1.2",
+    changelog: ["Added gamemode header for 2d"]
 });
