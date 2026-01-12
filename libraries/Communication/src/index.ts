@@ -3,7 +3,7 @@ import { getIdentifier, isUint24 } from "./encoding";
 import type { Message, OnMessageCallback } from "./types";
 
 api.net.onLoad(() => {
-    Runtime.init(api.stores.network.authId);
+    Runtime.init();
 
     api.onStop(api.net.room.state.characters.onAdd((char: any) => {
         api.onStop(

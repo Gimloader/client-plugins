@@ -17,5 +17,6 @@ export interface MessageState {
 
 export interface PendingAngle {
     angle: number;
-    resolve?: () => void;
+    resolve: () => void;
+    reject: () => void;
 }

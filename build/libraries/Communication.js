@@ -2,10 +2,10 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.2.3
+ * @version 0.3.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Fixed real angle not being sent
+ * @changelog Fixed the angle queue freezing when ending the game
  * @isLibrary true
  */
 
@@ -53,35 +53,40 @@ function encodeCharacters(characters) {
 // libraries/Communication/src/core.ts
 var Runtime = class {
   static pendingAngle = 0;
-  static sending = false;
   static angleChangeRes = null;
+  static angleChangeRej = null;
   static messageStates = /* @__PURE__ */ new Map();
   static angleQueue = [];
   static callbacks = /* @__PURE__ */ new Map();
   static alternate = false;
-  static myId = "";
   static ignoreNextAngle = false;
-  static init(myId) {
-    this.myId = myId;
+  static init() {
     api.net.on("send:AIMING", (message, editFn) => {
       if (this.ignoreNextAngle) {
         this.ignoreNextAngle = false;
         return;
       }
       this.pendingAngle = message.angle;
-      if (this.sending) editFn(null);
+      if (this.angleQueue.length > 0) editFn(null);
     });
+    api.net.room.state.session.listen("phase", (phase) => {
+      if (phase === "game") return;
+      this.angleQueue.forEach((pending) => pending.reject());
+      this.angleQueue.length = 0;
+      this.angleChangeRej?.();
+      this.messageStates.clear();
+    }, false);
   }
   static async sendBoolean(identifier, value) {
     await this.sendHeader(identifier, 0 /* Boolean */, value ? 1 : 0);
   }
   static async sendPositiveUint24(identifier, value) {
     const bytes = splitUint24(value);
-    await this.sendHeader(identifier, 1 /* PositiveUint24 */, ...bytes);
+    await this.sendHeader(identifier, 1 /* PositiveInt24 */, ...bytes);
   }
   static async sendNegativeUint24(identifier, value) {
     const bytes = splitUint24(-value);
-    await this.sendHeader(identifier, 2 /* NegativeUint24 */, ...bytes);
+    await this.sendHeader(identifier, 2 /* NegativeInt24 */, ...bytes);
   }
   static async sendNumber(identifier, value) {
     const bytes = floatToBytes(value);
@@ -92,7 +97,7 @@ var Runtime = class {
     const codes = encodeCharacters(string);
     await this.sendHeader(identifier, 4 /* ThreeCharacters */, ...codes);
   }
-  static async #sendStringOfType(identifier, string, type) {
+  static async sendStringOfType(identifier, string, type) {
     const codes = encodeCharacters(string);
     codes.push(0);
     await this.sendHeader(identifier, type, ...codes.slice(0, 3));
@@ -106,11 +111,11 @@ var Runtime = class {
     }
   }
   static async sendString(identifier, string) {
-    await this.#sendStringOfType(identifier, string, 5 /* String */);
+    await this.sendStringOfType(identifier, string, 5 /* String */);
   }
   static async sendObject(identifier, obj) {
     const string = JSON.stringify(obj);
-    await this.#sendStringOfType(identifier, string, 6 /* Object */);
+    await this.sendStringOfType(identifier, string, 6 /* Object */);
   }
   // Maxmium of 3 free bytes
   static async sendHeader(identifier, type, ...free) {
@@ -127,30 +132,41 @@ var Runtime = class {
     await this.sendAngle(bytesToFloat(bytes));
   }
   static async sendAngle(angle) {
-    if (this.sending) {
-      return new Promise((res) => {
-        this.angleQueue.push({
-          angle,
-          resolve: res
-        });
+    return new Promise((res, rej) => {
+      this.angleQueue.push({
+        angle,
+        resolve: res,
+        reject: rej
       });
-    }
-    this.angleQueue.unshift({ angle });
-    this.sending = true;
-    while (this.angleQueue.length) {
-      const queuedAngle = this.angleQueue.shift();
+      if (this.angleQueue.length > 1) return;
+      this.processQueue();
+    });
+  }
+  static async processQueue() {
+    while (this.angleQueue.length > 0) {
+      const queuedAngle = this.angleQueue[0];
       this.ignoreNextAngle = true;
       api.net.send("AIMING", { angle: queuedAngle.angle });
-      await new Promise((res) => this.angleChangeRes = res);
-      queuedAngle.resolve?.();
+      try {
+        await this.awaitAngleChange();
+      } catch {
+        break;
+      }
+      queuedAngle.resolve();
+      this.angleQueue.shift();
     }
-    this.sending = false;
     if (!this.pendingAngle) return;
     api.net.send("AIMING", { angle: this.pendingAngle });
   }
+  static async awaitAngleChange() {
+    return new Promise((res, rej) => {
+      this.angleChangeRes = res;
+      this.angleChangeRej = rej;
+    });
+  }
   static handleAngle(char, angle) {
     if (!angle) return;
-    if (char.id === this.myId) return this.angleChangeRes?.();
+    if (char.id === api.stores.network.authId) return this.angleChangeRes?.();
     const bytes = floatToBytes(angle);
     const identifierBytes = bytes.slice(0, 4);
     const identifierString = identifierBytes.join(",");
@@ -165,9 +181,9 @@ var Runtime = class {
       };
       if (type === 0 /* Boolean */) {
         gotValue(bytes[4] === 1);
-      } else if (type === 1 /* PositiveUint24 */) {
+      } else if (type === 1 /* PositiveInt24 */) {
         gotValue(joinUint24(bytes[4], bytes[5], bytes[6]));
-      } else if (type === 2 /* NegativeUint24 */) {
+      } else if (type === 2 /* NegativeInt24 */) {
         gotValue(-joinUint24(bytes[4], bytes[5], bytes[6]));
       } else if (type === 3 /* Float */) {
         this.messageStates.set(char, {
@@ -225,7 +241,7 @@ var Runtime = class {
 
 // libraries/Communication/src/index.ts
 api.net.onLoad(() => {
-  Runtime.init(api.stores.network.authId);
+  Runtime.init();
   api.onStop(api.net.room.state.characters.onAdd((char) => {
     api.onStop(
       char.projectiles.listen("aimAngle", (angle) => {
