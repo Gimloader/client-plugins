@@ -2,10 +2,11 @@
  * @name Desynchronize
  * @description Disables the client being snapped back by the server, others cannot see you move. Breaks most gamemodes.
  * @author TheLazySquid
- * @version 0.1.1
+ * @version 0.1.2
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @webpage https://gimloader.github.io/plugins/desynchronize
- * @changelog Added setting for what to do when touching laser in DLD
+ * @gamemode 2d
+ * @changelog Added gamemode header for 2d
  */
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
