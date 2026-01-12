@@ -2,7 +2,7 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.2.4
+ * @version 0.3.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
  * @changelog Fixed the angle queue freezing when ending the game
@@ -53,8 +53,8 @@ function encodeCharacters(characters) {
 // libraries/Communication/src/core.ts
 var Runtime = class {
   static pendingAngle = 0;
-  static sending = false;
   static angleChangeRes = null;
+  static angleChangeRej = null;
   static messageStates = /* @__PURE__ */ new Map();
   static angleQueue = [];
   static callbacks = /* @__PURE__ */ new Map();
@@ -67,12 +67,14 @@ var Runtime = class {
         return;
       }
       this.pendingAngle = message.angle;
-      if (this.sending) editFn(null);
+      if (this.angleQueue.length > 0) editFn(null);
     });
     api.net.room.state.session.listen("phase", (phase) => {
       if (phase === "game") return;
+      this.angleQueue.forEach((pending) => pending.reject());
       this.angleQueue.length = 0;
-      this.angleChangeRes?.();
+      this.angleChangeRej?.();
+      this.messageStates.clear();
     }, false);
   }
   static async sendBoolean(identifier, value) {
@@ -130,26 +132,37 @@ var Runtime = class {
     await this.sendAngle(bytesToFloat(bytes));
   }
   static async sendAngle(angle) {
-    if (this.sending) {
-      return new Promise((res) => {
-        this.angleQueue.push({
-          angle,
-          resolve: res
-        });
+    return new Promise((res, rej) => {
+      this.angleQueue.push({
+        angle,
+        resolve: res,
+        reject: rej
       });
-    }
-    this.angleQueue.unshift({ angle });
-    this.sending = true;
-    while (this.angleQueue.length) {
-      const queuedAngle = this.angleQueue.shift();
+      if (this.angleQueue.length > 1) return;
+      this.processQueue();
+    });
+  }
+  static async processQueue() {
+    while (this.angleQueue.length > 0) {
+      const queuedAngle = this.angleQueue[0];
       this.ignoreNextAngle = true;
       api.net.send("AIMING", { angle: queuedAngle.angle });
-      await new Promise((res) => this.angleChangeRes = res);
-      queuedAngle.resolve?.();
+      try {
+        await this.awaitAngleChange();
+      } catch {
+        break;
+      }
+      queuedAngle.resolve();
+      this.angleQueue.shift();
     }
-    this.sending = false;
     if (!this.pendingAngle) return;
     api.net.send("AIMING", { angle: this.pendingAngle });
+  }
+  static async awaitAngleChange() {
+    return new Promise((res, rej) => {
+      this.angleChangeRes = res;
+      this.angleChangeRej = rej;
+    });
   }
   static handleAngle(char, angle) {
     if (!angle) return;

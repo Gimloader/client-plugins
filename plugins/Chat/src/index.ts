@@ -15,8 +15,12 @@ api.net.onLoad(() => {
     const comms = new Comms<string | Ops>("Chat");
 
     UI.init(async (text: string) => {
-        await comms.send(text);
-        UI.addMessage(`${me.name}: ${text}`, true);
+        try {
+            await comms.send(text);
+            UI.addMessage(`${me.name}: ${text}`, true);
+        } catch {
+            UI.addMessage("Message failed to send", true);
+        }
     });
 
     const joinedPlayers = new Set<string>();

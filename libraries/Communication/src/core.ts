@@ -4,8 +4,8 @@ import type { Message, MessageState, OnMessageCallback, PendingAngle } from "./t
 
 export default class Runtime {
     private static pendingAngle = 0;
-    private static sending = false;
     private static angleChangeRes: (() => void) | null = null;
+    private static angleChangeRej: (() => void) | null = null;
     private static readonly messageStates = new Map<string, MessageState>();
     private static readonly angleQueue: PendingAngle[] = [];
     static readonly callbacks = new Map<string, OnMessageCallback[]>();
@@ -20,14 +20,18 @@ export default class Runtime {
             }
 
             this.pendingAngle = message.angle;
-            if(this.sending) editFn(null);
+
+            // Cancel it if we still have messages to send
+            if(this.angleQueue.length > 0) editFn(null);
         });
 
         // Purge the queue once the game ends
         api.net.room.state.session.listen("phase", (phase: string) => {
             if(phase === "game") return;
+            this.angleQueue.forEach((pending) => pending.reject());
             this.angleQueue.length = 0;
-            this.angleChangeRes?.();
+            this.angleChangeRej?.();
+            this.messageStates.clear();
         }, false);
     }
 
@@ -104,33 +108,45 @@ export default class Runtime {
     }
 
     private static async sendAngle(angle: number) {
-        if(this.sending) {
-            return new Promise<void>(res => {
-                this.angleQueue.push({
-                    angle,
-                    resolve: res
-                });
+        return new Promise<void>((res, rej) => {
+            this.angleQueue.push({
+                angle,
+                resolve: res,
+                reject: rej
             });
-        }
 
-        this.angleQueue.unshift({ angle });
-        this.sending = true;
+            if(this.angleQueue.length > 1) return;
+            this.processQueue();
+        });
+    }
 
-        while(this.angleQueue.length) {
-            const queuedAngle = this.angleQueue.shift()!;
+    static async processQueue() {
+        while(this.angleQueue.length > 0) {
+            const queuedAngle = this.angleQueue[0];
 
             this.ignoreNextAngle = true;
             api.net.send("AIMING", { angle: queuedAngle.angle });
-            await new Promise<void>(res => this.angleChangeRes = res);
 
-            queuedAngle.resolve?.();
+            try {
+                await this.awaitAngleChange();
+            } catch {
+                break;
+            }
+
+            queuedAngle.resolve();
+            this.angleQueue.shift();
         }
-
-        this.sending = false;
 
         // Send the real angle afterwards (we don't care about this being dropped)
         if(!this.pendingAngle) return;
         api.net.send("AIMING", { angle: this.pendingAngle });
+    }
+
+    static async awaitAngleChange() {
+        return new Promise<void>((res, rej) => {
+            this.angleChangeRes = res;
+            this.angleChangeRej = rej;
+        });
     }
 
     static handleAngle(char: any, angle: number) {

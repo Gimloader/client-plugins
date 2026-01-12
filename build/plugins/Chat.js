@@ -2,12 +2,12 @@
  * @name Chat
  * @description Adds an in-game chat to 2d gamemodes
  * @author TheLazySquid
- * @version 0.2.6
+ * @version 0.2.7
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Chat.js
  * @webpage https://gimloader.github.io/plugins/chat
  * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Updated to new Communication protocol
+ * @changelog Added message showing when message fails to send
  */
 
 // plugins/Chat/src/consts.ts
@@ -171,8 +171,12 @@ api.net.onLoad(() => {
   const Comms = api.lib("Communication");
   const comms = new Comms("Chat");
   UI.init(async (text) => {
-    await comms.send(text);
-    UI.addMessage(`${me.name}: ${text}`, true);
+    try {
+      await comms.send(text);
+      UI.addMessage(`${me.name}: ${text}`, true);
+    } catch {
+      UI.addMessage("Message failed to send", true);
+    }
   });
   const joinedPlayers = /* @__PURE__ */ new Set();
   comms.onMessage((message, char) => {
