@@ -52,9 +52,9 @@ export default class Communication<T extends Message = Message> {
         switch (typeof message) {
             case "number": {
                 if(isUint24(message)) {
-                    return await Runtime.sendPositiveUint24(this.#identifier, message);
+                    return await Runtime.sendPositiveInt24(this.#identifier, message);
                 } else if(isUint24(-message)) {
-                    return await Runtime.sendNegativeUint24(this.#identifier, message);
+                    return await Runtime.sendNegativeInt24(this.#identifier, message);
                 } else {
                     return await Runtime.sendNumber(this.#identifier, message);
                 }

@@ -39,20 +39,27 @@ export default class Runtime {
         await this.sendHeader(identifier, Type.Boolean, value ? 1 : 0);
     }
 
-    static async sendPositiveUint24(identifier: number[], value: number) {
+    static async sendPositiveInt24(identifier: number[], value: number) {
         const bytes = splitUint24(value);
         await this.sendHeader(identifier, Type.PositiveInt24, ...bytes);
     }
 
-    static async sendNegativeUint24(identifier: number[], value: number) {
+    static async sendNegativeInt24(identifier: number[], value: number) {
         const bytes = splitUint24(-value);
         await this.sendHeader(identifier, Type.NegativeInt24, ...bytes);
     }
 
     static async sendNumber(identifier: number[], value: number) {
         const bytes = floatToBytes(value);
-        await this.sendHeader(identifier, Type.Float, ...bytes.slice(0, 3));
-        await this.sendBytes(bytes.slice(3, 8));
+
+        const payloadBytes = bytes.slice(3, 8);
+        this.alternate = !this.alternate;
+        if(this.alternate) payloadBytes[7] = 1;
+
+        await Promise.all([
+            this.sendHeader(identifier, Type.Float, ...bytes.slice(0, 3)),
+            this.sendAngle(bytesToFloat(payloadBytes))
+        ]);
     }
 
     static async sendThreeCharacters(identifier: number[], string: string) {
@@ -62,9 +69,7 @@ export default class Runtime {
 
     private static async sendStringOfType(identifier: number[], string: string, type: Type) {
         const codes = encodeCharacters(string);
-        codes.push(0); // Null terminator
-
-        await this.sendHeader(identifier, type, ...codes.slice(0, 3));
+        const messages: number[][] = [];
 
         // Send the string 7 bytes at a time
         for(let i = 3; i < codes.length; i += 7) {
@@ -74,8 +79,19 @@ export default class Runtime {
                 msg[j] = codes[i + j];
             }
 
-            await this.sendBytes(msg);
+            this.alternate = !this.alternate;
+            if(this.alternate) msg[7] = 1;
+
+            messages.push(msg);
         }
+
+        // Signal that the message has ended
+        messages.at(-1)![7] = 2;
+
+        await Promise.all([
+            this.sendHeader(identifier, type, ...codes.slice(0, 3)),
+            ...messages.map(msg => this.sendAngle(bytesToFloat(msg)))
+        ]);
     }
 
     static async sendString(identifier: number[], string: string) {
@@ -99,14 +115,6 @@ export default class Runtime {
         await this.sendAngle(bytesToFloat(header));
     }
 
-    // Maxmium of 7 bytes
-    private static async sendBytes(bytes: number[]) {
-        this.alternate = !this.alternate;
-        if(this.alternate) bytes[7] = 1;
-
-        await this.sendAngle(bytesToFloat(bytes));
-    }
-
     private static async sendAngle(angle: number) {
         return new Promise<void>((res, rej) => {
             this.angleQueue.push({
@@ -120,7 +128,7 @@ export default class Runtime {
         });
     }
 
-    static async processQueue() {
+    private static async processQueue() {
         while(this.angleQueue.length > 0) {
             const queuedAngle = this.angleQueue[0];
 
@@ -142,7 +150,7 @@ export default class Runtime {
         api.net.send("AIMING", { angle: this.pendingAngle });
     }
 
-    static async awaitAngleChange() {
+    private static async awaitAngleChange() {
         return new Promise<void>((res, rej) => {
             this.angleChangeRes = res;
             this.angleChangeRej = rej;
@@ -178,20 +186,9 @@ export default class Runtime {
                 return gotValue(bytesToFloat(numberBytes));
             }
 
-            // Null-terminated strings
-            let ended = false;
+            state.recieved.push(...bytes.slice(0, 7).filter(byte => byte !== 0));
+            if(bytes[7] !== 2) return;
 
-            for(let i = 0; i < 7; i++) {
-                const byte = bytes[i];
-                if(byte === 0) {
-                    ended = true;
-                    break;
-                }
-
-                state.recieved.push(byte);
-            }
-
-            if(!ended) return;
             const string = String.fromCharCode(...state.recieved);
 
             if(state.type === Type.String) {
