@@ -161,38 +161,7 @@ export default class Runtime {
 
         const state = this.messageStates.get(char);
 
-        if(callbacksForIdentifier) {
-            const type = bytes[7] & 0x7F;
-
-            const gotValue = (value: Message) => {
-                callbacksForIdentifier.forEach(callback => {
-                    callback(value, char);
-                });
-            };
-
-            if(type === Type.Boolean) {
-                gotValue(bytes[4] === 1);
-            } else if(type === Type.PositiveInt24) {
-                gotValue(joinUint24(bytes[4], bytes[5], bytes[6]));
-            } else if(type === Type.NegativeInt24) {
-                gotValue(-joinUint24(bytes[4], bytes[5], bytes[6]));
-            } else if(type === Type.Float) {
-                this.messageStates.set(char, {
-                    type: Type.Float,
-                    identifierString,
-                    recieved: bytes.slice(4, 7)
-                });
-            } else if(type === Type.ThreeCharacters) {
-                const codes = bytes.slice(4, 7).filter(b => b !== 0);
-                gotValue(String.fromCharCode(...codes));
-            } else if(type === Type.String || type === Type.Object) {
-                this.messageStates.set(char, {
-                    type,
-                    identifierString,
-                    recieved: bytes.slice(4, 7)
-                });
-            }
-        } else if(state) {
+        if(state) {
             const callbacksForIdentifier = this.callbacks.get(state.identifierString);
             if(!callbacksForIdentifier) return;
 
@@ -234,6 +203,37 @@ export default class Runtime {
                 } catch {
                     this.messageStates.delete(char);
                 }
+            }
+        } else if(callbacksForIdentifier) {
+            const type = bytes[7] & 0x7F;
+
+            const gotValue = (value: Message) => {
+                callbacksForIdentifier.forEach(callback => {
+                    callback(value, char);
+                });
+            };
+
+            if(type === Type.Boolean) {
+                gotValue(bytes[4] === 1);
+            } else if(type === Type.PositiveInt24) {
+                gotValue(joinUint24(bytes[4], bytes[5], bytes[6]));
+            } else if(type === Type.NegativeInt24) {
+                gotValue(-joinUint24(bytes[4], bytes[5], bytes[6]));
+            } else if(type === Type.Float) {
+                this.messageStates.set(char, {
+                    type: Type.Float,
+                    identifierString,
+                    recieved: bytes.slice(4, 7)
+                });
+            } else if(type === Type.ThreeCharacters) {
+                const codes = bytes.slice(4, 7).filter(b => b !== 0);
+                gotValue(String.fromCharCode(...codes));
+            } else if(type === Type.String || type === Type.Object) {
+                this.messageStates.set(char, {
+                    type,
+                    identifierString,
+                    recieved: bytes.slice(4, 7)
+                });
             }
         }
     }

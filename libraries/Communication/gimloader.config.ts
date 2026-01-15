@@ -6,8 +6,11 @@ export default singleConfig({
     description: "Communication between different clients in 2D gamemodes",
     author: "retrozy",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js",
-    version: "0.3.0",
-    changelog: ["Fixed the angle queue freezing when ending the game"],
+    version: "0.3.1",
+    changelog: [
+        "Fix rare issue with messages not being sent properly",
+        "Ignore sending messages with nobody else in server"
+    ],
     gamemodes: ["2d"],
     isLibrary: true
 });

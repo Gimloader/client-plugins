@@ -2,10 +2,11 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.3.0
+ * @version 0.3.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Fixed the angle queue freezing when ending the game
+ * @changelog Fix rare issue with messages not being sent properly
+ * @changelog Ignore sending messages with nobody else in server
  * @isLibrary true
  */
 
@@ -172,36 +173,7 @@ var Runtime = class {
     const identifierString = identifierBytes.join(",");
     const callbacksForIdentifier = this.callbacks.get(identifierString);
     const state = this.messageStates.get(char);
-    if (callbacksForIdentifier) {
-      const type = bytes[7] & 127;
-      const gotValue = (value) => {
-        callbacksForIdentifier.forEach((callback) => {
-          callback(value, char);
-        });
-      };
-      if (type === 0 /* Boolean */) {
-        gotValue(bytes[4] === 1);
-      } else if (type === 1 /* PositiveInt24 */) {
-        gotValue(joinUint24(bytes[4], bytes[5], bytes[6]));
-      } else if (type === 2 /* NegativeInt24 */) {
-        gotValue(-joinUint24(bytes[4], bytes[5], bytes[6]));
-      } else if (type === 3 /* Float */) {
-        this.messageStates.set(char, {
-          type: 3 /* Float */,
-          identifierString,
-          recieved: bytes.slice(4, 7)
-        });
-      } else if (type === 4 /* ThreeCharacters */) {
-        const codes = bytes.slice(4, 7).filter((b) => b !== 0);
-        gotValue(String.fromCharCode(...codes));
-      } else if (type === 5 /* String */ || type === 6 /* Object */) {
-        this.messageStates.set(char, {
-          type,
-          identifierString,
-          recieved: bytes.slice(4, 7)
-        });
-      }
-    } else if (state) {
+    if (state) {
       const callbacksForIdentifier2 = this.callbacks.get(state.identifierString);
       if (!callbacksForIdentifier2) return;
       const gotValue = (value) => {
@@ -234,6 +206,35 @@ var Runtime = class {
         } catch {
           this.messageStates.delete(char);
         }
+      }
+    } else if (callbacksForIdentifier) {
+      const type = bytes[7] & 127;
+      const gotValue = (value) => {
+        callbacksForIdentifier.forEach((callback) => {
+          callback(value, char);
+        });
+      };
+      if (type === 0 /* Boolean */) {
+        gotValue(bytes[4] === 1);
+      } else if (type === 1 /* PositiveInt24 */) {
+        gotValue(joinUint24(bytes[4], bytes[5], bytes[6]));
+      } else if (type === 2 /* NegativeInt24 */) {
+        gotValue(-joinUint24(bytes[4], bytes[5], bytes[6]));
+      } else if (type === 3 /* Float */) {
+        this.messageStates.set(char, {
+          type: 3 /* Float */,
+          identifierString,
+          recieved: bytes.slice(4, 7)
+        });
+      } else if (type === 4 /* ThreeCharacters */) {
+        const codes = bytes.slice(4, 7).filter((b) => b !== 0);
+        gotValue(String.fromCharCode(...codes));
+      } else if (type === 5 /* String */ || type === 6 /* Object */) {
+        this.messageStates.set(char, {
+          type,
+          identifierString,
+          recieved: bytes.slice(4, 7)
+        });
       }
     }
   }
@@ -276,6 +277,7 @@ var Communication = class _Communication {
     if (!_Communication.enabled) {
       throw new Error("Communication can only be used after the game is started");
     }
+    if (api.net.room.state.characters.size <= 1) return;
     switch (typeof message) {
       case "number": {
         if (isUint24(message)) {

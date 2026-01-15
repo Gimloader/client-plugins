@@ -46,6 +46,9 @@ export default class Communication<T extends Message = Message> {
             throw new Error("Communication can only be used after the game is started");
         }
 
+        // Don't send messages if nobody else is in the server
+        if(api.net.room.state.characters.size <= 1) return;
+
         switch (typeof message) {
             case "number": {
                 if(isUint24(message)) {
