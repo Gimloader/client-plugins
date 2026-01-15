@@ -90,12 +90,9 @@ var Runtime = class {
   }
   static async sendNumber(identifier, value) {
     const bytes = floatToBytes(value);
-    const payloadBytes = bytes.slice(3, 8);
-    this.alternate = !this.alternate;
-    if (this.alternate) payloadBytes[7] = 1;
     await Promise.all([
       this.sendHeader(identifier, 3 /* Float */, ...bytes.slice(0, 3)),
-      this.sendAngle(bytesToFloat(payloadBytes))
+      this.sendBytes(bytes.slice(3, 8))
     ]);
   }
   static async sendThreeCharacters(identifier, string) {
@@ -111,14 +108,15 @@ var Runtime = class {
         if (i + j >= codes.length) break;
         msg[j] = codes[i + j];
       }
-      this.alternate = !this.alternate;
-      if (this.alternate) msg[7] = 1;
       messages.push(msg);
     }
     messages.at(-1)[7] = 2;
     await Promise.all([
       this.sendHeader(identifier, type, ...codes.slice(0, 3)),
-      ...messages.map((msg) => this.sendAngle(bytesToFloat(msg)))
+      ...messages.map((msg, i) => this.sendBytes(
+        msg,
+        i === messages.length - 1 ? 2 : void 0
+      ))
     ]);
   }
   static async sendString(identifier, string) {
@@ -135,6 +133,16 @@ var Runtime = class {
     this.alternate = !this.alternate;
     if (this.alternate) header[7] |= 128;
     await this.sendAngle(bytesToFloat(header));
+  }
+  // Maxmium of 7 bytes
+  static async sendBytes(bytes, overrideLast) {
+    if (overrideLast) {
+      bytes[7] = overrideLast;
+    } else {
+      this.alternate = !this.alternate;
+      if (this.alternate) bytes[7] = 1;
+    }
+    await this.sendAngle(bytesToFloat(bytes));
   }
   static async sendAngle(angle) {
     return new Promise((res, rej) => {

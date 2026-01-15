@@ -52,13 +52,9 @@ export default class Runtime {
     static async sendNumber(identifier: number[], value: number) {
         const bytes = floatToBytes(value);
 
-        const payloadBytes = bytes.slice(3, 8);
-        this.alternate = !this.alternate;
-        if(this.alternate) payloadBytes[7] = 1;
-
         await Promise.all([
             this.sendHeader(identifier, Type.Float, ...bytes.slice(0, 3)),
-            this.sendAngle(bytesToFloat(payloadBytes))
+            this.sendBytes(bytes.slice(3, 8))
         ]);
     }
 
@@ -79,9 +75,6 @@ export default class Runtime {
                 msg[j] = codes[i + j];
             }
 
-            this.alternate = !this.alternate;
-            if(this.alternate) msg[7] = 1;
-
             messages.push(msg);
         }
 
@@ -90,7 +83,12 @@ export default class Runtime {
 
         await Promise.all([
             this.sendHeader(identifier, type, ...codes.slice(0, 3)),
-            ...messages.map(msg => this.sendAngle(bytesToFloat(msg)))
+            ...messages.map((msg, i) =>
+                this.sendBytes(
+                    msg,
+                    i === messages.length - 1 ? 2 : undefined
+                )
+            )
         ]);
     }
 
@@ -113,6 +111,18 @@ export default class Runtime {
         if(this.alternate) header[7] |= 0x80;
 
         await this.sendAngle(bytesToFloat(header));
+    }
+
+    // Maxmium of 7 bytes
+    private static async sendBytes(bytes: number[], overrideLast?: number) {
+        if(overrideLast) {
+            bytes[7] = overrideLast;
+        } else {
+            this.alternate = !this.alternate;
+            if(this.alternate) bytes[7] = 1;
+        }
+
+        await this.sendAngle(bytesToFloat(bytes));
     }
 
     private static async sendAngle(angle: number) {
