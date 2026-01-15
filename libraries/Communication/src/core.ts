@@ -78,9 +78,6 @@ export default class Runtime {
             messages.push(msg);
         }
 
-        // Signal that the message has ended
-        messages.at(-1)![7] = 2;
-
         await Promise.all([
             this.sendHeader(identifier, type, ...codes.slice(0, 3)),
             ...messages.map((msg, i) =>

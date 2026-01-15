@@ -110,13 +110,14 @@ var Runtime = class {
       }
       messages.push(msg);
     }
-    messages.at(-1)[7] = 2;
     await Promise.all([
       this.sendHeader(identifier, type, ...codes.slice(0, 3)),
-      ...messages.map((msg, i) => this.sendBytes(
-        msg,
-        i === messages.length - 1 ? 2 : void 0
-      ))
+      ...messages.map(
+        (msg, i) => this.sendBytes(
+          msg,
+          i === messages.length - 1 ? 2 : void 0
+        )
+      )
     ]);
   }
   static async sendString(identifier, string) {
