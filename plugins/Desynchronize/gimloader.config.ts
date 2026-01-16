@@ -7,7 +7,9 @@ export default singleConfig({
     author: "TheLazySquid",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js",
     webpage: "https://gimloader.github.io/plugins/desynchronize",
-    gamemodes: ["2d"],
-    version: "0.1.2",
-    changelog: ["Added gamemode header for 2d"]
+    version: "0.2.0",
+    changelog: ["Added plugin sync setting to sync your position with other Desynchronize users"],
+    optionalLibs: [
+        "Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js"
+    ]
 });

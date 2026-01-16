@@ -1,3 +1,4 @@
+import Sync from "./sync";
 export * as DLD from "./dld";
 
 api.settings.create([
@@ -12,6 +13,12 @@ api.settings.create([
         title: "On hitting a laser in DLD",
         description: "What action should be taken when touching a laser in DLD?",
         default: "warn"
+    },
+    {
+        id: "pluginSync",
+        type: "toggle",
+        title: "Plugin Sync",
+        description: "Syncs your position (nothing else) to other players with this plugin and setting on. This requires the optional Communication library to be installed."
     }
 ]);
 
@@ -38,3 +45,34 @@ api.net.onLoad(() => {
 
     api.net.on("send:INPUT", (_, editFn) => editFn(null));
 });
+
+let sync: Sync | null = null;
+
+function stopSync() {
+    sync?.stop();
+    sync = null;
+}
+
+api.settings.listen("pluginSync", (enabled) => {
+    if(enabled) {
+        if(api.libs.isEnabled("Communication")) {
+            api.net.onLoad(() => {
+                sync ??= new Sync();
+            });
+        } else {
+            api.settings.pluginSync = false;
+            api.UI.showModal(
+                document.createElement("div"),
+                {
+                    title: "The Communication library is required for plugin sync.",
+                    closeOnBackgroundClick: true,
+                    style: "color: red"
+                }
+            );
+        }
+    } else {
+        stopSync();
+    }
+}, true);
+
+api.onStop(stopSync);
