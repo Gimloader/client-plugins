@@ -2,11 +2,10 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.3.1
+ * @version 0.3.2
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Fix rare issue with messages not being sent properly
- * @changelog Ignore sending messages with nobody else in server
+ * @changelog Fixed strings sent at a specific length never resolving
  * @isLibrary true
  */
 
@@ -81,18 +80,20 @@ var Runtime = class {
   static async sendBoolean(identifier, value) {
     await this.sendHeader(identifier, 0 /* Boolean */, value ? 1 : 0);
   }
-  static async sendPositiveUint24(identifier, value) {
+  static async sendPositiveInt24(identifier, value) {
     const bytes = splitUint24(value);
     await this.sendHeader(identifier, 1 /* PositiveInt24 */, ...bytes);
   }
-  static async sendNegativeUint24(identifier, value) {
+  static async sendNegativeInt24(identifier, value) {
     const bytes = splitUint24(-value);
     await this.sendHeader(identifier, 2 /* NegativeInt24 */, ...bytes);
   }
   static async sendNumber(identifier, value) {
     const bytes = floatToBytes(value);
-    await this.sendHeader(identifier, 3 /* Float */, ...bytes.slice(0, 3));
-    await this.sendBytes(bytes.slice(3, 8));
+    await Promise.all([
+      this.sendHeader(identifier, 3 /* Float */, ...bytes.slice(0, 3)),
+      this.sendBytes(bytes.slice(3, 8))
+    ]);
   }
   static async sendThreeCharacters(identifier, string) {
     const codes = encodeCharacters(string);
@@ -100,16 +101,20 @@ var Runtime = class {
   }
   static async sendStringOfType(identifier, string, type) {
     const codes = encodeCharacters(string);
-    codes.push(0);
-    await this.sendHeader(identifier, type, ...codes.slice(0, 3));
+    const messages = [];
     for (let i = 3; i < codes.length; i += 7) {
       const msg = [];
       for (let j = 0; j < 7; j++) {
         if (i + j >= codes.length) break;
         msg[j] = codes[i + j];
       }
-      await this.sendBytes(msg);
+      messages.push(msg);
     }
+    await Promise.all([
+      this.sendHeader(identifier, type, ...codes.slice(0, 3)),
+      ...messages.slice(0, -1).map((msg) => this.sendBytes(msg)),
+      this.sendBytes(messages[messages.length - 1], 2)
+    ]);
   }
   static async sendString(identifier, string) {
     await this.sendStringOfType(identifier, string, 5 /* String */);
@@ -127,9 +132,13 @@ var Runtime = class {
     await this.sendAngle(bytesToFloat(header));
   }
   // Maxmium of 7 bytes
-  static async sendBytes(bytes) {
-    this.alternate = !this.alternate;
-    if (this.alternate) bytes[7] = 1;
+  static async sendBytes(bytes, overrideLast) {
+    if (overrideLast) {
+      bytes[7] = overrideLast;
+    } else {
+      this.alternate = !this.alternate;
+      if (this.alternate) bytes[7] = 1;
+    }
     await this.sendAngle(bytesToFloat(bytes));
   }
   static async sendAngle(angle) {
@@ -186,16 +195,8 @@ var Runtime = class {
         const numberBytes = [...state.recieved, ...bytes.slice(0, 5)];
         return gotValue(bytesToFloat(numberBytes));
       }
-      let ended = false;
-      for (let i = 0; i < 7; i++) {
-        const byte = bytes[i];
-        if (byte === 0) {
-          ended = true;
-          break;
-        }
-        state.recieved.push(byte);
-      }
-      if (!ended) return;
+      state.recieved.push(...bytes.slice(0, 7).filter((byte) => byte !== 0));
+      if (bytes[7] !== 2) return;
       const string = String.fromCharCode(...state.recieved);
       if (state.type === 5 /* String */) {
         gotValue(string);
@@ -281,9 +282,9 @@ var Communication = class _Communication {
     switch (typeof message) {
       case "number": {
         if (isUint24(message)) {
-          return await Runtime.sendPositiveUint24(this.#identifier, message);
+          return await Runtime.sendPositiveInt24(this.#identifier, message);
         } else if (isUint24(-message)) {
-          return await Runtime.sendNegativeUint24(this.#identifier, message);
+          return await Runtime.sendNegativeInt24(this.#identifier, message);
         } else {
           return await Runtime.sendNumber(this.#identifier, message);
         }
