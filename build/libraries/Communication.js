@@ -112,12 +112,8 @@ var Runtime = class {
     }
     await Promise.all([
       this.sendHeader(identifier, type, ...codes.slice(0, 3)),
-      ...messages.map(
-        (msg, i) => this.sendBytes(
-          msg,
-          i === messages.length - 1 ? 2 : void 0
-        )
-      )
+      ...messages.slice(0, -1).map((msg) => this.sendBytes(msg)),
+      this.sendBytes(messages[messages.length - 1], 2)
     ]);
   }
   static async sendString(identifier, string) {
