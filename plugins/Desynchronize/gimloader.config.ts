@@ -11,5 +11,6 @@ export default singleConfig({
     changelog: ["Added plugin sync setting to sync your position with other Desynchronize users"],
     optionalLibs: [
         "Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js"
-    ]
+    ],
+    gamemodes: ["2d"]
 });
