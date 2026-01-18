@@ -8,10 +8,10 @@ export default singleConfig({
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/PhysicsSettings.js",
     webpage: "https://gimloader.github.io/plugins/physicssettings",
     hasSettings: true,
-    version: "0.2.2",
+    version: "0.2.3",
     gamemodes: ["2d"],
     needsPlugins: [
         "Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js"
     ],
-    changelog: ["Removed redundant desynchronization code"]
+    changelog: ["Made settings reset to default when the plugin is disabled"]
 });
