@@ -39,6 +39,6 @@ api.net.onLoad(() => {
     api.net.on("send:INPUT", (_, editFn) => {
         // Allow movement when in the creative editor
         if(api.stores.session.version === "saved" && api.stores.session.phase === "preGame") return;
-        editFn(null)
+        editFn(null);
     });
 });

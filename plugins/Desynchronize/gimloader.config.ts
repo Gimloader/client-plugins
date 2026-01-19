@@ -9,5 +9,5 @@ export default singleConfig({
     webpage: "https://gimloader.github.io/plugins/desynchronize",
     gamemodes: ["2d"],
     version: "0.1.3",
-    changelog: ["Allow inputs in creative editor"],
+    changelog: ["Allow inputs in creative editor"]
 });
