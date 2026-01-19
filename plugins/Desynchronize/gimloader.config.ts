@@ -8,6 +8,6 @@ export default singleConfig({
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js",
     webpage: "https://gimloader.github.io/plugins/desynchronize",
     gamemodes: ["2d"],
-    version: "0.1.2",
-    changelog: ["Added gamemode header for 2d"]
+    version: "0.1.3",
+    changelog: ["Allow inputs in creative editor"],
 });

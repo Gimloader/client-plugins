@@ -2,11 +2,11 @@
  * @name Desynchronize
  * @description Disables the client being snapped back by the server, others cannot see you move. Breaks most gamemodes.
  * @author TheLazySquid
- * @version 0.1.2
+ * @version 0.1.3
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @webpage https://gimloader.github.io/plugins/desynchronize
  * @gamemode 2d
- * @changelog Added gamemode header for 2d
+ * @changelog Allow inputs in creative editor
  */
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
@@ -208,7 +208,10 @@ api.net.onLoad(() => {
     }
     editFn(null);
   });
-  api.net.on("send:INPUT", (_, editFn) => editFn(null));
+  api.net.on("send:INPUT", (_, editFn) => {
+    if (api.stores.session.version === "saved" && api.stores.session.phase === "preGame") return;
+    editFn(null);
+  });
 });
 export {
   dld_exports as DLD
