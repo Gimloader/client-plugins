@@ -2,13 +2,13 @@
  * @name PhysicsSettings
  * @description Allows you to configure various things about the physics in platformer modes (client-side only)
  * @author TheLazySquid
- * @version 0.2.1
+ * @version 0.2.3
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/PhysicsSettings.js
  * @webpage https://gimloader.github.io/plugins/physicssettings
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @hasSettings true
  * @gamemode 2d
- * @changelog Added dependency on Desynchronize
+ * @changelog Made settings reset to default when the plugin is disabled
  */
 
 // plugins/PhysicsSettings/src/index.ts
@@ -37,20 +37,6 @@ api.settings.create([
     default: 310
   }
 ]);
-api.net.onLoad(() => {
-  let allowNext = true;
-  const unsub = api.net.room.state.session.listen("phase", () => {
-    allowNext = true;
-  });
-  api.onStop(() => unsub());
-  api.net.on("PHYSICS_STATE", (_, editFn) => {
-    if (allowNext) {
-      allowNext = false;
-      return;
-    }
-    editFn(null);
-  });
-});
 var updateMapOption = (key, value) => {
   const options = JSON.parse(api.stores.world.mapOptionsJSON);
   options[key] = value;
@@ -75,5 +61,13 @@ api.net.onLoad(() => {
   api.settings.listen("speed", (speed) => {
     dldTas?.setMoveSpeed(api.settings.speed);
     api.stores.me.movementSpeed = speed;
+  });
+  api.onStop(() => {
+    const options = JSON.parse(api.stores.world.mapOptionsJSON);
+    options.maxJumps = 2;
+    options.jumpHeight = 1.92;
+    api.stores.world.mapOptionsJSON = JSON.stringify(options);
+    dldTas?.setMoveSpeed(310);
+    api.stores.me.movementSpeed = 310;
   });
 });

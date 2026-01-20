@@ -296,7 +296,10 @@ api.net.onLoad(() => {
     }
     editFn(null);
   });
-  api.net.on("send:INPUT", (_, editFn) => editFn(null));
+  api.net.on("send:INPUT", (_, editFn) => {
+    if (api.stores.session.version === "saved" && api.stores.session.phase === "preGame") return;
+    editFn(null);
+  });
 });
 var sync = null;
 function stopSync() {

@@ -54,4 +54,14 @@ api.net.onLoad(() => {
         dldTas?.setMoveSpeed(api.settings.speed);
         api.stores.me.movementSpeed = speed;
     });
+
+    api.onStop(() => {
+        const options = JSON.parse(api.stores.world.mapOptionsJSON);
+        options.maxJumps = 2;
+        options.jumpHeight = 1.92;
+        api.stores.world.mapOptionsJSON = JSON.stringify(options);
+
+        dldTas?.setMoveSpeed(310);
+        api.stores.me.movementSpeed = 310;
+    });
 });
