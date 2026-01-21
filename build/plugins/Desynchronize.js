@@ -32,6 +32,7 @@ function decodeOffset(uint24) {
   const y = (yInt - offset) / scale;
   return { x, y };
 }
+var round = (num) => Math.round(num * 10) / 10;
 var Sync = class {
   Comms = api.lib("Communication");
   comms = new this.Comms("Desynchronize");
@@ -44,8 +45,8 @@ var Sync = class {
     this.unsub = api.patcher.after(api.stores.phaser.scene.worldManager.physics, "physicsStep", () => {
       if (!this.Comms.enabled || this.sending || !this.publicPosition) return;
       const translation = this.rb.translation();
-      const xOffset = +(translation.x - this.publicPosition.x).toFixed(1);
-      const yOffset = +(this.publicPosition.y - translation.y).toFixed(1);
+      const xOffset = round(translation.x - this.publicPosition.x);
+      const yOffset = round(this.publicPosition.y - translation.y);
       if (!xOffset && !yOffset) return;
       this.sending = true;
       this.publicPosition.x += xOffset;
@@ -85,8 +86,8 @@ var Sync = class {
   }
   async updatePublicPosition() {
     const translation = this.rb.translation();
-    const publicX = +translation.x.toFixed(2);
-    const publicY = +translation.y.toFixed(2);
+    const publicX = round(translation.x);
+    const publicY = round(translation.y);
     this.publicPosition = { x: publicX, y: publicY };
     await this.comms.send(`${this.publicPosition.x * 100} ${this.publicPosition.y * 100}`);
   }
