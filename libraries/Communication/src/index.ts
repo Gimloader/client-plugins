@@ -1,34 +1,35 @@
-import Runtime from "./core";
+import Messenger from "./messenger";
 import { getIdentifier, isUint24 } from "./encoding";
 import type { Message, OnMessageCallback } from "./types";
 
 api.net.onLoad(() => {
-    Runtime.init();
+    Messenger.init();
 
     api.onStop(api.net.room.state.characters.onAdd((char: any) => {
         api.onStop(
             char.projectiles.listen("aimAngle", (angle: number) => {
-                Runtime.handleAngle(char, angle);
+                Messenger.handleAngle(char, angle);
             })
         );
     }));
 });
 
 export default class Communication<T extends Message = Message> {
-    readonly #identifier: number[];
     readonly #identifierString: string;
     readonly #onDisabledCallbacks: (() => void)[] = [];
+    readonly #messenger: Messenger;
 
     constructor(name: string) {
-        this.#identifier = getIdentifier(name);
-        this.#identifierString = this.#identifier.join(",");
+        const identifier = getIdentifier(name);
+        this.#identifierString = identifier.join(",");
+        this.#messenger = new Messenger(identifier);
     }
 
     get #onMessageCallbacks() {
-        if(!Runtime.callbacks.has(this.#identifierString)) {
-            Runtime.callbacks.set(this.#identifierString, []);
+        if(!Messenger.callbacks.has(this.#identifierString)) {
+            Messenger.callbacks.set(this.#identifierString, []);
         }
-        return Runtime.callbacks.get(this.#identifierString)!;
+        return Messenger.callbacks.get(this.#identifierString)!;
     }
 
     static get enabled() {
@@ -52,25 +53,37 @@ export default class Communication<T extends Message = Message> {
         switch (typeof message) {
             case "number": {
                 if(isUint24(message)) {
-                    return await Runtime.sendPositiveInt24(this.#identifier, message);
+                    return await this.#messenger.sendPositiveInt24(message);
                 } else if(isUint24(-message)) {
-                    return await Runtime.sendNegativeInt24(this.#identifier, message);
+                    return await this.#messenger.sendNegativeInt24(message);
                 } else {
-                    return await Runtime.sendNumber(this.#identifier, message);
+                    return await this.#messenger.sendNumber(message);
                 }
             }
             case "string": {
                 if(message.length <= 3) {
-                    return await Runtime.sendThreeCharacters(this.#identifier, message);
+                    return await this.#messenger.sendThreeCharacters(message);
                 } else {
-                    return await Runtime.sendString(this.#identifier, message);
+                    return await this.#messenger.sendString(message);
                 }
             }
             case "boolean": {
-                return await Runtime.sendBoolean(this.#identifier, message);
+                return await this.#messenger.sendBoolean(message);
             }
             case "object": {
-                return await Runtime.sendObject(this.#identifier, message);
+                if(
+                    Array.isArray(message)
+                    && message.every(element => typeof element === "number")
+                    && message.every(isUint24)
+                ) {
+                    if(message.length <= 3) {
+                        return await this.#messenger.sendThreeBytes(message);
+                    } else {
+                        return await this.#messenger.sendSeveralBytes(message);
+                    }
+                } else {
+                    return await this.#messenger.sendObject(message);
+                }
             }
         }
     }
@@ -86,7 +99,7 @@ export default class Communication<T extends Message = Message> {
     }
 
     destroy() {
-        Runtime.callbacks.delete(this.#identifierString);
+        Messenger.callbacks.delete(this.#identifierString);
         this.#onDisabledCallbacks.forEach(cb => cb());
     }
 }

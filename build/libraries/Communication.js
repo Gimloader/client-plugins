@@ -2,10 +2,10 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.3.2
+ * @version 0.4.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Fixed strings sent at a specific length never resolving
+ * @changelog Allowed arrays of only bytes to be sent optimally
  * @isLibrary true
  */
 
@@ -50,8 +50,11 @@ function encodeCharacters(characters) {
   return characters.split("").map((c) => c.charCodeAt(0)).filter((c) => c < 256 && c > 0);
 }
 
-// libraries/Communication/src/core.ts
-var Runtime = class {
+// libraries/Communication/src/messenger.ts
+var Messenger = class _Messenger {
+  constructor(identifier) {
+    this.identifier = identifier;
+  }
   static pendingAngle = 0;
   static angleChangeRes = null;
   static angleChangeRej = null;
@@ -77,68 +80,74 @@ var Runtime = class {
       this.messageStates.clear();
     }, false);
   }
-  static async sendBoolean(identifier, value) {
-    await this.sendHeader(identifier, 0 /* Boolean */, value ? 1 : 0);
+  async sendBoolean(value) {
+    await this.sendHeader(0 /* Boolean */, value ? 1 : 0);
   }
-  static async sendPositiveInt24(identifier, value) {
+  async sendPositiveInt24(value) {
     const bytes = splitUint24(value);
-    await this.sendHeader(identifier, 1 /* PositiveInt24 */, ...bytes);
+    await this.sendHeader(1 /* PositiveInt24 */, ...bytes);
   }
-  static async sendNegativeInt24(identifier, value) {
+  async sendNegativeInt24(value) {
     const bytes = splitUint24(-value);
-    await this.sendHeader(identifier, 2 /* NegativeInt24 */, ...bytes);
+    await this.sendHeader(2 /* NegativeInt24 */, ...bytes);
   }
-  static async sendNumber(identifier, value) {
+  async sendNumber(value) {
     const bytes = floatToBytes(value);
-    await Promise.all([
-      this.sendHeader(identifier, 3 /* Float */, ...bytes.slice(0, 3)),
-      this.sendBytes(bytes.slice(3, 8))
-    ]);
+    await this.sendSpreadBytes(3 /* Float */, bytes);
   }
-  static async sendThreeCharacters(identifier, string) {
+  async sendThreeBytes(bytes) {
+    await this.sendHeader(7 /* ThreeBytes */, ...bytes);
+  }
+  async sendSeveralBytes(bytes) {
+    await this.sendSpreadBytes(8 /* SeveralBytes */, bytes);
+  }
+  async sendThreeCharacters(string) {
     const codes = encodeCharacters(string);
-    await this.sendHeader(identifier, 4 /* ThreeCharacters */, ...codes);
+    await this.sendHeader(4 /* ThreeCharacters */, ...codes);
   }
-  static async sendStringOfType(identifier, string, type) {
-    const codes = encodeCharacters(string);
-    const messages = [];
-    for (let i = 3; i < codes.length; i += 7) {
-      const msg = [];
-      for (let j = 0; j < 7; j++) {
-        if (i + j >= codes.length) break;
-        msg[j] = codes[i + j];
-      }
-      messages.push(msg);
-    }
-    await Promise.all([
-      this.sendHeader(identifier, type, ...codes.slice(0, 3)),
-      ...messages.slice(0, -1).map((msg) => this.sendBytes(msg)),
-      this.sendBytes(messages[messages.length - 1], 2)
-    ]);
+  async sendString(string) {
+    await this.sendStringOfType(string, 5 /* String */);
   }
-  static async sendString(identifier, string) {
-    await this.sendStringOfType(identifier, string, 5 /* String */);
-  }
-  static async sendObject(identifier, obj) {
+  async sendObject(obj) {
     const string = JSON.stringify(obj);
-    await this.sendStringOfType(identifier, string, 6 /* Object */);
+    await this.sendStringOfType(string, 6 /* Object */);
+  }
+  async sendStringOfType(string, type) {
+    const codes = encodeCharacters(string);
+    await this.sendSpreadBytes(type, codes);
+  }
+  async sendSpreadBytes(type, bytes) {
+    const messages = [];
+    for (let i = 3; i < bytes.length; i += 7) {
+      messages.push(bytes.slice(i, i + 7));
+    }
+    const lastMessage = messages.at(-1);
+    const lastIndex = lastMessage.length + 1;
+    await Promise.all([
+      this.sendHeader(type, ...bytes.slice(0, 3)),
+      ...messages.slice(0, -1).map((msg) => this.sendAlternatedBytes(msg)),
+      this.sendAlternatedBytes(lastMessage, lastIndex)
+    ]);
   }
   // Maxmium of 3 free bytes
-  static async sendHeader(identifier, type, ...free) {
-    const header = [...identifier, ...free];
+  async sendHeader(type, ...free) {
+    const header = [...this.identifier, ...free];
     header[7] = type;
-    this.alternate = !this.alternate;
-    if (this.alternate) header[7] |= 128;
-    await this.sendAngle(bytesToFloat(header));
+    _Messenger.alternate = !_Messenger.alternate;
+    if (_Messenger.alternate) header[7] |= 128;
+    await _Messenger.sendBytes(header);
   }
   // Maxmium of 7 bytes
-  static async sendBytes(bytes, overrideLast) {
+  async sendAlternatedBytes(bytes, overrideLast) {
     if (overrideLast) {
       bytes[7] = overrideLast;
     } else {
-      this.alternate = !this.alternate;
-      if (this.alternate) bytes[7] = 1;
+      _Messenger.alternate = !_Messenger.alternate;
+      if (_Messenger.alternate) bytes[7] = 1;
     }
+    await _Messenger.sendBytes(bytes);
+  }
+  static async sendBytes(bytes) {
     await this.sendAngle(bytesToFloat(bytes));
   }
   static async sendAngle(angle) {
@@ -178,25 +187,26 @@ var Runtime = class {
     if (!angle) return;
     if (char.id === api.stores.network.authId) return this.angleChangeRes?.();
     const bytes = floatToBytes(angle);
-    const identifierBytes = bytes.slice(0, 4);
-    const identifierString = identifierBytes.join(",");
-    const callbacksForIdentifier = this.callbacks.get(identifierString);
     const state = this.messageStates.get(char);
     if (state) {
-      const callbacksForIdentifier2 = this.callbacks.get(state.identifierString);
-      if (!callbacksForIdentifier2) return;
+      const callbacksForState = this.callbacks.get(state.identifierString);
+      if (!callbacksForState) return;
+      const payload = bytes.slice(0, 7);
+      const flag = bytes[7];
       const gotValue = (value) => {
         this.messageStates.delete(char);
-        callbacksForIdentifier2.forEach((callback) => {
+        callbacksForState.forEach((callback) => {
           callback(value, char);
         });
       };
-      if (state.type === 3 /* Float */) {
-        const numberBytes = [...state.recieved, ...bytes.slice(0, 5)];
-        return gotValue(bytesToFloat(numberBytes));
+      if (flag < 2) {
+        state.recieved.push(...payload);
+        return;
       }
-      state.recieved.push(...bytes.slice(0, 7).filter((byte) => byte !== 0));
-      if (bytes[7] !== 2) return;
+      state.recieved.push(...payload.slice(0, flag - 1));
+      if (state.type === 3 /* Float */) {
+        return gotValue(bytesToFloat(state.recieved));
+      }
       const string = String.fromCharCode(...state.recieved);
       if (state.type === 5 /* String */) {
         gotValue(string);
@@ -208,27 +218,32 @@ var Runtime = class {
           this.messageStates.delete(char);
         }
       }
-    } else if (callbacksForIdentifier) {
+    } else {
+      const identifierBytes = bytes.slice(0, 4);
+      const payload = bytes.slice(4, 7);
       const type = bytes[7] & 127;
+      const identifierString = identifierBytes.join(",");
+      const callbacksForIdentifier = this.callbacks.get(identifierString);
+      if (!callbacksForIdentifier) return;
       const gotValue = (value) => {
         callbacksForIdentifier.forEach((callback) => {
           callback(value, char);
         });
       };
       if (type === 0 /* Boolean */) {
-        gotValue(bytes[4] === 1);
+        gotValue(payload[0] === 1);
       } else if (type === 1 /* PositiveInt24 */) {
-        gotValue(joinUint24(bytes[4], bytes[5], bytes[6]));
+        gotValue(joinUint24(...payload));
       } else if (type === 2 /* NegativeInt24 */) {
-        gotValue(-joinUint24(bytes[4], bytes[5], bytes[6]));
+        gotValue(-joinUint24(...payload));
       } else if (type === 3 /* Float */) {
         this.messageStates.set(char, {
           type: 3 /* Float */,
           identifierString,
-          recieved: bytes.slice(4, 7)
+          recieved: payload
         });
       } else if (type === 4 /* ThreeCharacters */) {
-        const codes = bytes.slice(4, 7).filter((b) => b !== 0);
+        const codes = payload.filter((b) => b !== 0);
         gotValue(String.fromCharCode(...codes));
       } else if (type === 5 /* String */ || type === 6 /* Object */) {
         this.messageStates.set(char, {
@@ -243,28 +258,29 @@ var Runtime = class {
 
 // libraries/Communication/src/index.ts
 api.net.onLoad(() => {
-  Runtime.init();
+  Messenger.init();
   api.onStop(api.net.room.state.characters.onAdd((char) => {
     api.onStop(
       char.projectiles.listen("aimAngle", (angle) => {
-        Runtime.handleAngle(char, angle);
+        Messenger.handleAngle(char, angle);
       })
     );
   }));
 });
 var Communication = class _Communication {
-  #identifier;
   #identifierString;
   #onDisabledCallbacks = [];
+  #messenger;
   constructor(name) {
-    this.#identifier = getIdentifier(name);
-    this.#identifierString = this.#identifier.join(",");
+    const identifier = getIdentifier(name);
+    this.#identifierString = identifier.join(",");
+    this.#messenger = new Messenger(identifier);
   }
   get #onMessageCallbacks() {
-    if (!Runtime.callbacks.has(this.#identifierString)) {
-      Runtime.callbacks.set(this.#identifierString, []);
+    if (!Messenger.callbacks.has(this.#identifierString)) {
+      Messenger.callbacks.set(this.#identifierString, []);
     }
-    return Runtime.callbacks.get(this.#identifierString);
+    return Messenger.callbacks.get(this.#identifierString);
   }
   static get enabled() {
     return api.net.room?.state.session.phase === "game";
@@ -282,25 +298,33 @@ var Communication = class _Communication {
     switch (typeof message) {
       case "number": {
         if (isUint24(message)) {
-          return await Runtime.sendPositiveInt24(this.#identifier, message);
+          return await this.#messenger.sendPositiveInt24(message);
         } else if (isUint24(-message)) {
-          return await Runtime.sendNegativeInt24(this.#identifier, message);
+          return await this.#messenger.sendNegativeInt24(message);
         } else {
-          return await Runtime.sendNumber(this.#identifier, message);
+          return await this.#messenger.sendNumber(message);
         }
       }
       case "string": {
         if (message.length <= 3) {
-          return await Runtime.sendThreeCharacters(this.#identifier, message);
+          return await this.#messenger.sendThreeCharacters(message);
         } else {
-          return await Runtime.sendString(this.#identifier, message);
+          return await this.#messenger.sendString(message);
         }
       }
       case "boolean": {
-        return await Runtime.sendBoolean(this.#identifier, message);
+        return await this.#messenger.sendBoolean(message);
       }
       case "object": {
-        return await Runtime.sendObject(this.#identifier, message);
+        if (Array.isArray(message) && message.every((element) => typeof element === "number") && message.every(isUint24)) {
+          if (message.length <= 3) {
+            return await this.#messenger.sendThreeBytes(message);
+          } else {
+            return await this.#messenger.sendSeveralBytes(message);
+          }
+        } else {
+          return await this.#messenger.sendObject(message);
+        }
       }
     }
   }
@@ -313,7 +337,7 @@ var Communication = class _Communication {
     };
   }
   destroy() {
-    Runtime.callbacks.delete(this.#identifierString);
+    Messenger.callbacks.delete(this.#identifierString);
     this.#onDisabledCallbacks.forEach((cb) => cb());
   }
 };
