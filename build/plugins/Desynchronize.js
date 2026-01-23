@@ -32,30 +32,41 @@ function decodeOffset(uint24) {
   const y = (yInt - offset) / scale;
   return { x, y };
 }
-var round = (num) => Math.round(num * 10) / 10;
+var round = (num, decimals) => Math.round(num * 10 * decimals) / (10 * decimals);
 var Sync = class {
   Comms = api.lib("Communication");
   comms = new this.Comms("Desynchronize");
   publicPosition = null;
   playerPositions = /* @__PURE__ */ new Map();
-  rb = api.stores.phaser.mainCharacter.physics.getBody().rigidBody;
+  body = api.stores.phaser.mainCharacter.physics.getBody();
   sending = false;
   unsub;
-  constructor() {
-    this.unsub = api.patcher.after(api.stores.phaser.scene.worldManager.physics, "physicsStep", () => {
-      if (!this.Comms.enabled || this.sending || !this.publicPosition) return;
-      const translation = this.rb.translation();
-      const xOffset = round(translation.x - this.publicPosition.x);
-      const yOffset = round(this.publicPosition.y - translation.y);
-      if (!xOffset && !yOffset) return;
-      this.sending = true;
+  get isGrounded() {
+    return this.body.character.controller.computedGrounded();
+  }
+  async sendOffset() {
+    if (this.sending || !this.publicPosition) return;
+    this.sending = true;
+    while (true) {
+      const translation = this.body.rigidBody.translation();
+      const xOffset = round(translation.x - this.publicPosition.x, 1);
+      const yOffset = round(this.publicPosition.y - translation.y, 1);
+      if (!xOffset && !yOffset) break;
       this.publicPosition.x += xOffset;
       this.publicPosition.y -= yOffset;
       if (Math.abs(xOffset) > 204.7 || Math.abs(yOffset) > 204.7) {
-        this.updatePublicPosition().then(() => this.sending = false);
+        await this.updatePublicPosition();
       } else {
-        this.comms.send(encodeOffset(xOffset, yOffset)).then(() => this.sending = false);
+        const encodedOffset = encodeOffset(xOffset, yOffset);
+        await this.comms.send(this.isGrounded ? -encodedOffset : encodedOffset);
       }
+    }
+    this.sending = false;
+  }
+  constructor() {
+    this.unsub = api.patcher.after(api.stores.phaser.scene.worldManager.physics, "physicsStep", () => {
+      if (!this.Comms.enabled) return;
+      this.sendOffset();
     });
     if (this.Comms.enabled) {
       this.updatePublicPosition();
@@ -65,11 +76,18 @@ var Sync = class {
       this.updatePublicPosition();
     });
     this.comms.onMessage((message, char) => {
+      const character = api.stores.phaser.scene.characterManager.characters.get(char.id);
+      if (!character) return;
+      const setGrounded = character.movement.setNonMainCharacterTargetGrounded;
       if (typeof message === "string") {
-        const [x, y] = message.split(" ");
+        const isGrounded = message.includes("_");
+        const [x, y] = message.split(isGrounded ? "_" : " ");
+        setGrounded(isGrounded);
         if (!this.playerPositions.has(char.id)) this.updatePublicPosition();
         this.playerPositions.set(char.id, { x: +x / 100, y: +y / 100 });
       } else {
+        setGrounded(message < 0);
+        message = Math.abs(message);
         const { x, y } = decodeOffset(message);
         const player2 = this.playerPositions.get(char.id);
         if (!player2) return;
@@ -78,18 +96,18 @@ var Sync = class {
       }
       const player = this.playerPositions.get(char.id);
       if (!player) return;
-      const movement = api.stores.phaser.scene.characterManager.characters.get(char.id)?.movement;
-      if (!movement) return;
+      const { movement } = character;
       movement.setTargetX(player.x * 100);
       movement.setTargetY(player.y * 100);
     });
   }
   async updatePublicPosition() {
-    const translation = this.rb.translation();
-    const publicX = round(translation.x);
-    const publicY = round(translation.y);
+    const translation = this.body.rigidBody.translation();
+    const publicX = round(translation.x, 2);
+    const publicY = round(translation.y, 2);
     this.publicPosition = { x: publicX, y: publicY };
-    await this.comms.send(`${this.publicPosition.x * 100} ${this.publicPosition.y * 100}`);
+    const separator = this.isGrounded ? "_" : " ";
+    await this.comms.send(this.publicPosition.x * 100 + separator + this.publicPosition.y * 100);
   }
   stop() {
     this.unsub();
