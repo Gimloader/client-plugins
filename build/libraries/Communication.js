@@ -10,6 +10,7 @@
  */
 
 // libraries/Communication/src/encoding.ts
+var isUint8 = (n) => Number.isInteger(n) && n >= 0 && n <= 255;
 var isUint24 = (n) => Number.isInteger(n) && n >= 0 && n <= 16777215;
 var splitUint24 = (int) => [
   int >> 16 & 255,
@@ -125,8 +126,8 @@ var Messenger = class _Messenger {
     const lastIndex = lastMessage.length + 1;
     await Promise.all([
       this.sendHeader(type, ...bytes.slice(0, 3)),
-      ...messages.slice(0, -1).map((msg) => this.sendAlternatedBytes(msg)),
-      this.sendAlternatedBytes(lastMessage, lastIndex)
+      ...messages.slice(0, -1).map((msg) => _Messenger.sendAlternatedBytes(msg)),
+      _Messenger.sendAlternatedBytes(lastMessage, lastIndex)
     ]);
   }
   // Maxmium of 3 free bytes
@@ -138,14 +139,14 @@ var Messenger = class _Messenger {
     await _Messenger.sendBytes(header);
   }
   // Maxmium of 7 bytes
-  async sendAlternatedBytes(bytes, overrideLast) {
+  static async sendAlternatedBytes(bytes, overrideLast) {
     if (overrideLast) {
       bytes[7] = overrideLast;
     } else {
-      _Messenger.alternate = !_Messenger.alternate;
-      if (_Messenger.alternate) bytes[7] = 1;
+      this.alternate = !this.alternate;
+      if (this.alternate) bytes[7] = 1;
     }
-    await _Messenger.sendBytes(bytes);
+    await this.sendBytes(bytes);
   }
   static async sendBytes(bytes) {
     await this.sendAngle(bytesToFloat(bytes));
@@ -316,7 +317,7 @@ var Communication = class _Communication {
         return await this.#messenger.sendBoolean(message);
       }
       case "object": {
-        if (Array.isArray(message) && message.every((element) => typeof element === "number") && message.every(isUint24)) {
+        if (Array.isArray(message) && message.every((element) => typeof element === "number") && message.every(isUint8)) {
           if (message.length <= 3) {
             return await this.#messenger.sendThreeBytes(message);
           } else {
