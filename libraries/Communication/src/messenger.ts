@@ -96,8 +96,8 @@ export default class Messenger {
 
         await Promise.all([
             this.sendHeader(type, ...bytes.slice(0, 3)),
-            ...messages.slice(0, -1).map(msg => this.sendAlternatedBytes(msg)),
-            this.sendAlternatedBytes(lastMessage, lastIndex)
+            ...messages.slice(0, -1).map(msg => Messenger.sendAlternatedBytes(msg)),
+            Messenger.sendAlternatedBytes(lastMessage, lastIndex)
         ]);
     }
 
@@ -114,15 +114,15 @@ export default class Messenger {
     }
 
     // Maxmium of 7 bytes
-    private async sendAlternatedBytes(bytes: number[], overrideLast?: number) {
+    private static async sendAlternatedBytes(bytes: number[], overrideLast?: number) {
         if(overrideLast) {
             bytes[7] = overrideLast;
         } else {
-            Messenger.alternate = !Messenger.alternate;
-            if(Messenger.alternate) bytes[7] = 1;
+            this.alternate = !this.alternate;
+            if(this.alternate) bytes[7] = 1;
         }
 
-        await Messenger.sendBytes(bytes);
+        await this.sendBytes(bytes);
     }
 
     private static async sendBytes(bytes: number[]) {
