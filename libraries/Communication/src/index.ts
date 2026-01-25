@@ -1,5 +1,5 @@
 import Messenger from "./messenger";
-import { getIdentifier, isUint24 } from "./encoding";
+import { getIdentifier, isUint24, isUint8 } from "./encoding";
 import type { Message, OnMessageCallback } from "./types";
 
 api.net.onLoad(() => {
@@ -74,7 +74,7 @@ export default class Communication<T extends Message = Message> {
                 if(
                     Array.isArray(message)
                     && message.every(element => typeof element === "number")
-                    && message.every(isUint24)
+                    && message.every(isUint8)
                 ) {
                     if(message.length <= 3) {
                         return await this.#messenger.sendThreeBytes(message);
