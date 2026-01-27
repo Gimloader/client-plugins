@@ -2,7 +2,7 @@
  * @name KitTimesPlayed
  * @description Shows the number of times that kits have been played on the kits screen
  * @author retrozy
- * @version 0.1.0
+ * @version 0.1.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/KitTimesPlayed.js
  * @webpage https://gimloader.github.io/plugins/kittimesplayed
  * @reloadRequired notingame
@@ -57,4 +57,13 @@ api.rewriter.addParseHook("Container", (code) => {
   const playCountInfo = `, \${${playCountString} ? \`played \${${playCountString}} \${${playCountString} === 1 ? "time" : "times"}\` : "never played"}`;
   const isEnabledString = `GL.plugins.isEnabled("KitTimesPlayed")`;
   return insert(code, ".createdAt).fromNow()}@`", `\${${isEnabledString} ? \`${playCountInfo}\` : ""}`);
+});
+api.onStop(() => {
+  if (location.pathname !== "/kits" && location.pathname !== "/gamemode") return;
+  const kits = document.getElementsByClassName("ant-card ant-card-bordered ant-card-hoverable");
+  for (const kit of kits) {
+    const div = kit.children[0]?.children[0]?.children[0]?.children[1]?.children[1];
+    if (!div?.innerHTML.includes(",")) return;
+    div.innerHTML = div.innerHTML.split(",")[0];
+  }
 });
