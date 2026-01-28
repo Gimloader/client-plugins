@@ -48,7 +48,8 @@ export default class Communication<T extends Message = Message> {
         }
 
         // Don't send messages if nobody else is in the server
-        if(api.net.room.state.characters.size <= 1) return;
+        const players = [...api.net.room.state.characters.values()].filter(char => char.type === "player");
+        if(players.length <= 1) return;
 
         switch (typeof message) {
             case "number": {

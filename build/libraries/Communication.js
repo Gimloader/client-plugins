@@ -295,7 +295,8 @@ var Communication = class _Communication {
     if (!_Communication.enabled) {
       throw new Error("Communication can only be used after the game is started");
     }
-    if (api.net.room.state.characters.size <= 1) return;
+    const players = [...api.net.room.state.characters.values()].filter((char) => char.type === "player");
+    if (players.length <= 1) return;
     switch (typeof message) {
       case "number": {
         if (isUint24(message)) {
