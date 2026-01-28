@@ -2,12 +2,12 @@
  * @name PlayerCollision
  * @description Makes you collide with other players in 2d gamemodes
  * @author retrozy
- * @version 0.1.2
+ * @version 0.1.3
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/PlayerCollision.js
  * @webpage https://gimloader.github.io/plugins/playercollision
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode 2d
- * @changelog Fixed movement issue when host
+ * @changelog Actually ixed movement issue when host
  */
 
 // plugins/PlayerCollision/src/index.ts
@@ -42,7 +42,7 @@ api.net.onLoad(async () => {
       );
     })
   );
-  if (api.net.isHost) {
+  if (!api.net.isHost) {
     const { gameOwnerId } = api.stores.session;
     api.net.room.state.session.listen("phase", (phase) => {
       if (api.net.room.state.characters.get(gameOwnerId).teamId === "__SPECTATORS_TEAM" && phase === "game") {

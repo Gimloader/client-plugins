@@ -38,7 +38,7 @@ api.net.onLoad(async () => {
         })
     );
 
-    if(api.net.isHost) {
+    if(!api.net.isHost) {
         const { gameOwnerId } = api.stores.session;
         api.net.room.state.session.listen("phase", (phase: string) => {
             if(
