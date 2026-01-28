@@ -38,17 +38,19 @@ api.net.onLoad(async () => {
         })
     );
 
-    const { gameOwnerId } = api.stores.session;
-    api.net.room.state.session.listen("phase", (phase: string) => {
-        if(
-            api.net.room.state.characters.get(gameOwnerId).teamId === "__SPECTATORS_TEAM"
-            && phase === "game"
-        ) {
-            removeCollider(gameOwnerId);
-        } else {
-            createCollider(gameOwnerId);
-        }
-    });
+    if(api.net.isHost) {
+        const { gameOwnerId } = api.stores.session;
+        api.net.room.state.session.listen("phase", (phase: string) => {
+            if(
+                api.net.room.state.characters.get(gameOwnerId).teamId === "__SPECTATORS_TEAM"
+                && phase === "game"
+            ) {
+                removeCollider(gameOwnerId);
+            } else {
+                createCollider(gameOwnerId);
+            }
+        });
+    }
 
     api.patcher.before(physics, "physicsStep", () => {
         for(const [id, collider] of colliders) {
