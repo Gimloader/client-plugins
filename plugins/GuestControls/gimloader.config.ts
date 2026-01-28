@@ -5,7 +5,10 @@ export default singleConfig({
     name: "GuestControls",
     description: "Allows guests to perform host actions in 2d modes, when the host has this plugin on",
     author: "retrozy",
-    version: "0.1.0",
+    version: "0.1.1",
+    changelog: [
+        "Fixed sending the initial message when the game ends"
+    ],
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/GuestControls.js",
     webpage: "https://gimloader.github.io/plugins/guestcontrols",
     needsLibs: ["Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js"],
