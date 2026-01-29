@@ -46,6 +46,7 @@ api.net.onLoad(() => {
 
     if(api.net.isHost) {
         comms.onEnabledChanged(() => {
+            if(!Comms.enabled) return;
             comms.send(Op.PluginOn);
         });
 
