@@ -5,7 +5,7 @@ api.rewriter.exposeVar(true, {
     callback(modal: typeof Modal) {
         const originalConfirm = modal.confirm;
         modal.confirm = (props) => {
-            if(api.hotkeys.pressed.has("LeftShift")) {
+            if(api.hotkeys.pressed.has("ShiftLeft")) {
                 props.onOk?.();
 
                 return {
