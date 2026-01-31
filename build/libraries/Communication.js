@@ -96,11 +96,17 @@ var Messenger = class _Messenger {
     const bytes = floatToBytes(value);
     await this.sendSpreadBytes(3 /* Float */, bytes);
   }
-  async sendThreeBytes(bytes) {
-    await this.sendHeader(7 /* ThreeBytes */, ...bytes);
+  async sendHeaderBytes(bytes) {
+    const type = {
+      1: 7 /* Byte */,
+      2: 8 /* TwoBytes */,
+      3: 9 /* ThreeBytes */
+    }[bytes.length];
+    if (!type) return;
+    await this.sendHeader(type, ...bytes);
   }
   async sendSeveralBytes(bytes) {
-    await this.sendSpreadBytes(8 /* SeveralBytes */, bytes);
+    await this.sendSpreadBytes(10 /* SeveralBytes */, bytes);
   }
   async sendThreeCharacters(string) {
     const codes = encodeCharacters(string);
@@ -207,6 +213,8 @@ var Messenger = class _Messenger {
       state.recieved.push(...payload.slice(0, flag - 1));
       if (state.type === 3 /* Float */) {
         return gotValue(bytesToFloat(state.recieved));
+      } else if (state.type === 10 /* SeveralBytes */) {
+        return gotValue(state.recieved);
       }
       const string = String.fromCharCode(...state.recieved);
       if (state.type === 5 /* String */) {
@@ -237,20 +245,20 @@ var Messenger = class _Messenger {
         gotValue(joinUint24(...payload));
       } else if (type === 2 /* NegativeInt24 */) {
         gotValue(-joinUint24(...payload));
-      } else if (type === 3 /* Float */) {
-        this.messageStates.set(char, {
-          type: 3 /* Float */,
-          identifierString,
-          recieved: payload
-        });
+      } else if (type === 7 /* Byte */) {
+        gotValue([payload[0]]);
+      } else if (type === 8 /* TwoBytes */) {
+        gotValue(payload.slice(0, 2));
+      } else if (type === 9 /* ThreeBytes */) {
+        gotValue(payload);
       } else if (type === 4 /* ThreeCharacters */) {
         const codes = payload.filter((b) => b !== 0);
         gotValue(String.fromCharCode(...codes));
-      } else if (type === 5 /* String */ || type === 6 /* Object */) {
+      } else if (type === 5 /* String */ || type === 6 /* Object */ || type === 10 /* SeveralBytes */ || type === 3 /* Float */) {
         this.messageStates.set(char, {
           type,
           identifierString,
-          recieved: bytes.slice(4, 7)
+          recieved: payload
         });
       }
     }
@@ -320,7 +328,7 @@ var Communication = class _Communication {
       case "object": {
         if (Array.isArray(message) && message.every((element) => typeof element === "number") && message.every(isUint8)) {
           if (message.length <= 3) {
-            return await this.#messenger.sendThreeBytes(message);
+            return await this.#messenger.sendHeaderBytes(message);
           } else {
             return await this.#messenger.sendSeveralBytes(message);
           }

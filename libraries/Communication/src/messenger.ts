@@ -56,8 +56,15 @@ export default class Messenger {
         await this.sendSpreadBytes(Type.Float, bytes);
     }
 
-    async sendThreeBytes(bytes: number[]) {
-        await this.sendHeader(Type.ThreeBytes, ...bytes);
+    async sendHeaderBytes(bytes: number[]) {
+        const type = {
+            1: Type.Byte,
+            2: Type.TwoBytes,
+            3: Type.ThreeBytes
+        }[bytes.length];
+        if(!type) return;
+
+        await this.sendHeader(type, ...bytes);
     }
 
     async sendSeveralBytes(bytes: number[]) {
@@ -203,6 +210,8 @@ export default class Messenger {
 
             if(state.type === Type.Float) {
                 return gotValue(bytesToFloat(state.recieved));
+            } else if(state.type === Type.SeveralBytes) {
+                return gotValue(state.recieved);
             }
 
             const string = String.fromCharCode(...state.recieved);
@@ -238,20 +247,20 @@ export default class Messenger {
                 gotValue(joinUint24(...payload));
             } else if(type === Type.NegativeInt24) {
                 gotValue(-joinUint24(...payload));
-            } else if(type === Type.Float) {
-                this.messageStates.set(char, {
-                    type: Type.Float,
-                    identifierString,
-                    recieved: payload
-                });
+            } else if(type === Type.Byte) {
+                gotValue([payload[0]]);
+            } else if(type === Type.TwoBytes) {
+                gotValue(payload.slice(0, 2));
+            } else if(type === Type.ThreeBytes) {
+                gotValue(payload);
             } else if(type === Type.ThreeCharacters) {
                 const codes = payload.filter(b => b !== 0);
                 gotValue(String.fromCharCode(...codes));
-            } else if(type === Type.String || type === Type.Object) {
+            } else if(type === Type.String || type === Type.Object || type === Type.SeveralBytes || type === Type.Float) {
                 this.messageStates.set(char, {
                     type,
                     identifierString,
-                    recieved: bytes.slice(4, 7)
+                    recieved: payload
                 });
             }
         }

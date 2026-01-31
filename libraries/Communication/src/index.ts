@@ -78,7 +78,7 @@ export default class Communication<T extends Message = Message> {
                     && message.every(isUint8)
                 ) {
                     if(message.length <= 3) {
-                        return await this.#messenger.sendThreeBytes(message);
+                        return await this.#messenger.sendHeaderBytes(message);
                     } else {
                         return await this.#messenger.sendSeveralBytes(message);
                     }

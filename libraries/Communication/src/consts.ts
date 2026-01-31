@@ -6,6 +6,8 @@ export enum Type {
     ThreeCharacters,
     String,
     Object,
+    Byte,
+    TwoBytes,
     ThreeBytes,
     SeveralBytes
 }
