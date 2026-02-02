@@ -4,8 +4,11 @@
  * @author retrozy
  * @version 0.4.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
+ * @webpage https://gimloader.github.io/libraries/communication
  * @gamemode 2d
  * @changelog Allowed arrays of only bytes to be sent optimally
+ * @changelog Disregarded sentries when ignoring sending messages
+ * @changelog Added webpage link
  * @isLibrary true
  */
 
