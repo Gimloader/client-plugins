@@ -2,12 +2,12 @@
  * @name PlayerCollision
  * @description Makes you collide with other players in 2d gamemodes
  * @author retrozy
- * @version 0.1.3
+ * @version 0.2.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/PlayerCollision.js
  * @webpage https://gimloader.github.io/plugins/playercollision
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode 2d
- * @changelog Actually fixed movement issue when host
+ * @changelog Added settings on what types of characters to collide with
  */
 
 // plugins/PlayerCollision/src/index.ts
