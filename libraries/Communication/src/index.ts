@@ -76,6 +76,7 @@ export default class Communication<T extends Message = Message> {
                     Array.isArray(message)
                     && message.every(element => typeof element === "number")
                     && message.every(isUint8)
+                    && message.length > 0
                 ) {
                     if(message.length === 1) {
                         return await this.#messenger.sendByte(message[0]);

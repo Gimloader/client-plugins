@@ -329,7 +329,7 @@ var Communication = class _Communication {
         return await this.#messenger.sendBoolean(message);
       }
       case "object": {
-        if (Array.isArray(message) && message.every((element) => typeof element === "number") && message.every(isUint8)) {
+        if (Array.isArray(message) && message.every((element) => typeof element === "number") && message.every(isUint8) && message.length > 0) {
           if (message.length === 1) {
             return await this.#messenger.sendByte(message[0]);
           } else if (message.length === 2) {
