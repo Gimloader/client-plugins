@@ -36,6 +36,7 @@ api.net.onLoad(async () => {
   const physics = api.stores.phaser.scene.worldManager.physics;
   const world = physics.world;
   const colliders = /* @__PURE__ */ new Map();
+  const myId = api.stores.network.authId;
   function createCollider(id) {
     if (colliders.has(id)) return;
     const collider = world.createCollider(rapier.ColliderDesc.cuboid(0.32, 0.32));
@@ -48,8 +49,8 @@ api.net.onLoad(async () => {
     colliders.delete(id);
   }
   api.settings.listen("collidePlayers", (enabled) => {
-    for (const [id, { type }] of api.stores.phaser.scene.characterManager.characters) {
-      if (type !== "player") continue;
+    for (const [id, char] of api.stores.phaser.scene.characterManager.characters) {
+      if (char.type !== "player" || char.id === myId) continue;
       if (enabled) {
         createCollider(id);
       } else {
@@ -69,7 +70,7 @@ api.net.onLoad(async () => {
   });
   api.onStop(
     api.net.room.state.characters.onAdd((char) => {
-      if (char.id === api.stores.network.authId) return;
+      if (char.id === myId) return;
       if (char.type === "player" && !api.settings.collidePlayers) return;
       if (char.type === "sentry" && !api.settings.collideSentries) return;
       createCollider(char.id);

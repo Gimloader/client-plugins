@@ -27,6 +27,7 @@ api.net.onLoad(async () => {
     const physics = api.stores.phaser.scene.worldManager.physics;
     const world = physics.world as unknown as RAPIER.World;
     const colliders = new Map<string, RAPIER.Collider>();
+    const myId = api.stores.network.authId;
 
     function createCollider(id: string) {
         if(colliders.has(id)) return;
@@ -42,8 +43,8 @@ api.net.onLoad(async () => {
     }
 
     api.settings.listen("collidePlayers", (enabled: boolean) => {
-        for(const [id, { type }] of api.stores.phaser.scene.characterManager.characters) {
-            if(type !== "player") continue;
+        for(const [id, char] of api.stores.phaser.scene.characterManager.characters) {
+            if(char.type !== "player" || char.id === myId) continue;
             if(enabled) {
                 createCollider(id);
             } else {
@@ -65,7 +66,7 @@ api.net.onLoad(async () => {
 
     api.onStop(
         api.net.room.state.characters.onAdd((char: any) => {
-            if(char.id === api.stores.network.authId) return;
+            if(char.id === myId) return;
             if(char.type === "player" && !api.settings.collidePlayers) return;
             if(char.type === "sentry" && !api.settings.collideSentries) return;
 
