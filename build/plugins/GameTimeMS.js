@@ -6,6 +6,7 @@
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/GameTimeMS.js
  * @webpage https://gimloader.github.io/plugins/gametimems
  * @reloadRequired ingame
+ * @hasSettings true
  */
 
 // shared/rewritingUtils.ts

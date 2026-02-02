@@ -8,5 +8,6 @@ export default singleConfig({
     version: "0.1.0",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/GameTimeMS.js",
     webpage: "https://gimloader.github.io/plugins/gametimems",
-    reloadRequired: "ingame"
+    reloadRequired: "ingame",
+    hasSettings: true
 });
