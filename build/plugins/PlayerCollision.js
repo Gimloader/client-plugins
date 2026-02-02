@@ -7,10 +7,24 @@
  * @webpage https://gimloader.github.io/plugins/playercollision
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode 2d
- * @changelog Actually ixed movement issue when host
+ * @changelog Actually fixed movement issue when host
  */
 
 // plugins/PlayerCollision/src/index.ts
+api.settings.create([
+  {
+    id: "collidePlayers",
+    type: "toggle",
+    title: "Collide with other players",
+    default: true
+  },
+  {
+    id: "collideSentries",
+    type: "toggle",
+    title: "Collide with sentries",
+    default: true
+  }
+]);
 api.net.onLoad(async () => {
   const rapier = await new Promise((res) => {
     api.rewriter.exposeVar("App", {
@@ -33,9 +47,31 @@ api.net.onLoad(async () => {
     world.removeCollider(collider, true);
     colliders.delete(id);
   }
+  api.settings.listen("collidePlayers", (enabled) => {
+    for (const [id, { type }] of api.stores.phaser.scene.characterManager.characters) {
+      if (type !== "player") continue;
+      if (enabled) {
+        createCollider(id);
+      } else {
+        removeCollider(id);
+      }
+    }
+  });
+  api.settings.listen("collideSentries", (enabled) => {
+    for (const [id, { type }] of api.stores.phaser.scene.characterManager.characters) {
+      if (type !== "sentry") continue;
+      if (enabled) {
+        createCollider(id);
+      } else {
+        removeCollider(id);
+      }
+    }
+  });
   api.onStop(
     api.net.room.state.characters.onAdd((char) => {
       if (char.id === api.stores.network.authId) return;
+      if (char.type === "player" && !api.settings.collidePlayers) return;
+      if (char.type === "sentry" && !api.settings.collideSentries) return;
       createCollider(char.id);
       api.onStop(
         char.onRemove(() => removeCollider(char.id))

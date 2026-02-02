@@ -1,5 +1,20 @@
 import type RAPIER from "@dimforge/rapier2d-compat";
 
+api.settings.create([
+    {
+        id: "collidePlayers",
+        type: "toggle",
+        title: "Collide with other players",
+        default: true
+    },
+    {
+        id: "collideSentries",
+        type: "toggle",
+        title: "Collide with sentries",
+        default: true
+    }
+]);
+
 api.net.onLoad(async () => {
     const rapier = await new Promise<typeof RAPIER>((res) => {
         api.rewriter.exposeVar("App", {
@@ -26,9 +41,33 @@ api.net.onLoad(async () => {
         colliders.delete(id);
     }
 
+    api.settings.listen("collidePlayers", (enabled: boolean) => {
+        for(const [id, { type }] of api.stores.phaser.scene.characterManager.characters) {
+            if(type !== "player") continue;
+            if(enabled) {
+                createCollider(id);
+            } else {
+                removeCollider(id);
+            }
+        }
+    });
+
+    api.settings.listen("collideSentries", (enabled: boolean) => {
+        for(const [id, { type }] of api.stores.phaser.scene.characterManager.characters) {
+            if(type !== "sentry") continue;
+            if(enabled) {
+                createCollider(id);
+            } else {
+                removeCollider(id);
+            }
+        }
+    });
+
     api.onStop(
         api.net.room.state.characters.onAdd((char: any) => {
             if(char.id === api.stores.network.authId) return;
+            if(char.type === "player" && !api.settings.collidePlayers) return;
+            if(char.type === "sentry" && !api.settings.collideSentries) return;
 
             createCollider(char.id);
 
