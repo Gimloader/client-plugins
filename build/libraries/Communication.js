@@ -96,14 +96,14 @@ var Messenger = class _Messenger {
     const bytes = floatToBytes(value);
     await this.sendSpreadBytes(3 /* Float */, bytes);
   }
-  async sendHeaderBytes(bytes) {
-    const type = {
-      1: 7 /* Byte */,
-      2: 8 /* TwoBytes */,
-      3: 9 /* ThreeBytes */
-    }[bytes.length];
-    if (!type) return;
-    await this.sendHeader(type, ...bytes);
+  async sendByte(byte) {
+    await this.sendHeader(7 /* Byte */, byte);
+  }
+  async sendTwoBytes(bytes) {
+    await this.sendHeader(8 /* TwoBytes */, ...bytes);
+  }
+  async sendThreeBytes(bytes) {
+    await this.sendHeader(9 /* ThreeBytes */, ...bytes);
   }
   async sendSeveralBytes(bytes) {
     await this.sendSpreadBytes(10 /* SeveralBytes */, bytes);
@@ -327,9 +327,13 @@ var Communication = class _Communication {
       }
       case "object": {
         if (Array.isArray(message) && message.every((element) => typeof element === "number") && message.every(isUint8)) {
-          if (message.length <= 3) {
-            return await this.#messenger.sendHeaderBytes(message);
-          } else {
+          if (message.length === 1) {
+            return await this.#messenger.sendByte(message[0]);
+          } else if (message.length === 2) {
+            return await this.#messenger.sendTwoBytes(message);
+          } else if (message.length === 3) {
+            return await this.#messenger.sendThreeBytes(message);
+          } else if (message.length > 3) {
             return await this.#messenger.sendSeveralBytes(message);
           }
         } else {

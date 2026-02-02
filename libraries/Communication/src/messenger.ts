@@ -56,15 +56,16 @@ export default class Messenger {
         await this.sendSpreadBytes(Type.Float, bytes);
     }
 
-    async sendHeaderBytes(bytes: number[]) {
-        const type = {
-            1: Type.Byte,
-            2: Type.TwoBytes,
-            3: Type.ThreeBytes
-        }[bytes.length];
-        if(!type) return;
+    async sendByte(byte: number) {
+        await this.sendHeader(Type.Byte, byte);
+    }
 
-        await this.sendHeader(type, ...bytes);
+    async sendTwoBytes(bytes: number[]) {
+        await this.sendHeader(Type.TwoBytes, ...bytes);
+    }
+
+    async sendThreeBytes(bytes: number[]) {
+        await this.sendHeader(Type.ThreeBytes, ...bytes);
     }
 
     async sendSeveralBytes(bytes: number[]) {

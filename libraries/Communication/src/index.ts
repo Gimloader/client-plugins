@@ -77,9 +77,13 @@ export default class Communication<T extends Message = Message> {
                     && message.every(element => typeof element === "number")
                     && message.every(isUint8)
                 ) {
-                    if(message.length <= 3) {
-                        return await this.#messenger.sendHeaderBytes(message);
-                    } else {
+                    if(message.length === 1) {
+                        return await this.#messenger.sendByte(message[0]);
+                    } else if(message.length === 2) {
+                        return await this.#messenger.sendTwoBytes(message);
+                    } else if(message.length === 3) {
+                        return await this.#messenger.sendThreeBytes(message);
+                    } else if(message.length > 3) {
                         return await this.#messenger.sendSeveralBytes(message);
                     }
                 } else {
