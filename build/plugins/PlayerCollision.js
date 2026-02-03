@@ -2,15 +2,29 @@
  * @name PlayerCollision
  * @description Makes you collide with other players in 2d gamemodes
  * @author retrozy
- * @version 0.1.3
+ * @version 0.2.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/PlayerCollision.js
  * @webpage https://gimloader.github.io/plugins/playercollision
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode 2d
- * @changelog Actually ixed movement issue when host
+ * @changelog Added settings on what types of characters to collide with
  */
 
 // plugins/PlayerCollision/src/index.ts
+api.settings.create([
+  {
+    id: "collidePlayers",
+    type: "toggle",
+    title: "Collide with other players",
+    default: true
+  },
+  {
+    id: "collideSentries",
+    type: "toggle",
+    title: "Collide with sentries",
+    default: true
+  }
+]);
 api.net.onLoad(async () => {
   const rapier = await new Promise((res) => {
     api.rewriter.exposeVar("App", {
@@ -22,6 +36,7 @@ api.net.onLoad(async () => {
   const physics = api.stores.phaser.scene.worldManager.physics;
   const world = physics.world;
   const colliders = /* @__PURE__ */ new Map();
+  const myId = api.stores.network.authId;
   function createCollider(id) {
     if (colliders.has(id)) return;
     const collider = world.createCollider(rapier.ColliderDesc.cuboid(0.32, 0.32));
@@ -33,9 +48,31 @@ api.net.onLoad(async () => {
     world.removeCollider(collider, true);
     colliders.delete(id);
   }
+  api.settings.listen("collidePlayers", (enabled) => {
+    for (const [id, char] of api.stores.phaser.scene.characterManager.characters) {
+      if (char.type !== "player" || char.id === myId) continue;
+      if (enabled) {
+        createCollider(id);
+      } else {
+        removeCollider(id);
+      }
+    }
+  });
+  api.settings.listen("collideSentries", (enabled) => {
+    for (const [id, { type }] of api.stores.phaser.scene.characterManager.characters) {
+      if (type !== "sentry") continue;
+      if (enabled) {
+        createCollider(id);
+      } else {
+        removeCollider(id);
+      }
+    }
+  });
   api.onStop(
     api.net.room.state.characters.onAdd((char) => {
-      if (char.id === api.stores.network.authId) return;
+      if (char.id === myId) return;
+      if (char.type === "player" && !api.settings.collidePlayers) return;
+      if (char.type === "sentry" && !api.settings.collideSentries) return;
       createCollider(char.id);
       api.onStop(
         char.onRemove(() => removeCollider(char.id))
