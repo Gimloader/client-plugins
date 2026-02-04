@@ -2,12 +2,12 @@
  * @name CameraControl
  * @description Lets you freely move and zoom your camera
  * @author TheLazySquid
- * @version 0.7.0
+ * @version 0.7.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/CameraControl.js
  * @optionalLib CommandLine | https://raw.githubusercontent.com/Blackhole927/gimkitmods/main/libraries/CommandLine/CommandLine.js
  * @hasSettings true
  * @gamemode 2d
- * @changelog Added Gimloader commands for setting camera zoom
+ * @changelog Fixed freecam resetting when going into area with restricted camera bounds
  */
 
 // plugins/CameraControl/src/index.ts
@@ -150,6 +150,7 @@ var lastInteractiveSlot = 0;
 function stopFreecamming() {
   if (!scene || !camera) return;
   api.stores.me.inventory.activeInteractiveSlot = lastInteractiveSlot;
+  GL.patcher.unpatchAll("CameraControl-helper");
   camera.useBounds = true;
   const charObj = api.stores.phaser.mainCharacter.body;
   scene.cameraHelper.startFollowingObject({ object: charObj });
@@ -176,6 +177,8 @@ api.hotkeys.addConfigurableHotkey({
     camera.useBounds = false;
     freecamPos = { x: camera.midPoint.x, y: camera.midPoint.y };
     stopDefaultArrows = true;
+    GL.patcher.instead("CameraControl-helper", scene.cameraHelper, "setCameraSizeParams", () => {
+    });
     updateFreecam = (dt) => {
       let moveAmount = 0.8 / camera.zoom * dt;
       const pressed = api.hotkeys.pressed;

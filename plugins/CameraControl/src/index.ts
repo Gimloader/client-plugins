@@ -164,6 +164,7 @@ let lastInteractiveSlot = 0;
 function stopFreecamming() {
     if(!scene || !camera) return;
     api.stores.me.inventory.activeInteractiveSlot = lastInteractiveSlot;
+    GL.patcher.unpatchAll("CameraControl-helper");
 
     camera.useBounds = true;
     const charObj = api.stores.phaser.mainCharacter.body;
@@ -197,6 +198,7 @@ api.hotkeys.addConfigurableHotkey({
         camera.useBounds = false;
         freecamPos = { x: camera.midPoint.x, y: camera.midPoint.y };
         stopDefaultArrows = true;
+        GL.patcher.instead("CameraControl-helper", scene.cameraHelper, "setCameraSizeParams", () => {});
 
         // move the camera
         updateFreecam = (dt) => {
