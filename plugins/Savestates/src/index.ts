@@ -44,7 +44,7 @@ const saveState = () => {
     const { pos, state } = getPhysicsState();
 
     const name = updateState(pos, state);
-    api.notification.open({ message: `State Saved to ${name}`, duration: 0.75 });
+    api.UI.notification.open({ message: `State Saved to ${name}`, duration: 0.75 });
 };
 
 const loadState = () => {
@@ -52,7 +52,7 @@ const loadState = () => {
 
     const selectedState = getSelectedState();
     if(!selectedState) {
-        api.notification.error({ message: "You don't have any states, create a state with Gimloader commands", duration: 2 });
+        api.UI.notification.error({ message: "You don't have any states, create a state with Gimloader commands", duration: 2 });
         return;
     }
 
@@ -62,7 +62,7 @@ const loadState = () => {
     rb.setTranslation(selectedState.pos, true);
     physics.state = JSON.parse(selectedState.state);
 
-    api.notification.open({ message: `State Loaded: ${selectedState.name}`, duration: 0.75 });
+    api.UI.notification.open({ message: `State Loaded: ${selectedState.name}`, duration: 0.75 });
 
     stateLoadCallbacks.forEach(cb => cb("custom"));
 };
@@ -107,7 +107,7 @@ api.net.onLoad(() => {
 
         const { pos, state } = getPhysicsState();
         createState(name, pos, state);
-        api.notification.open({ message: `State Created and Selected: ${name}`, duration: 0.75 });
+        api.UI.notification.open({ message: `State Created and Selected: ${name}`, duration: 0.75 });
     });
 
     api.commands.addCommand({
@@ -129,7 +129,7 @@ api.net.onLoad(() => {
 
         setSelected(selected);
         loadState();
-        api.notification.open({ message: `Switched to State: ${selected}` });
+        api.UI.notification.open({ message: `Switched to State: ${selected}` });
     });
 
     api.commands.addCommand({
@@ -149,7 +149,7 @@ api.net.onLoad(() => {
         });
 
         deleteState(selected);
-        api.notification.open({ message: `Deleted State ${selected}` });
+        api.UI.notification.open({ message: `Deleted State ${selected}` });
     });
 
     api.commands.addCommand({

@@ -258,7 +258,7 @@ function onLaserHit(rb) {
       setTimeout(() => api.stores.me.isRespawning = false, 1e3);
       break;
     case "warn":
-      api.notification.warning({
+      api.UI.notification.warning({
         message: "Character ran into laser"
       });
       break;

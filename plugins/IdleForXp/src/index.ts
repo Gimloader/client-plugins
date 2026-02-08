@@ -53,7 +53,7 @@ api.net.on("DEVICES_STATES_CHANGES", (event) => {
 });
 
 api.net.onLoad(() => {
-    api.notification.open({ message: "IdleForXp is active" });
+    api.UI.notification.open({ message: "IdleForXp is active" });
     const answerInterval = setInterval(answerQuestion, 30000);
 
     api.onStop(() => clearInterval(answerInterval));

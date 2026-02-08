@@ -3863,7 +3863,7 @@ var DLDAutosplitter = class extends SplitsAutosplitter {
     }
     const time = fmtMs(this.timer.elapsed);
     recorder.stopRecording(isPb, `recording-${username}-${this.category}-${mode}-${time}.json`);
-    api.notification.open({ message: `Auto-saved PB of ${time}`, placement: "topLeft" });
+    api.UI.notification.open({ message: `Auto-saved PB of ${time}`, placement: "topLeft" });
   }
   onStateLoaded(summit) {
     if (summit === "custom") return;

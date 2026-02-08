@@ -279,14 +279,14 @@ var AutoKicker = class {
     this.kicked.add(id);
     const char = api.net.room.state.characters.get(id);
     api.net.send("KICK_PLAYER", { characterId: id });
-    api.notification.open({ message: `Kicked ${char.name} for ${reason}` });
+    api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
   }
   blueboatKick(id, reason) {
     if (this.kicked.has(id)) return;
     this.kicked.add(id);
     const playername = this.lastLeaderboard?.find((e) => e.id === id)?.name;
     api.net.send("KICK_PLAYER", id);
-    api.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
+    api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
   }
 };
 
@@ -510,7 +510,7 @@ var checkStart = () => {
     if (!uiShown) {
       ui.style.display = "none";
       if (autoKicker.kickDuplicateNames || autoKicker.kickSkinless || autoKicker.blacklist.length > 0 || autoKicker.kickIdle) {
-        api.notification.open({ message: "AutoKicker is running!" });
+        api.UI.notification.open({ message: "AutoKicker is running!" });
       }
     }
   }

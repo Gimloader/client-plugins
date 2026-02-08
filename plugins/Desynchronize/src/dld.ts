@@ -167,7 +167,7 @@ function onLaserHit(rb: RigidBody) {
             break;
 
         case "warn":
-            api.notification.warning({
+            api.UI.notification.warning({
                 message: "Character ran into laser"
             });
             break;

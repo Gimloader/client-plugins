@@ -21,7 +21,7 @@ const checkStart = () => {
                 autoKicker.kickDuplicateNames || autoKicker.kickSkinless
                 || autoKicker.blacklist.length > 0 || autoKicker.kickIdle
             ) {
-                api.notification.open({ message: "AutoKicker is running!" });
+                api.UI.notification.open({ message: "AutoKicker is running!" });
             }
         }
     }

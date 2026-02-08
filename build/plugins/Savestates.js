@@ -110,20 +110,20 @@ var saveState = () => {
   if (!gameLoaded) return;
   const { pos, state } = getPhysicsState();
   const name = updateState(pos, state);
-  api.notification.open({ message: `State Saved to ${name}`, duration: 0.75 });
+  api.UI.notification.open({ message: `State Saved to ${name}`, duration: 0.75 });
 };
 var loadState = () => {
   if (!gameLoaded) return;
   const selectedState = getSelectedState();
   if (!selectedState) {
-    api.notification.error({ message: "You don't have any states, create a state with Gimloader commands", duration: 2 });
+    api.UI.notification.error({ message: "You don't have any states, create a state with Gimloader commands", duration: 2 });
     return;
   }
   const { rb, physics } = getPhysics();
   desync.DLD.cancelRespawn();
   rb.setTranslation(selectedState.pos, true);
   physics.state = JSON.parse(selectedState.state);
-  api.notification.open({ message: `State Loaded: ${selectedState.name}`, duration: 0.75 });
+  api.UI.notification.open({ message: `State Loaded: ${selectedState.name}`, duration: 0.75 });
   stateLoadCallbacks.forEach((cb) => cb("custom"));
 };
 async function getNewName(context, initial) {
@@ -156,7 +156,7 @@ api.net.onLoad(() => {
     const name = await getNewName(context, "Name");
     const { pos, state } = getPhysicsState();
     createState(name, pos, state);
-    api.notification.open({ message: `State Created and Selected: ${name}`, duration: 0.75 });
+    api.UI.notification.open({ message: `State Created and Selected: ${name}`, duration: 0.75 });
   });
   api.commands.addCommand({
     text() {
@@ -175,7 +175,7 @@ api.net.onLoad(() => {
     });
     setSelected(selected);
     loadState();
-    api.notification.open({ message: `Switched to State: ${selected}` });
+    api.UI.notification.open({ message: `Switched to State: ${selected}` });
   });
   api.commands.addCommand({
     text: "Savestates: Delete State",
@@ -190,7 +190,7 @@ api.net.onLoad(() => {
       options: savedStates.filter((state) => state.name !== selectedState).map(({ name }) => ({ label: name, value: name }))
     });
     deleteState(selected);
-    api.notification.open({ message: `Deleted State ${selected}` });
+    api.UI.notification.open({ message: `Deleted State ${selected}` });
   });
   api.commands.addCommand({
     text: "Savestates: Rename State",

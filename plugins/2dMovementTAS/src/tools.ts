@@ -203,7 +203,7 @@ export default class TASTools {
                     Math.floor(device.options.interactionDuration * 12) - 1,
                     () => {
                         updateDeviceState(device, "GLOBAL_active", false);
-                        api.notification.open({ message: `Purchased ${name}` });
+                        api.UI.notification.open({ message: `Purchased ${name}` });
                         switch (name) {
                             case "Energy Per Question Upgrade":
                                 this.energyPerQuestion += 200;
@@ -231,7 +231,7 @@ export default class TASTools {
                     true
                 ]);
             } else {
-                api.notification.open({ message: "Unable to handle what you're trying to purchase. If this is unexpected, please report it." });
+                api.UI.notification.open({ message: "Unable to handle what you're trying to purchase. If this is unexpected, please report it." });
             }
         }
     }

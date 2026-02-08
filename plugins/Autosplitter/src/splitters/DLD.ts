@@ -233,7 +233,7 @@ export default class DLDAutosplitter extends SplitsAutosplitter {
 
         recorder.stopRecording(isPb, `recording-${username}-${this.category}-${mode}-${time}.json`);
 
-        api.notification.open({ message: `Auto-saved PB of ${time}`, placement: "topLeft" });
+        api.UI.notification.open({ message: `Auto-saved PB of ${time}`, placement: "topLeft" });
     }
 
     onStateLoaded(summit: number | "custom") {

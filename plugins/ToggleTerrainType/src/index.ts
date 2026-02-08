@@ -4,7 +4,7 @@ function toggle() {
 
     terrain.buildTerrainAsWall = !terrain.buildTerrainAsWall;
 
-    api.notification.open({
+    api.UI.notification.open({
         message: `Placing terrain as a ${terrain.buildTerrainAsWall ? "wall" : "floor"}`
     });
 }

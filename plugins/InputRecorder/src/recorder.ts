@@ -45,7 +45,7 @@ export default class Recorder {
         this.platformerPhysics = JSON.stringify(GL.platformerPhysics);
         this.frames = [];
 
-        api.notification.open({ message: "Started Recording" });
+        api.UI.notification.open({ message: "Started Recording" });
 
         this.inputManager.getPhysicsInput = this.getPhysicsInput;
         this.physicsManager.physicsStep = (dt) => {
@@ -105,7 +105,7 @@ export default class Recorder {
             const frame = data.frames[currentFrame];
             if(!frame) {
                 this.stopPlayback();
-                api.notification.open({ message: "Playback finished" });
+                api.UI.notification.open({ message: "Playback finished" });
                 return;
             }
 
