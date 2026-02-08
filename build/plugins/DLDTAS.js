@@ -2,12 +2,12 @@
  * @name DLDTAS
  * @description Allows you to create TASes for Dont Look Down
  * @author TheLazySquid
- * @version 0.5.1
+ * @version 0.6.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js
  * @webpage https://gimloader.github.io/plugins/dldtas
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
- * @changelog Remove usage of unneeded Desync functions
+ * @changelog Added a command for jumping to any previous frame
  */
 
 // plugins/DLDTAS/src/styles.scss
@@ -400,9 +400,22 @@ var values = { frames, currentFrame: 0 };
 function createUI() {
   let rowOffset = 0;
   initOverlay();
-  const tools = new TASTools(values, () => {
+  function update() {
     scrollTable();
     updateTable();
+  }
+  const tools = new TASTools(values, update);
+  api.commands.addCommand({
+    text: "DLDTAS: Go to previous frame"
+  }, async (context) => {
+    const frame = await context.number({
+      title: "Frame",
+      decimal: false,
+      min: 0,
+      max: values.currentFrame
+    });
+    tools.setFrame(frame);
+    update();
   });
   const div = document.createElement("div");
   div.id = "inputTable";
@@ -586,8 +599,7 @@ function createUI() {
       const checkPos = () => {
         if (i + rowOffset < values.currentFrame) {
           tools.setFrame(i + rowOffset);
-          scrollTable();
-          updateTable();
+          update();
         }
       };
       data.addEventListener("mousedown", (e) => {
@@ -649,8 +661,7 @@ function createUI() {
     } else {
       tools.advanceFrame();
     }
-    scrollTable();
-    updateTable();
+    update();
   }
   function onBack(event) {
     if (playing || controlling) return;
@@ -659,8 +670,7 @@ function createUI() {
     } else {
       tools.setFrame(Math.max(0, values.currentFrame - 1));
     }
-    scrollTable();
-    updateTable();
+    update();
   }
   window.addEventListener("wheel", (e) => {
     rowOffset += Math.sign(e.deltaY);
