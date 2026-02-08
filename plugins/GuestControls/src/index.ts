@@ -28,18 +28,18 @@ api.net.onLoad(() => {
 
         switch (message) {
             case Op.EndGame:
-                api.notification.info({ message: `${char.name} ended the game` });
+                api.UI.notification.info({ message: `${char.name} ended the game` });
                 break;
             case Op.ResetToLobby:
-                api.notification.info({ message: `${char.name} reset back to lobby` });
+                api.UI.notification.info({ message: `${char.name} reset back to lobby` });
                 break;
             case Op.AddGameTime:
-                api.notification.info({ message: `${char.name} added game time` });
+                api.UI.notification.info({ message: `${char.name} added game time` });
                 break;
             default: {
                 const character = characters()[message - 10];
                 if(!character) return;
-                api.notification.info({ message: `${char.name} kicked ${character.name}` });
+                api.UI.notification.info({ message: `${char.name} kicked ${character.name}` });
             }
         }
     });

@@ -28,18 +28,18 @@ api.net.onLoad(() => {
     if (!settings.notification || message === 1 /* PluginOff */ || message === 0 /* PluginOn */) return;
     switch (message) {
       case 3 /* EndGame */:
-        api.notification.info({ message: `${char.name} ended the game` });
+        api.UI.notification.info({ message: `${char.name} ended the game` });
         break;
       case 4 /* ResetToLobby */:
-        api.notification.info({ message: `${char.name} reset back to lobby` });
+        api.UI.notification.info({ message: `${char.name} reset back to lobby` });
         break;
       case 5 /* AddGameTime */:
-        api.notification.info({ message: `${char.name} added game time` });
+        api.UI.notification.info({ message: `${char.name} added game time` });
         break;
       default: {
         const character = characters()[message - 10];
         if (!character) return;
-        api.notification.info({ message: `${char.name} kicked ${character.name}` });
+        api.UI.notification.info({ message: `${char.name} kicked ${character.name}` });
       }
     }
   });

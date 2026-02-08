@@ -256,7 +256,7 @@ export default class AutoKicker {
         const char = api.net.room.state.characters.get(id)!;
 
         api.net.send("KICK_PLAYER", { characterId: id });
-        api.notification.open({ message: `Kicked ${char.name} for ${reason}` });
+        api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
     }
 
     blueboatKick(id: string, reason: string) {
@@ -266,6 +266,6 @@ export default class AutoKicker {
         const playername = this.lastLeaderboard?.find((e) => e.id === id)?.name;
 
         api.net.send("KICK_PLAYER", id);
-        api.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
+        api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
     }
 }

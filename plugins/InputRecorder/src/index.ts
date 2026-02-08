@@ -6,7 +6,7 @@ function startRecording() {
     if(!recorder) return;
 
     if(recorder.playing) {
-        api.notification.open({ message: "Cannot record while playing", type: "error" });
+        api.UI.notification.open({ message: "Cannot record while playing", type: "error" });
         return;
     }
 
@@ -21,13 +21,13 @@ function playBackRecording() {
     if(!recorder) return;
 
     if(recorder.recording) {
-        api.notification.open({ message: "Cannot playback while recording", type: "error" });
+        api.UI.notification.open({ message: "Cannot playback while recording", type: "error" });
         return;
     }
 
     if(recorder.playing) {
         recorder.stopPlayback();
-        api.notification.open({ message: "Playback canceled" });
+        api.UI.notification.open({ message: "Playback canceled" });
     } else {
         const input = document.createElement("input");
         input.type = "file";
@@ -39,7 +39,7 @@ function playBackRecording() {
 
             const json = await file.text();
             const data = JSON.parse(json);
-            api.notification.open({ message: "Starting Playback" });
+            api.UI.notification.open({ message: "Starting Playback" });
 
             recorder.playback(data);
         };
