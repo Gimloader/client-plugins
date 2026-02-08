@@ -81,6 +81,11 @@ export default class Messenger {
         await this.sendStringOfType(string, Type.String);
     }
 
+    async sendSmallObject(obj: object) {
+        const string = JSON.stringify(obj);
+        await this.sendHeader(Type.SmallObject, ...encodeCharacters(string));
+    }
+
     async sendObject(obj: object) {
         const string = JSON.stringify(obj);
         await this.sendStringOfType(string, Type.Object);
@@ -257,6 +262,9 @@ export default class Messenger {
             } else if(type === Type.ThreeCharacters) {
                 const codes = payload.filter(b => b !== 0);
                 gotValue(String.fromCharCode(...codes));
+            } else if(type === Type.SmallObject) {
+                const codes = payload.filter(b => b !== 0);
+                gotValue(JSON.parse(String.fromCharCode(...codes)));
             } else if(type === Type.String || type === Type.Object || type === Type.SeveralBytes || type === Type.Float) {
                 this.messageStates.set(char, {
                     type,

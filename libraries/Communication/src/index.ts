@@ -88,6 +88,9 @@ export default class Communication<T extends Message = Message> {
                         return await this.#messenger.sendSeveralBytes(message);
                     }
                 } else {
+                    if(JSON.stringify(message).length <= 3) {
+                        return await this.#messenger.sendSmallObject(message);
+                    }
                     return await this.#messenger.sendObject(message);
                 }
             }

@@ -100,16 +100,16 @@ var Messenger = class _Messenger {
     await this.sendSpreadBytes(3 /* Float */, bytes);
   }
   async sendByte(byte) {
-    await this.sendHeader(7 /* Byte */, byte);
+    await this.sendHeader(8 /* Byte */, byte);
   }
   async sendTwoBytes(bytes) {
-    await this.sendHeader(8 /* TwoBytes */, ...bytes);
+    await this.sendHeader(9 /* TwoBytes */, ...bytes);
   }
   async sendThreeBytes(bytes) {
-    await this.sendHeader(9 /* ThreeBytes */, ...bytes);
+    await this.sendHeader(10 /* ThreeBytes */, ...bytes);
   }
   async sendSeveralBytes(bytes) {
-    await this.sendSpreadBytes(10 /* SeveralBytes */, bytes);
+    await this.sendSpreadBytes(11 /* SeveralBytes */, bytes);
   }
   async sendThreeCharacters(string) {
     const codes = encodeCharacters(string);
@@ -117,6 +117,10 @@ var Messenger = class _Messenger {
   }
   async sendString(string) {
     await this.sendStringOfType(string, 5 /* String */);
+  }
+  async sendSmallObject(obj) {
+    const string = JSON.stringify(obj);
+    await this.sendHeader(7 /* SmallObject */, ...encodeCharacters(string));
   }
   async sendObject(obj) {
     const string = JSON.stringify(obj);
@@ -216,7 +220,7 @@ var Messenger = class _Messenger {
       state.recieved.push(...payload.slice(0, flag - 1));
       if (state.type === 3 /* Float */) {
         return gotValue(bytesToFloat(state.recieved));
-      } else if (state.type === 10 /* SeveralBytes */) {
+      } else if (state.type === 11 /* SeveralBytes */) {
         return gotValue(state.recieved);
       }
       const string = String.fromCharCode(...state.recieved);
@@ -248,16 +252,19 @@ var Messenger = class _Messenger {
         gotValue(joinUint24(...payload));
       } else if (type === 2 /* NegativeInt24 */) {
         gotValue(-joinUint24(...payload));
-      } else if (type === 7 /* Byte */) {
+      } else if (type === 8 /* Byte */) {
         gotValue([payload[0]]);
-      } else if (type === 8 /* TwoBytes */) {
+      } else if (type === 9 /* TwoBytes */) {
         gotValue(payload.slice(0, 2));
-      } else if (type === 9 /* ThreeBytes */) {
+      } else if (type === 10 /* ThreeBytes */) {
         gotValue(payload);
       } else if (type === 4 /* ThreeCharacters */) {
         const codes = payload.filter((b) => b !== 0);
         gotValue(String.fromCharCode(...codes));
-      } else if (type === 5 /* String */ || type === 6 /* Object */ || type === 10 /* SeveralBytes */ || type === 3 /* Float */) {
+      } else if (type === 7 /* SmallObject */) {
+        const codes = payload.filter((b) => b !== 0);
+        gotValue(JSON.parse(String.fromCharCode(...codes)));
+      } else if (type === 5 /* String */ || type === 6 /* Object */ || type === 11 /* SeveralBytes */ || type === 3 /* Float */) {
         this.messageStates.set(char, {
           type,
           identifierString,
@@ -340,6 +347,9 @@ var Communication = class _Communication {
             return await this.#messenger.sendSeveralBytes(message);
           }
         } else {
+          if (JSON.stringify(message).length <= 3) {
+            return await this.#messenger.sendSmallObject(message);
+          }
           return await this.#messenger.sendObject(message);
         }
       }
