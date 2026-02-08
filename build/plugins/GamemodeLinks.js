@@ -2,14 +2,12 @@
  * @name GamemodeLinks
  * @description Creates game rooms from links, particularly useful in bookmarks.
  * @author retrozy
- * @version 0.3.0
+ * @version 0.3.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/GamemodeLinks.js
  * @webpage https://gimloader.github.io/plugins/gamemodelinks
  * @reloadRequired notingame
  * @hasSettings true
- * @changelog Reload required only while not in-game
- * @changelog Added links for editing a creative map. You can get a link for editing a specific map in the three dots on your maps
- * @changelog Added settings for if the gamemode selector should be updating the tab link and title
+ * @changelog Used Gimkit's error modal for link errors
  */
 
 // shared/rewritingUtils.ts
@@ -168,7 +166,11 @@ var [root, id] = location.pathname.split("/").slice(1);
 if (root === "gamemode") {
   makeGame(id, new URLSearchParams(location.search).entries()).then((gameId) => {
     location.href = `/host?id=${gameId}`;
-  }).catch((err) => alert(err.message));
+  }).catch((err) => {
+    api.UI.modal.error({
+      content: err.message
+    });
+  });
 } else {
   fetch("/api/games/summary/me").then((res) => res.json()).then(({ games }) => {
     api.settings.create([
