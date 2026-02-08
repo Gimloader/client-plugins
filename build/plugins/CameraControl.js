@@ -11,7 +11,7 @@
  */
 
 // plugins/CameraControl/src/index.ts
-api.settings.create([
+var settings = api.settings.create([
   {
     type: "toggle",
     id: "shiftToZoom",
@@ -67,7 +67,7 @@ var updateScroll = (dt) => {
   scrollMomentum *= 0.97 ** dt;
   camera2.zoom += scrollMomentum * dt;
   if (scrollMomentum > 0) changedZoom = true;
-  if (api.settings.capZoomOut) {
+  if (settings.capZoomOut) {
     if (camera2.zoom <= 0.1) {
       scrollMomentum = 0;
     }
@@ -111,12 +111,12 @@ function onPointermove(e) {
 function onWheel(e) {
   if (!(e.target instanceof HTMLElement)) return;
   if (e.target.nodeName !== "CANVAS") return;
-  if (!freecamming || !api.settings.mouseControls) {
-    if (api.settings.shiftToZoom && !api.hotkeys.pressed.has("ShiftLeft")) return;
+  if (!freecamming || !settings.mouseControls) {
+    if (settings.shiftToZoom && !api.hotkeys.pressed.has("ShiftLeft")) return;
     scrollMomentum -= e.deltaY / 65e3;
     return;
   }
-  if (camera.zoom === 0.1 && e.deltaY > 0 && api.settings.capZoomOut) return;
+  if (camera.zoom === 0.1 && e.deltaY > 0 && settings.capZoomOut) return;
   const oldzoom = camera.zoom;
   const newzoom = oldzoom * (e.deltaY < 0 ? 1.1 : 0.9);
   const canvasZoom = getCanvasZoom();
@@ -207,7 +207,7 @@ if (commandLine) {
 var zoomToggled = false;
 var initialZoom = 1;
 var onDown = () => {
-  if (!api.settings.toggleZoomFactor) return;
+  if (!settings.toggleZoomFactor) return;
   const scene2 = api.stores?.phaser?.scene;
   const camera2 = scene2?.cameras?.cameras?.[0];
   if (!scene2 || !camera2) return;
@@ -215,7 +215,7 @@ var onDown = () => {
     camera2.zoom = initialZoom;
   } else {
     initialZoom = camera2.zoom;
-    camera2.zoom /= api.settings.toggleZoomFactor;
+    camera2.zoom /= settings.toggleZoomFactor;
   }
   zoomToggled = !zoomToggled;
 };

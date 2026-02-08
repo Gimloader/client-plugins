@@ -11,7 +11,7 @@
  */
 
 // plugins/GuestControls/src/index.ts
-api.settings.create([
+var settings = api.settings.create([
   {
     id: "notification",
     type: "toggle",
@@ -25,7 +25,7 @@ api.net.onLoad(() => {
   const comms = new Comms("GuestControls");
   const characters = () => [...api.stores.characters.characters.values()];
   comms.onMessage((message, char) => {
-    if (!api.settings.notification || message === 1 /* PluginOff */ || message === 0 /* PluginOn */) return;
+    if (!settings.notification || message === 1 /* PluginOff */ || message === 0 /* PluginOn */) return;
     switch (message) {
       case 3 /* EndGame */:
         api.notification.info({ message: `${char.name} ended the game` });

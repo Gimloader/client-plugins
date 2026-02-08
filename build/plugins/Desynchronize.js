@@ -278,7 +278,7 @@ function lineIntersects(start1, end1, start2, end2) {
 }
 
 // plugins/Desynchronize/src/index.ts
-api.settings.create([
+var settings = api.settings.create([
   {
     id: "dldLaserAction",
     type: "dropdown",
@@ -325,14 +325,14 @@ function stopSync() {
   sync?.stop();
   sync = null;
 }
-api.settings.listen("pluginSync", (enabled) => {
+settings.listen("pluginSync", (enabled) => {
   if (enabled) {
     if (api.libs.isEnabled("Communication")) {
       api.net.onLoad(() => {
         sync ??= new Sync();
       });
     } else {
-      api.settings.pluginSync = false;
+      settings.pluginSync = false;
       api.UI.showModal(
         document.createElement("div"),
         {

@@ -12,7 +12,7 @@
  */
 
 // plugins/PhysicsSettings/src/index.ts
-api.settings.create([
+var settings = api.settings.create([
   {
     type: "number",
     id: "jumps",
@@ -44,8 +44,8 @@ var updateMapOption = (key, value) => {
 };
 var applyAll = () => {
   const options = JSON.parse(api.stores.world.mapOptionsJSON);
-  options.maxJumps = api.settings.jumps;
-  options.jumpHeight = api.settings.jumpheight;
+  options.maxJumps = settings.jumps;
+  options.jumpHeight = settings.jumpheight;
   api.stores.world.mapOptionsJSON = JSON.stringify(options);
 };
 api.net.onLoad(() => {
@@ -54,12 +54,12 @@ api.net.onLoad(() => {
     applyAll();
   });
   const dldTas = api.plugin("DLDTAS");
-  dldTas?.setMoveSpeed(api.settings.speed);
-  api.stores.me.movementSpeed = api.settings.speed;
-  api.settings.listen("jumps", (jumps) => updateMapOption("maxJumps", jumps));
-  api.settings.listen("jumpheight", (height) => updateMapOption("jumpHeight", height));
-  api.settings.listen("speed", (speed) => {
-    dldTas?.setMoveSpeed(api.settings.speed);
+  dldTas?.setMoveSpeed(settings.speed);
+  api.stores.me.movementSpeed = settings.speed;
+  settings.listen("jumps", (jumps) => updateMapOption("maxJumps", jumps));
+  settings.listen("jumpheight", (height) => updateMapOption("jumpHeight", height));
+  settings.listen("speed", (speed) => {
+    dldTas?.setMoveSpeed(settings.speed);
     api.stores.me.movementSpeed = speed;
   });
   api.onStop(() => {

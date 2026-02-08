@@ -2,7 +2,7 @@
  * @name PerformantGims
  * @description Replaces configurable gims with images of them. Looks like crap, runs really fast.
  * @author TheLazySquid
- * @version 0.5.0
+ * @version 0.5.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/PerformantGims.js
  * @webpage https://gimloader.github.io/plugins/performantgims
  * @reloadRequired ingame
@@ -10,11 +10,11 @@
  */
 
 // plugins/PerformantGims/src/index.ts
-api.settings.create([
+var settings = api.settings.create([
   {
     type: "dropdown",
     title: "Apply To",
-    description: "Which characters should be converted into still images? You will need to reload to see changes.",
+    description: "Which characters should be converted into still images? You will need to reload to see changes if in game.",
     id: "applyTo",
     options: [
       { value: "everything", label: "Everything" },
@@ -24,9 +24,13 @@ api.settings.create([
     default: "others"
   }
 ]);
+settings.listen("applyTo", () => {
+  if (api.net.type !== "Colyseus") return;
+  api.requestReload();
+});
 function shouldApply(character) {
-  if (api.settings.applyTo === "everything") return true;
-  else if (api.settings.applyTo === "sentries") return character.type === "sentry";
+  if (settings.applyTo === "everything") return true;
+  else if (settings.applyTo === "sentries") return character.type === "sentry";
   return character.id !== api.stores.network.authId;
 }
 var wrapSkin = api.rewriter.createShared("WrapSkin", (Skin) => {

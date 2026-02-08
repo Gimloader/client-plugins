@@ -1,6 +1,6 @@
 import type RAPIER from "@dimforge/rapier2d-compat";
 
-api.settings.create([
+const settings = api.settings.create([
     {
         id: "collidePlayers",
         type: "toggle",
@@ -42,7 +42,7 @@ api.net.onLoad(async () => {
         colliders.delete(id);
     }
 
-    api.settings.listen("collidePlayers", (enabled: boolean) => {
+    settings.listen("collidePlayers", (enabled: boolean) => {
         for(const [id, char] of api.stores.phaser.scene.characterManager.characters) {
             if(char.type !== "player" || char.id === myId) continue;
             if(enabled) {
@@ -53,7 +53,7 @@ api.net.onLoad(async () => {
         }
     });
 
-    api.settings.listen("collideSentries", (enabled: boolean) => {
+    settings.listen("collideSentries", (enabled: boolean) => {
         for(const [id, { type }] of api.stores.phaser.scene.characterManager.characters) {
             if(type !== "sentry") continue;
             if(enabled) {
@@ -67,8 +67,8 @@ api.net.onLoad(async () => {
     api.onStop(
         api.net.room.state.characters.onAdd((char: any) => {
             if(char.id === myId) return;
-            if(char.type === "player" && !api.settings.collidePlayers) return;
-            if(char.type === "sentry" && !api.settings.collideSentries) return;
+            if(char.type === "player" && !settings.collidePlayers) return;
+            if(char.type === "sentry" && !settings.collideSentries) return;
 
             createCollider(char.id);
 

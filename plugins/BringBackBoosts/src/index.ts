@@ -1,5 +1,5 @@
 // biome-ignore-all lint: This file includes minified code
-api.settings.create([
+const settings = api.settings.create([
     {
         type: "toggle",
         id: "useOriginalPhysics",
@@ -9,7 +9,7 @@ api.settings.create([
     }
 ]);
 
-api.settings.listen("useOriginalPhysics", (value: boolean) => {
+settings.listen("useOriginalPhysics", (value) => {
     console.log("Updated to", value);
     if(!GL.platformerPhysics) return;
     if(value) {
@@ -31,7 +31,7 @@ const originalAirMovement = {
 };
 
 api.net.onLoad(() => {
-    if(api.settings.useOriginalPhysics) {
+    if(settings.useOriginalPhysics) {
         GL.platformerPhysics.movement.air = originalAirMovement;
     }
 });

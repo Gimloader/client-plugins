@@ -9,7 +9,7 @@
  */
 
 // plugins/AutoJoinName/src/index.ts
-api.settings.create([
+var settings = api.settings.create([
   {
     id: "name",
     type: "text",
@@ -19,7 +19,7 @@ api.settings.create([
   }
 ]);
 var localStorageName = "play-again-last-used-name";
-api.settings.listen("name", (name) => {
+settings.listen("name", (name) => {
   localStorage.setItem(localStorageName, name);
 }, true);
 api.onStop(() => localStorage.removeItem(localStorageName));

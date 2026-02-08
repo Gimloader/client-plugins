@@ -1,10 +1,10 @@
 import type { Vector } from "@dimforge/rapier2d-compat";
 
-api.settings.create([
+const settings = api.settings.create([
     {
         type: "dropdown",
         title: "Apply To",
-        description: "Which characters should be converted into still images? You will need to reload to see changes.",
+        description: "Which characters should be converted into still images? You will need to reload to see changes if in game.",
         id: "applyTo",
         options: [
             { value: "everything", label: "Everything" },
@@ -15,9 +15,14 @@ api.settings.create([
     }
 ]);
 
+settings.listen("applyTo", () => {
+    if(api.net.type !== "Colyseus") return;
+    api.requestReload();
+});
+
 function shouldApply(character: Gimloader.Stores.Character) {
-    if(api.settings.applyTo === "everything") return true;
-    else if(api.settings.applyTo === "sentries") return character.type === "sentry";
+    if(settings.applyTo === "everything") return true;
+    else if(settings.applyTo === "sentries") return character.type === "sentry";
 
     return character.id !== api.stores.network.authId;
 }

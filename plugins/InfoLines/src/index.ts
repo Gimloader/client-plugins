@@ -19,7 +19,7 @@ export class InfoLines {
     element?: HTMLElement;
 
     constructor() {
-        const settings: Gimloader.PluginSettingsDescription = [
+        const settings: Gimloader.PluginSetting[] = [
             {
                 type: "dropdown",
                 id: "position",

@@ -1,4 +1,4 @@
-api.settings.create([
+const settings = api.settings.create([
     {
         type: "number",
         id: "swingSpeed",
@@ -34,12 +34,12 @@ let flagConsts: FlagConsts | null = null;
 
 function applySettings() {
     if(!flagConsts) return;
-    flagConsts.FlagSwingInterval = 1 / api.settings.swingSpeed;
-    flagConsts.FlagSwingAmplitude = api.settings.swingAmount / 10;
+    flagConsts.FlagSwingInterval = 1 / settings.swingSpeed;
+    flagConsts.FlagSwingAmplitude = settings.swingAmount / 10;
 }
 
-api.settings.listen("swingSpeed", applySettings);
-api.settings.listen("swingAmount", applySettings);
+settings.listen("swingSpeed", applySettings);
+settings.listen("swingAmount", applySettings);
 
 api.rewriter.exposeVar("FlagDevice", {
     find: /(\w)={FlagOriginX/,

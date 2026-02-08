@@ -7,7 +7,7 @@ enum Op {
     AddGameTime
 }
 
-api.settings.create([
+const settings = api.settings.create([
     {
         id: "notification",
         type: "toggle",
@@ -24,7 +24,7 @@ api.net.onLoad(() => {
     const characters = () => [...api.stores.characters.characters.values()];
 
     comms.onMessage((message, char) => {
-        if(!api.settings.notification || message === Op.PluginOff || message === Op.PluginOn) return;
+        if(!settings.notification || message === Op.PluginOff || message === Op.PluginOn) return;
 
         switch (message) {
             case Op.EndGame:

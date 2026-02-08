@@ -13,7 +13,7 @@
  */
 
 // plugins/BringBackBoosts/src/index.ts
-api.settings.create([
+var settings = api.settings.create([
   {
     type: "toggle",
     id: "useOriginalPhysics",
@@ -22,7 +22,7 @@ api.settings.create([
     default: false
   }
 ]);
-api.settings.listen("useOriginalPhysics", (value) => {
+settings.listen("useOriginalPhysics", (value) => {
   console.log("Updated to", value);
   if (!GL.platformerPhysics) return;
   if (value) {
@@ -42,7 +42,7 @@ var originalAirMovement = {
   maxAccelerationSpeed: 0.155
 };
 api.net.onLoad(() => {
-  if (api.settings.useOriginalPhysics) {
+  if (settings.useOriginalPhysics) {
     GL.platformerPhysics.movement.air = originalAirMovement;
   }
 });

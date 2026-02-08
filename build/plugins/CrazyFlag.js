@@ -10,7 +10,7 @@
  */
 
 // plugins/CrazyFlag/src/index.ts
-api.settings.create([
+var settings = api.settings.create([
   {
     type: "number",
     id: "swingSpeed",
@@ -31,11 +31,11 @@ api.settings.create([
 var flagConsts = null;
 function applySettings() {
   if (!flagConsts) return;
-  flagConsts.FlagSwingInterval = 1 / api.settings.swingSpeed;
-  flagConsts.FlagSwingAmplitude = api.settings.swingAmount / 10;
+  flagConsts.FlagSwingInterval = 1 / settings.swingSpeed;
+  flagConsts.FlagSwingAmplitude = settings.swingAmount / 10;
 }
-api.settings.listen("swingSpeed", applySettings);
-api.settings.listen("swingAmount", applySettings);
+settings.listen("swingSpeed", applySettings);
+settings.listen("swingAmount", applySettings);
 api.rewriter.exposeVar("FlagDevice", {
   find: /(\w)={FlagOriginX/,
   callback: (consts) => {

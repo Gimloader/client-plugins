@@ -1,7 +1,7 @@
 import Sync from "./sync";
 export * as DLD from "./dld";
 
-api.settings.create([
+const settings = api.settings.create([
     {
         id: "dldLaserAction",
         type: "dropdown",
@@ -57,14 +57,14 @@ function stopSync() {
     sync = null;
 }
 
-api.settings.listen("pluginSync", (enabled) => {
+settings.listen("pluginSync", (enabled) => {
     if(enabled) {
         if(api.libs.isEnabled("Communication")) {
             api.net.onLoad(() => {
                 sync ??= new Sync();
             });
         } else {
-            api.settings.pluginSync = false;
+            settings.pluginSync = false;
             api.UI.showModal(
                 document.createElement("div"),
                 {

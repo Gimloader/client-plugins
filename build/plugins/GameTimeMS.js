@@ -51,7 +51,7 @@ function insert(code, match, string) {
 }
 
 // plugins/GameTimeMS/src/index.ts
-api.settings.create([
+var settings = api.settings.create([
   {
     id: "decimals",
     type: "slider",
@@ -66,7 +66,7 @@ api.settings.create([
 var msToTime = api.rewriter.createShared("MSToTime", (ms) => {
   const minutes = Math.floor(ms / 6e4);
   const seconds = Math.floor(ms % 6e4 / 1e3);
-  const fraction = (ms % 1e3 / 1e3).toFixed(api.settings.decimals).slice(2);
+  const fraction = (ms % 1e3 / 1e3).toFixed(settings.decimals).slice(2);
   return `${minutes}:${String(seconds).padStart(2, "0")}.${fraction}`;
 });
 api.rewriter.addParseHook("MapOptionsDevice", (code) => {

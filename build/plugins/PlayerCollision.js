@@ -11,7 +11,7 @@
  */
 
 // plugins/PlayerCollision/src/index.ts
-api.settings.create([
+var settings = api.settings.create([
   {
     id: "collidePlayers",
     type: "toggle",
@@ -48,7 +48,7 @@ api.net.onLoad(async () => {
     world.removeCollider(collider, true);
     colliders.delete(id);
   }
-  api.settings.listen("collidePlayers", (enabled) => {
+  settings.listen("collidePlayers", (enabled) => {
     for (const [id, char] of api.stores.phaser.scene.characterManager.characters) {
       if (char.type !== "player" || char.id === myId) continue;
       if (enabled) {
@@ -58,7 +58,7 @@ api.net.onLoad(async () => {
       }
     }
   });
-  api.settings.listen("collideSentries", (enabled) => {
+  settings.listen("collideSentries", (enabled) => {
     for (const [id, { type }] of api.stores.phaser.scene.characterManager.characters) {
       if (type !== "sentry") continue;
       if (enabled) {
@@ -71,8 +71,8 @@ api.net.onLoad(async () => {
   api.onStop(
     api.net.room.state.characters.onAdd((char) => {
       if (char.id === myId) return;
-      if (char.type === "player" && !api.settings.collidePlayers) return;
-      if (char.type === "sentry" && !api.settings.collideSentries) return;
+      if (char.type === "player" && !settings.collidePlayers) return;
+      if (char.type === "sentry" && !settings.collideSentries) return;
       createCollider(char.id);
       api.onStop(
         char.onRemove(() => removeCollider(char.id))

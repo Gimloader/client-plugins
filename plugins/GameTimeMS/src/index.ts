@@ -1,6 +1,6 @@
 import { getSection, insert } from "$shared/rewritingUtils";
 
-api.settings.create([
+const settings = api.settings.create([
     {
         id: "decimals",
         type: "slider",
@@ -16,7 +16,7 @@ api.settings.create([
 const msToTime = api.rewriter.createShared("MSToTime", (ms: number) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
-    const fraction = ((ms % 1000) / 1000).toFixed(api.settings.decimals).slice(2);
+    const fraction = ((ms % 1000) / 1000).toFixed(settings.decimals).slice(2);
 
     return `${minutes}:${String(seconds).padStart(2, "0")}.${fraction}`;
 });

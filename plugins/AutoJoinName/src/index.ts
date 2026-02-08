@@ -1,4 +1,4 @@
-api.settings.create([
+const settings = api.settings.create([
     {
         id: "name",
         type: "text",
@@ -10,7 +10,7 @@ api.settings.create([
 
 const localStorageName = "play-again-last-used-name";
 
-api.settings.listen("name", name => {
+settings.listen("name", (name) => {
     localStorage.setItem(localStorageName, name);
 }, true);
 
