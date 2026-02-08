@@ -38,7 +38,11 @@ if(root === "gamemode") {
         .then(gameId => {
             location.href = `/host?id=${gameId}`;
         })
-        .catch((err: Error) => alert(err.message));
+        .catch((err: Error) => {
+            api.UI.modal.error({
+                content: err.message
+            });
+        });
 } else {
     fetch("/api/games/summary/me")
         .then(res => res.json())
