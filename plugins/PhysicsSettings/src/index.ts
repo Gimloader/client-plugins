@@ -1,3 +1,5 @@
+import { replaceSection } from "$shared/rewritingUtils";
+
 const settings = api.settings.create([
     {
         type: "number",
@@ -21,8 +23,27 @@ const settings = api.settings.create([
         title: "Grounded Move Speed",
         description: "How fast should the character move on the ground? 310 by default.",
         default: 310
+    },
+    {
+        type: "number",
+        id: "tps",
+        title: "Ticks Per Second",
+        description: "The amount of physics ticks per second the game runs at, higher values feel more instant. Updating requires a reload. 12 by default.",
+        default: 12,
+        onChange() {
+            if(api.net.type === "None") return;
+            api.requestReload();
+        }
     }
 ]);
+
+let rewritten = false;
+
+api.rewriter.addParseHook("App", (code) => {
+    rewritten = true;
+    if(!code.includes('.zoneAbilitiesOverrides.listen("allowResourceDrop",')) return code;
+    return replaceSection(code, "staticGridSize#=@,", settings.tps.toString());
+});
 
 const updateMapOption = (key: string, value: any) => {
     const options = JSON.parse(api.stores.world.mapOptionsJSON);
@@ -38,6 +59,7 @@ const applyAll = () => {
 };
 
 api.net.onLoad(() => {
+    if(!rewritten && settings.tps !== 12) api.requestReload();
     if(api.stores?.session?.mapStyle !== "platformer") return;
 
     api.net.room.state.listen("mapSettings", () => {
@@ -63,5 +85,7 @@ api.net.onLoad(() => {
 
         dldTas?.setMoveSpeed(310);
         api.stores.me.movementSpeed = 310;
+
+        if(settings.tps !== 12) api.requestReload();
     });
 });
