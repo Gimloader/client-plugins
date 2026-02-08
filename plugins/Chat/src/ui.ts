@@ -34,6 +34,7 @@ export default class UI {
     static messageWrapper: HTMLElement;
     static messageContainer: HTMLElement;
     static input: HTMLInputElement;
+    static typingDetails: HTMLElement;
     static maxLength = 100;
     static history: HTMLElement[] = [];
     static enabled = false;
@@ -55,6 +56,11 @@ export default class UI {
         UI.messageContainer = document.createElement("div");
         UI.messageContainer.id = "chat-messages";
         UI.messageWrapper.appendChild(UI.messageContainer);
+
+        UI.typingDetails = document.createElement("div");
+        UI.typingDetails.id = "typing-details";
+        UI.typingDetails.className = "text-white text-sm";
+        UI.messageWrapper.appendChild(UI.typingDetails);
 
         UI.input = UI.createInput();
         UI.element.appendChild(UI.input);
@@ -136,5 +142,9 @@ export default class UI {
             UI.input.disabled = true;
             UI.input.placeholder = "Chat not available in lobby";
         }
+    }
+
+    static setPlayersTyping(text: string) {
+        UI.typingDetails.textContent = text;
     }
 }

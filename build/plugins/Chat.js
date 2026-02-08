@@ -2,12 +2,12 @@
  * @name Chat
  * @description Adds an in-game chat to 2d gamemodes
  * @author TheLazySquid
- * @version 0.2.7
+ * @version 0.3.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Chat.js
  * @webpage https://gimloader.github.io/plugins/chat
  * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Added message showing when message fails to send
+ * @changelog Added typing indicator
  */
 
 // plugins/Chat/src/consts.ts
@@ -79,6 +79,7 @@ var UI = class _UI {
   static messageWrapper;
   static messageContainer;
   static input;
+  static typingDetails;
   static maxLength = 100;
   static history = [];
   static enabled = false;
@@ -95,6 +96,10 @@ var UI = class _UI {
     _UI.messageContainer = document.createElement("div");
     _UI.messageContainer.id = "chat-messages";
     _UI.messageWrapper.appendChild(_UI.messageContainer);
+    _UI.typingDetails = document.createElement("div");
+    _UI.typingDetails.id = "typing-details";
+    _UI.typingDetails.className = "text-white text-sm";
+    _UI.messageWrapper.appendChild(_UI.typingDetails);
     _UI.input = _UI.createInput();
     _UI.element.appendChild(_UI.input);
     document.body.appendChild(_UI.element);
@@ -158,9 +163,21 @@ var UI = class _UI {
       _UI.input.placeholder = "Chat not available in lobby";
     }
   }
+  static setPlayersTyping(text) {
+    _UI.typingDetails.textContent = text;
+  }
 };
 
 // plugins/Chat/src/index.ts
+var settings = api.settings.create([
+  {
+    id: "transmitTyping",
+    type: "toggle",
+    title: "Transmit Typing",
+    description: "Show other players when you are typing",
+    default: true
+  }
+]);
 api.net.onLoad(() => {
   const myId = api.stores.network.authId;
   api.net.on("ACTIVITY_FEED_MESSAGE", (message, editFn) => {
@@ -179,9 +196,48 @@ api.net.onLoad(() => {
     }
   });
   const joinedPlayers = /* @__PURE__ */ new Set();
+  let typing = false;
+  let timeout;
+  let playersTyping = [];
+  function stopTyping() {
+    if (!Comms.enabled || !typing) return;
+    comms.send(4 /* NotTyping */);
+    typing = false;
+  }
+  if (settings.transmitTyping) {
+    UI.input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") return;
+      if (typing) {
+        clearTimeout(timeout);
+      } else {
+        typing = true;
+        comms.send(3 /* Typing */);
+      }
+      timeout = setTimeout(() => stopTyping(), 3e3);
+    });
+    UI.input.addEventListener("blur", () => {
+      if (UI.input.disabled) return;
+      stopTyping();
+    });
+  }
+  function updatePlayersTyping() {
+    const names = playersTyping.map((player) => player.name);
+    if (names.length === 0) {
+      UI.setPlayersTyping("");
+    } else if (names.length > 3) {
+      UI.setPlayersTyping("Several players are typing...");
+    } else if (names.length === 1) {
+      UI.setPlayersTyping(`${names[0]} is typing...`);
+    } else {
+      UI.setPlayersTyping(`${names.slice(0, -2).join(", ")} and ${names.at(-1)} are typing.`);
+    }
+  }
   comms.onMessage((message, char) => {
+    const removeTyping = () => playersTyping = playersTyping.filter((c) => c !== char);
     if (typeof message === "string") {
       UI.addMessage(`${char.name}: ${message}`);
+      removeTyping();
+      updatePlayersTyping();
     } else {
       if (message === 0 /* Join */) {
         if (joinedPlayers.has(char.id)) return;
@@ -189,15 +245,25 @@ api.net.onLoad(() => {
         joinedPlayers.add(char.id);
       } else if (message === 1 /* Leave */) {
         UI.addMessage(`${char.name} left the chat`);
+        joinedPlayers.delete(char.id);
+        removeTyping();
+        updatePlayersTyping();
       } else if (message === 2 /* Greet */) {
         UI.addMessage(`${char.name} connected to the chat`);
         comms.send(0 /* Join */);
         joinedPlayers.add(char.id);
+      } else if (message === 3 /* Typing */) {
+        playersTyping.push(char);
+        updatePlayersTyping();
+      } else if (message === 4 /* NotTyping */) {
+        removeTyping();
+        updatePlayersTyping();
       }
     }
   });
   api.onStop(api.net.room.state.characters.onRemove((char) => {
     joinedPlayers.delete(char.id);
+    playersTyping = playersTyping.filter((c) => c !== char);
   }));
   if (Comms.enabled) {
     comms.send(2 /* Greet */);
@@ -212,6 +278,10 @@ api.net.onLoad(() => {
       comms.send(0 /* Join */);
     } else {
       UI.addMessage("The chat is no longer active");
+      playersTyping = [];
+      if (typing) {
+        clearTimeout(timeout);
+      }
     }
   });
   function sendLeave() {
