@@ -2,7 +2,7 @@
  * @name PhysicsSettings
  * @description Allows you to configure various things about the physics in platformer modes (client-side only)
  * @author TheLazySquid
- * @version 0.3
+ * @version 0.3.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/PhysicsSettings.js
  * @webpage https://gimloader.github.io/plugins/physicssettings
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
