@@ -2,7 +2,7 @@ import { Type } from "./consts";
 import { bytesToFloat, encodeCharacters, floatToBytes, joinUint24, splitUint24 } from "./encoding";
 import type { Message, MessageState, OnMessageCallback, PendingAngle } from "./types";
 
-export default class Runtime {
+export default class Messenger {
     private static pendingAngle = 0;
     private static angleChangeRes: (() => void) | null = null;
     private static angleChangeRej: (() => void) | null = null;
@@ -35,79 +35,99 @@ export default class Runtime {
         }, false);
     }
 
-    static async sendBoolean(identifier: number[], value: boolean) {
-        await this.sendHeader(identifier, Type.Boolean, value ? 1 : 0);
+    constructor(private readonly identifier: number[]) {}
+
+    async sendBoolean(value: boolean) {
+        await this.sendHeader(Type.Boolean, value ? 1 : 0);
     }
 
-    static async sendPositiveInt24(identifier: number[], value: number) {
+    async sendPositiveInt24(value: number) {
         const bytes = splitUint24(value);
-        await this.sendHeader(identifier, Type.PositiveInt24, ...bytes);
+        await this.sendHeader(Type.PositiveInt24, ...bytes);
     }
 
-    static async sendNegativeInt24(identifier: number[], value: number) {
+    async sendNegativeInt24(value: number) {
         const bytes = splitUint24(-value);
-        await this.sendHeader(identifier, Type.NegativeInt24, ...bytes);
+        await this.sendHeader(Type.NegativeInt24, ...bytes);
     }
 
-    static async sendNumber(identifier: number[], value: number) {
+    async sendNumber(value: number) {
         const bytes = floatToBytes(value);
-
-        await Promise.all([
-            this.sendHeader(identifier, Type.Float, ...bytes.slice(0, 3)),
-            this.sendBytes(bytes.slice(3, 8))
-        ]);
+        await this.sendSpreadBytes(Type.Float, bytes);
     }
 
-    static async sendThreeCharacters(identifier: number[], string: string) {
-        const codes = encodeCharacters(string);
-        await this.sendHeader(identifier, Type.ThreeCharacters, ...codes);
+    async sendByte(byte: number) {
+        await this.sendHeader(Type.Byte, byte);
     }
 
-    private static async sendStringOfType(identifier: number[], string: string, type: Type) {
+    async sendTwoBytes(bytes: number[]) {
+        await this.sendHeader(Type.TwoBytes, ...bytes);
+    }
+
+    async sendThreeBytes(bytes: number[]) {
+        await this.sendHeader(Type.ThreeBytes, ...bytes);
+    }
+
+    async sendSeveralBytes(bytes: number[]) {
+        await this.sendSpreadBytes(Type.SeveralBytes, bytes);
+    }
+
+    async sendThreeCharacters(string: string) {
         const codes = encodeCharacters(string);
+        await this.sendHeader(Type.ThreeCharacters, ...codes);
+    }
+
+    async sendString(string: string) {
+        await this.sendStringOfType(string, Type.String);
+    }
+
+    async sendSmallObject(obj: object) {
+        const string = JSON.stringify(obj);
+        await this.sendHeader(Type.SmallObject, ...encodeCharacters(string));
+    }
+
+    async sendObject(obj: object) {
+        const string = JSON.stringify(obj);
+        await this.sendStringOfType(string, Type.Object);
+    }
+
+    private async sendStringOfType(string: string, type: Type) {
+        const codes = encodeCharacters(string);
+        await this.sendSpreadBytes(type, codes);
+    }
+
+    private async sendSpreadBytes(type: Type, bytes: number[]) {
         const messages: number[][] = [];
 
-        // Send the string 7 bytes at a time
-        for(let i = 3; i < codes.length; i += 7) {
-            const msg = [];
-            for(let j = 0; j < 7; j++) {
-                if(i + j >= codes.length) break;
-                msg[j] = codes[i + j];
-            }
-
-            messages.push(msg);
+        for(let i = 3; i < bytes.length; i += 7) {
+            messages.push(bytes.slice(i, i + 7));
         }
 
+        const lastMessage = messages.at(-1)!;
+        // Send the index of the last byte, plus 2 to differentiate from the 0/1 alternation
+        const lastIndex = lastMessage.length + 1;
+
         await Promise.all([
-            this.sendHeader(identifier, type, ...codes.slice(0, 3)),
-            ...messages.slice(0, -1).map(msg => this.sendBytes(msg)),
-            this.sendBytes(messages[messages.length - 1], 2)
+            this.sendHeader(type, ...bytes.slice(0, 3)),
+            ...messages.slice(0, -1).map(msg => Messenger.sendAlternatedBytes(msg)),
+            Messenger.sendAlternatedBytes(lastMessage, lastIndex)
         ]);
-    }
-
-    static async sendString(identifier: number[], string: string) {
-        await this.sendStringOfType(identifier, string, Type.String);
-    }
-
-    static async sendObject(identifier: number[], obj: object) {
-        const string = JSON.stringify(obj);
-        await this.sendStringOfType(identifier, string, Type.Object);
     }
 
     // Maxmium of 3 free bytes
-    private static async sendHeader(identifier: number[], type: Type, ...free: number[]) {
-        const header = [...identifier, ...free];
+    private async sendHeader(type: Type, ...free: number[]) {
+        const header = [...this.identifier, ...free];
 
         // Vary the float to avoid dropping due to repeat angle
         header[7] = type;
-        this.alternate = !this.alternate;
-        if(this.alternate) header[7] |= 0x80;
+        Messenger.alternate = !Messenger.alternate;
+        if(Messenger.alternate) header[7] |= 0x80;
 
-        await this.sendAngle(bytesToFloat(header));
+        await Messenger.sendBytes(header);
     }
 
     // Maxmium of 7 bytes
-    private static async sendBytes(bytes: number[], overrideLast?: number) {
+    private static async sendAlternatedBytes(bytes: number[], overrideLast?: number) {
         if(overrideLast) {
             bytes[7] = overrideLast;
         } else {
@@ -115,6 +135,10 @@ export default class Runtime {
             if(this.alternate) bytes[7] = 1;
         }
 
+        await this.sendBytes(bytes);
+    }
+
+    private static async sendBytes(bytes: number[]) {
         await this.sendAngle(bytesToFloat(bytes));
     }
 
@@ -166,31 +190,35 @@ export default class Runtime {
         if(char.id === api.stores.network.authId) return this.angleChangeRes?.();
 
         const bytes = floatToBytes(angle);
-        const identifierBytes = bytes.slice(0, 4);
-        const identifierString = identifierBytes.join(",");
-        const callbacksForIdentifier = this.callbacks.get(identifierString);
-
         const state = this.messageStates.get(char);
 
         if(state) {
-            const callbacksForIdentifier = this.callbacks.get(state.identifierString);
-            if(!callbacksForIdentifier) return;
+            const callbacksForState = this.callbacks.get(state.identifierString);
+            if(!callbacksForState) return;
+
+            const payload = bytes.slice(0, 7);
+            const flag = bytes[7];
 
             const gotValue = (value: Message) => {
                 this.messageStates.delete(char);
 
-                callbacksForIdentifier.forEach(callback => {
+                callbacksForState.forEach(callback => {
                     callback(value, char);
                 });
             };
 
-            if(state.type === Type.Float) {
-                const numberBytes = [...state.recieved, ...bytes.slice(0, 5)];
-                return gotValue(bytesToFloat(numberBytes));
+            if(flag < 2) {
+                state.recieved.push(...payload);
+                return;
             }
 
-            state.recieved.push(...bytes.slice(0, 7).filter(byte => byte !== 0));
-            if(bytes[7] !== 2) return;
+            state.recieved.push(...payload.slice(0, flag - 1));
+
+            if(state.type === Type.Float) {
+                return gotValue(bytesToFloat(state.recieved));
+            } else if(state.type === Type.SeveralBytes) {
+                return gotValue(state.recieved);
+            }
 
             const string = String.fromCharCode(...state.recieved);
 
@@ -204,8 +232,14 @@ export default class Runtime {
                     this.messageStates.delete(char);
                 }
             }
-        } else if(callbacksForIdentifier) {
+        } else {
+            const identifierBytes = bytes.slice(0, 4);
+            const payload = bytes.slice(4, 7) as [number, number, number];
             const type = bytes[7] & 0x7F;
+
+            const identifierString = identifierBytes.join(",");
+            const callbacksForIdentifier = this.callbacks.get(identifierString);
+            if(!callbacksForIdentifier) return;
 
             const gotValue = (value: Message) => {
                 callbacksForIdentifier.forEach(callback => {
@@ -214,25 +248,28 @@ export default class Runtime {
             };
 
             if(type === Type.Boolean) {
-                gotValue(bytes[4] === 1);
+                gotValue(payload[0] === 1);
             } else if(type === Type.PositiveInt24) {
-                gotValue(joinUint24(bytes[4], bytes[5], bytes[6]));
+                gotValue(joinUint24(...payload));
             } else if(type === Type.NegativeInt24) {
-                gotValue(-joinUint24(bytes[4], bytes[5], bytes[6]));
-            } else if(type === Type.Float) {
-                this.messageStates.set(char, {
-                    type: Type.Float,
-                    identifierString,
-                    recieved: bytes.slice(4, 7)
-                });
+                gotValue(-joinUint24(...payload));
+            } else if(type === Type.Byte) {
+                gotValue([payload[0]]);
+            } else if(type === Type.TwoBytes) {
+                gotValue(payload.slice(0, 2));
+            } else if(type === Type.ThreeBytes) {
+                gotValue(payload);
             } else if(type === Type.ThreeCharacters) {
-                const codes = bytes.slice(4, 7).filter(b => b !== 0);
+                const codes = payload.filter(b => b !== 0);
                 gotValue(String.fromCharCode(...codes));
-            } else if(type === Type.String || type === Type.Object) {
+            } else if(type === Type.SmallObject) {
+                const codes = payload.filter(b => b !== 0);
+                gotValue(JSON.parse(String.fromCharCode(...codes)));
+            } else if(type === Type.String || type === Type.Object || type === Type.SeveralBytes || type === Type.Float) {
                 this.messageStates.set(char, {
                     type,
                     identifierString,
-                    recieved: bytes.slice(4, 7)
+                    recieved: payload
                 });
             }
         }
