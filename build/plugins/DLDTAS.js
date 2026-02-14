@@ -7,7 +7,7 @@
  * @webpage https://gimloader.github.io/plugins/dldtas
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
- * @changelog Added a command for jumping to any previous frame
+ * @changelog Added a command for jumping to any frame
  */
 
 // plugins/DLDTAS/src/styles.scss

@@ -12,5 +12,5 @@ export default singleConfig({
         "Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js"
     ],
     gamemodes: ["dontLookDown"],
-    changelog: ["Added a command for jumping to any previous frame"]
+    changelog: ["Added a command for jumping to any frame"]
 });
