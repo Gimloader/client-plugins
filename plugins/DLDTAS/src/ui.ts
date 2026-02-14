@@ -22,16 +22,23 @@ export function createUI() {
     const tools = new TASTools(values, update);
 
     api.commands.addCommand({
-        text: "DLDTAS: Go to previous frame"
+        text: "DLDTAS: Go to frame"
     }, async (context) => {
         const frame = await context.number({
             title: "Frame",
             decimal: false,
-            min: 0,
-            max: values.currentFrame
+            min: 0
         });
 
-        tools.setFrame(frame);
+        if(frame < values.currentFrame) {
+            tools.setFrame(frame);
+        } else {
+            const framesToGo = frame - values.currentFrame;
+            for(let i = 0; i < framesToGo; i++) {
+                tools.advanceFrame();
+            }
+        }
+
         update();
     });
 
