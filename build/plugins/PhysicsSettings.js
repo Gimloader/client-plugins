@@ -86,10 +86,12 @@ var settings = api.settings.create([
   }
 ]);
 var rewritten = false;
+var getTps = api.rewriter.createShared("GetTPS", () => settings.tps);
+var triggerRewritten = api.rewriter.createShared("TriggerRewritten", () => rewritten = true);
 api.rewriter.addParseHook("App", (code) => {
-  rewritten = true;
   if (!code.includes('.zoneAbilitiesOverrides.listen("allowResourceDrop",')) return code;
-  return replaceSection(code, "staticGridSize#=@,", settings.tps.toString());
+  code = replaceSection(code, ",staticGridSize:#=@,", `${getTps}?.() ?? 12`);
+  return code + `${triggerRewritten}?.();`;
 });
 var updateMapOption = (key, value) => {
   const options = JSON.parse(api.stores.world.mapOptionsJSON);

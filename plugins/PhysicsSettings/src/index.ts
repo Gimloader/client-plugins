@@ -39,10 +39,13 @@ const settings = api.settings.create([
 
 let rewritten = false;
 
+const getTps = api.rewriter.createShared("GetTPS", () => settings.tps);
+const triggerRewritten = api.rewriter.createShared("TriggerRewritten", () => rewritten = true);
+
 api.rewriter.addParseHook("App", (code) => {
-    rewritten = true;
     if(!code.includes('.zoneAbilitiesOverrides.listen("allowResourceDrop",')) return code;
-    return replaceSection(code, "staticGridSize#=@,", settings.tps.toString());
+    code = replaceSection(code, ",staticGridSize:#=@,", `${getTps}?.() ?? 12`);
+    return code + `${triggerRewritten}?.();`;
 });
 
 const updateMapOption = (key: string, value: any) => {
