@@ -279,6 +279,7 @@ api.net.onLoad(() => {
     } else {
       UI.addMessage("The chat is no longer active");
       playersTyping = [];
+      updatePlayersTyping();
       if (typing) {
         clearTimeout(timeout);
       }
