@@ -21,7 +21,7 @@ api.net.onLoad(() => {
   api.onStop(() => window.removeEventListener("click", onClick));
   const otherPlayers = () => [...api.stores.characters.characters.values()].filter((char) => char.type === "player" && char.id !== api.stores.network.authId);
   api.commands.addCommand({
-    text: "[Teleport] Teleport to Player",
+    text: "Teleport: Teleport to Player",
     hidden: () => otherPlayers().length === 0
   }, async (context) => {
     const player = await context.select({
