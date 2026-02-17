@@ -59,7 +59,7 @@ export default class UI {
 
         UI.typingDetails = document.createElement("div");
         UI.typingDetails.id = "typing-details";
-        UI.typingDetails.className = "text-white text-sm";
+        UI.typingDetails.className = "text-white text-sm h-6";
         UI.messageWrapper.appendChild(UI.typingDetails);
 
         UI.input = UI.createInput();

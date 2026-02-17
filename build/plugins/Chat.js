@@ -98,7 +98,7 @@ var UI = class _UI {
     _UI.messageWrapper.appendChild(_UI.messageContainer);
     _UI.typingDetails = document.createElement("div");
     _UI.typingDetails.id = "typing-details";
-    _UI.typingDetails.className = "text-white text-sm";
+    _UI.typingDetails.className = "text-white text-sm h-6";
     _UI.messageWrapper.appendChild(_UI.typingDetails);
     _UI.input = _UI.createInput();
     _UI.element.appendChild(_UI.input);
