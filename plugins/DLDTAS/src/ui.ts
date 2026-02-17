@@ -27,7 +27,8 @@ export function createUI() {
         const frame = await context.number({
             title: "Frame",
             decimal: false,
-            min: 0
+            min: 0,
+            max: values.frames.findLastIndex(({ up, left, right }) => up || left || right)
         });
 
         if(frame < values.currentFrame) {

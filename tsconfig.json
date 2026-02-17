@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "strict": true,
+        "lib": ["ESNext"],
         "target": "es2022",
         "moduleResolution": "bundler",
         "jsx": "preserve",
