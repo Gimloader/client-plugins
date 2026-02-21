@@ -1,9 +1,8 @@
+import { mount, unmount } from "svelte";
 import UI from "./ui/Start.svelte";
 
 api.net.onLoad(() => {
-    const ui = new UI({
-        target: document.body
-    });
+    const ui = mount(UI, { target: document.body });
 
-    api.onStop(() => ui.$destroy());
+    api.onStop(() => unmount(ui));
 });

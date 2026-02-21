@@ -1,3 +1,4 @@
+export const isUint8 = (n: number) => Number.isInteger(n) && n >= 0 && n <= 255;
 export const isUint24 = (n: number) => Number.isInteger(n) && n >= 0 && n <= 0xFFFFFF;
 export const splitUint24 = (int: number) => [
     (int >> 16) & 0xFF,

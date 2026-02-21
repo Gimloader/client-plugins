@@ -1,7 +1,7 @@
 import { sassPlugin } from "esbuild-sass-plugin";
 import svelte from "esbuild-svelte";
-import { sveltePreprocess } from "svelte-preprocess";
 import { workspaceConfig } from "@gimloader/build";
+import { externalSvelte } from "@gimloader/external-svelte-plugin";
 
 export default workspaceConfig({
     type: "workspace",
@@ -13,11 +13,11 @@ export default workspaceConfig({
     plugins: [
         sassPlugin({ type: "css-text" }),
         svelte({
-            preprocess: sveltePreprocess(),
             compilerOptions: {
                 css: "injected"
             }
-        })
+        }),
+        externalSvelte()
     ],
     esbuildOptions: {
         loader: {

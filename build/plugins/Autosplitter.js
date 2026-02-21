@@ -2,717 +2,48 @@
  * @name Autosplitter
  * @description Automatically times speedruns for various gamemodes
  * @author TheLazySquid
- * @version 0.5.5
+ * @version 0.6.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Autosplitter.js
  * @webpage https://gimloader.github.io/plugins/autosplitter
  * @hasSettings true
  * @gamemode dontLookDown
  * @gamemode fishtopia
  * @gamemode oneWayOut
- * @changelog Fixed One Way Out autosplitter not starting correctly
+ * @changelog Updated the settings UI to svelte 5
  */
 
-// node_modules/svelte/src/runtime/internal/utils.js
-function noop() {
-}
-function run(fn) {
-  return fn();
-}
-function blank_object() {
-  return /* @__PURE__ */ Object.create(null);
-}
-function run_all(fns) {
-  fns.forEach(run);
-}
-function is_function(thing) {
-  return typeof thing === "function";
-}
-function safe_not_equal(a, b) {
-  return a != a ? b == b : a !== b || a && typeof a === "object" || typeof a === "function";
-}
-function is_empty(obj) {
-  return Object.keys(obj).length === 0;
-}
-
-// node_modules/svelte/src/runtime/internal/globals.js
-var globals = typeof window !== "undefined" ? window : typeof globalThis !== "undefined" ? globalThis : (
-  // @ts-ignore Node typings have this
-  global
-);
-
-// node_modules/svelte/src/runtime/internal/ResizeObserverSingleton.js
-var ResizeObserverSingleton = class _ResizeObserverSingleton {
-  /**
-   * @private
-   * @readonly
-   * @type {WeakMap<Element, import('./private.js').Listener>}
-   */
-  _listeners = "WeakMap" in globals ? /* @__PURE__ */ new WeakMap() : void 0;
-  /**
-   * @private
-   * @type {ResizeObserver}
-   */
-  _observer = void 0;
-  /** @type {ResizeObserverOptions} */
-  options;
-  /** @param {ResizeObserverOptions} options */
-  constructor(options) {
-    this.options = options;
-  }
-  /**
-   * @param {Element} element
-   * @param {import('./private.js').Listener} listener
-   * @returns {() => void}
-   */
-  observe(element2, listener) {
-    this._listeners.set(element2, listener);
-    this._getObserver().observe(element2, this.options);
-    return () => {
-      this._listeners.delete(element2);
-      this._observer.unobserve(element2);
-    };
-  }
-  /**
-   * @private
-   */
-  _getObserver() {
-    return this._observer ?? (this._observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        _ResizeObserverSingleton.entries.set(entry.target, entry);
-        this._listeners.get(entry.target)?.(entry);
-      }
-    }));
-  }
-};
-ResizeObserverSingleton.entries = "WeakMap" in globals ? /* @__PURE__ */ new WeakMap() : void 0;
-
-// node_modules/svelte/src/runtime/internal/dom.js
-var is_hydrating = false;
-function start_hydrating() {
-  is_hydrating = true;
-}
-function end_hydrating() {
-  is_hydrating = false;
-}
-function append(target, node) {
-  target.appendChild(node);
-}
-function append_styles(target, style_sheet_id, styles) {
-  const append_styles_to = get_root_for_style(target);
-  if (!append_styles_to.getElementById(style_sheet_id)) {
-    const style = element("style");
-    style.id = style_sheet_id;
-    style.textContent = styles;
-    append_stylesheet(append_styles_to, style);
-  }
-}
-function get_root_for_style(node) {
-  if (!node) return document;
-  const root = node.getRootNode ? node.getRootNode() : node.ownerDocument;
-  if (root && /** @type {ShadowRoot} */
-  root.host) {
-    return (
-      /** @type {ShadowRoot} */
-      root
-    );
-  }
-  return node.ownerDocument;
-}
-function append_stylesheet(node, style) {
-  append(
-    /** @type {Document} */
-    node.head || node,
-    style
-  );
-  return style.sheet;
-}
-function insert(target, node, anchor) {
-  target.insertBefore(node, anchor || null);
-}
-function detach(node) {
-  if (node.parentNode) {
-    node.parentNode.removeChild(node);
-  }
-}
-function destroy_each(iterations, detaching) {
-  for (let i = 0; i < iterations.length; i += 1) {
-    if (iterations[i]) iterations[i].d(detaching);
-  }
-}
-function element(name) {
-  return document.createElement(name);
-}
-function text(data) {
-  return document.createTextNode(data);
-}
-function space() {
-  return text(" ");
-}
-function empty() {
-  return text("");
-}
-function listen(node, event, handler, options) {
-  node.addEventListener(event, handler, options);
-  return () => node.removeEventListener(event, handler, options);
-}
-function attr(node, attribute, value) {
-  if (value == null) node.removeAttribute(attribute);
-  else if (node.getAttribute(attribute) !== value) node.setAttribute(attribute, value);
-}
-function to_number(value) {
-  return value === "" ? null : +value;
-}
-function children(element2) {
-  return Array.from(element2.childNodes);
-}
-function set_data(text2, data) {
-  data = "" + data;
-  if (text2.data === data) return;
-  text2.data = /** @type {string} */
-  data;
-}
-function set_input_value(input, value) {
-  input.value = value == null ? "" : value;
-}
-function select_option(select, value, mounting) {
-  for (let i = 0; i < select.options.length; i += 1) {
-    const option = select.options[i];
-    if (option.__value === value) {
-      option.selected = true;
-      return;
-    }
-  }
-  if (!mounting || value !== void 0) {
-    select.selectedIndex = -1;
-  }
-}
-function select_value(select) {
-  const selected_option = select.querySelector(":checked");
-  return selected_option && selected_option.__value;
-}
-function toggle_class(element2, name, toggle) {
-  element2.classList.toggle(name, !!toggle);
-}
-function get_custom_elements_slots(element2) {
-  const result = {};
-  element2.childNodes.forEach(
-    /** @param {Element} node */
-    (node) => {
-      result[node.slot || "default"] = true;
-    }
-  );
-  return result;
-}
-
-// node_modules/svelte/src/runtime/internal/lifecycle.js
-var current_component;
-function set_current_component(component) {
-  current_component = component;
-}
-
-// node_modules/svelte/src/runtime/internal/scheduler.js
-var dirty_components = [];
-var binding_callbacks = [];
-var render_callbacks = [];
-var flush_callbacks = [];
-var resolved_promise = /* @__PURE__ */ Promise.resolve();
-var update_scheduled = false;
-function schedule_update() {
-  if (!update_scheduled) {
-    update_scheduled = true;
-    resolved_promise.then(flush);
-  }
-}
-function add_render_callback(fn) {
-  render_callbacks.push(fn);
-}
-var seen_callbacks = /* @__PURE__ */ new Set();
-var flushidx = 0;
-function flush() {
-  if (flushidx !== 0) {
-    return;
-  }
-  const saved_component = current_component;
-  do {
-    try {
-      while (flushidx < dirty_components.length) {
-        const component = dirty_components[flushidx];
-        flushidx++;
-        set_current_component(component);
-        update(component.$$);
-      }
-    } catch (e) {
-      dirty_components.length = 0;
-      flushidx = 0;
-      throw e;
-    }
-    set_current_component(null);
-    dirty_components.length = 0;
-    flushidx = 0;
-    while (binding_callbacks.length) binding_callbacks.pop()();
-    for (let i = 0; i < render_callbacks.length; i += 1) {
-      const callback = render_callbacks[i];
-      if (!seen_callbacks.has(callback)) {
-        seen_callbacks.add(callback);
-        callback();
-      }
-    }
-    render_callbacks.length = 0;
-  } while (dirty_components.length);
-  while (flush_callbacks.length) {
-    flush_callbacks.pop()();
-  }
-  update_scheduled = false;
-  seen_callbacks.clear();
-  set_current_component(saved_component);
-}
-function update($$) {
-  if ($$.fragment !== null) {
-    $$.update();
-    run_all($$.before_update);
-    const dirty = $$.dirty;
-    $$.dirty = [-1];
-    $$.fragment && $$.fragment.p($$.ctx, dirty);
-    $$.after_update.forEach(add_render_callback);
-  }
-}
-function flush_render_callbacks(fns) {
-  const filtered = [];
-  const targets = [];
-  render_callbacks.forEach((c) => fns.indexOf(c) === -1 ? filtered.push(c) : targets.push(c));
-  targets.forEach((c) => c());
-  render_callbacks = filtered;
-}
-
-// node_modules/svelte/src/runtime/internal/transitions.js
-var outroing = /* @__PURE__ */ new Set();
-var outros;
-function group_outros() {
-  outros = {
-    r: 0,
-    c: [],
-    p: outros
-    // parent group
-  };
-}
-function check_outros() {
-  if (!outros.r) {
-    run_all(outros.c);
-  }
-  outros = outros.p;
-}
-function transition_in(block, local) {
-  if (block && block.i) {
-    outroing.delete(block);
-    block.i(local);
-  }
-}
-function transition_out(block, local, detach2, callback) {
-  if (block && block.o) {
-    if (outroing.has(block)) return;
-    outroing.add(block);
-    outros.c.push(() => {
-      outroing.delete(block);
-      if (callback) {
-        if (detach2) block.d(1);
-        callback();
-      }
-    });
-    block.o(local);
-  } else if (callback) {
-    callback();
-  }
-}
-
-// node_modules/svelte/src/runtime/internal/each.js
-function ensure_array_like(array_like_or_iterator) {
-  return array_like_or_iterator?.length !== void 0 ? array_like_or_iterator : Array.from(array_like_or_iterator);
-}
-
-// node_modules/svelte/src/shared/boolean_attributes.js
-var _boolean_attributes = (
-  /** @type {const} */
-  [
-    "allowfullscreen",
-    "allowpaymentrequest",
-    "async",
-    "autofocus",
-    "autoplay",
-    "checked",
-    "controls",
-    "default",
-    "defer",
-    "disabled",
-    "formnovalidate",
-    "hidden",
-    "inert",
-    "ismap",
-    "loop",
-    "multiple",
-    "muted",
-    "nomodule",
-    "novalidate",
-    "open",
-    "playsinline",
-    "readonly",
-    "required",
-    "reversed",
-    "selected"
-  ]
-);
-var boolean_attributes = /* @__PURE__ */ new Set([..._boolean_attributes]);
-
-// node_modules/svelte/src/runtime/internal/Component.js
-function create_component(block) {
-  block && block.c();
-}
-function mount_component(component, target, anchor) {
-  const { fragment, after_update } = component.$$;
-  fragment && fragment.m(target, anchor);
-  add_render_callback(() => {
-    const new_on_destroy = component.$$.on_mount.map(run).filter(is_function);
-    if (component.$$.on_destroy) {
-      component.$$.on_destroy.push(...new_on_destroy);
-    } else {
-      run_all(new_on_destroy);
-    }
-    component.$$.on_mount = [];
-  });
-  after_update.forEach(add_render_callback);
-}
-function destroy_component(component, detaching) {
-  const $$ = component.$$;
-  if ($$.fragment !== null) {
-    flush_render_callbacks($$.after_update);
-    run_all($$.on_destroy);
-    $$.fragment && $$.fragment.d(detaching);
-    $$.on_destroy = $$.fragment = null;
-    $$.ctx = [];
-  }
-}
-function make_dirty(component, i) {
-  if (component.$$.dirty[0] === -1) {
-    dirty_components.push(component);
-    schedule_update();
-    component.$$.dirty.fill(0);
-  }
-  component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
-}
-function init(component, options, instance9, create_fragment9, not_equal, props, append_styles2 = null, dirty = [-1]) {
-  const parent_component = current_component;
-  set_current_component(component);
-  const $$ = component.$$ = {
-    fragment: null,
-    ctx: [],
-    // state
-    props,
-    update: noop,
-    not_equal,
-    bound: blank_object(),
-    // lifecycle
-    on_mount: [],
-    on_destroy: [],
-    on_disconnect: [],
-    before_update: [],
-    after_update: [],
-    context: new Map(options.context || (parent_component ? parent_component.$$.context : [])),
-    // everything else
-    callbacks: blank_object(),
-    dirty,
-    skip_bound: false,
-    root: options.target || parent_component.$$.root
-  };
-  append_styles2 && append_styles2($$.root);
-  let ready = false;
-  $$.ctx = instance9 ? instance9(component, options.props || {}, (i, ret, ...rest) => {
-    const value = rest.length ? rest[0] : ret;
-    if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
-      if (!$$.skip_bound && $$.bound[i]) $$.bound[i](value);
-      if (ready) make_dirty(component, i);
-    }
-    return ret;
-  }) : [];
-  $$.update();
-  ready = true;
-  run_all($$.before_update);
-  $$.fragment = create_fragment9 ? create_fragment9($$.ctx) : false;
-  if (options.target) {
-    if (options.hydrate) {
-      start_hydrating();
-      const nodes = children(options.target);
-      $$.fragment && $$.fragment.l(nodes);
-      nodes.forEach(detach);
-    } else {
-      $$.fragment && $$.fragment.c();
-    }
-    if (options.intro) transition_in(component.$$.fragment);
-    mount_component(component, options.target, options.anchor);
-    end_hydrating();
-    flush();
-  }
-  set_current_component(parent_component);
-}
-var SvelteElement;
-if (typeof HTMLElement === "function") {
-  SvelteElement = class extends HTMLElement {
-    /** The Svelte component constructor */
-    $$ctor;
-    /** Slots */
-    $$s;
-    /** The Svelte component instance */
-    $$c;
-    /** Whether or not the custom element is connected */
-    $$cn = false;
-    /** Component props data */
-    $$d = {};
-    /** `true` if currently in the process of reflecting component props back to attributes */
-    $$r = false;
-    /** @type {Record<string, CustomElementPropDefinition>} Props definition (name, reflected, type etc) */
-    $$p_d = {};
-    /** @type {Record<string, Function[]>} Event listeners */
-    $$l = {};
-    /** @type {Map<Function, Function>} Event listener unsubscribe functions */
-    $$l_u = /* @__PURE__ */ new Map();
-    constructor($$componentCtor, $$slots, use_shadow_dom) {
-      super();
-      this.$$ctor = $$componentCtor;
-      this.$$s = $$slots;
-      if (use_shadow_dom) {
-        this.attachShadow({ mode: "open" });
-      }
-    }
-    addEventListener(type, listener, options) {
-      this.$$l[type] = this.$$l[type] || [];
-      this.$$l[type].push(listener);
-      if (this.$$c) {
-        const unsub = this.$$c.$on(type, listener);
-        this.$$l_u.set(listener, unsub);
-      }
-      super.addEventListener(type, listener, options);
-    }
-    removeEventListener(type, listener, options) {
-      super.removeEventListener(type, listener, options);
-      if (this.$$c) {
-        const unsub = this.$$l_u.get(listener);
-        if (unsub) {
-          unsub();
-          this.$$l_u.delete(listener);
-        }
-      }
-      if (this.$$l[type]) {
-        const idx = this.$$l[type].indexOf(listener);
-        if (idx >= 0) {
-          this.$$l[type].splice(idx, 1);
-        }
-      }
-    }
-    async connectedCallback() {
-      this.$$cn = true;
-      if (!this.$$c) {
-        let create_slot = function(name) {
-          return () => {
-            let node;
-            const obj = {
-              c: function create() {
-                node = element("slot");
-                if (name !== "default") {
-                  attr(node, "name", name);
-                }
-              },
-              /**
-               * @param {HTMLElement} target
-               * @param {HTMLElement} [anchor]
-               */
-              m: function mount(target, anchor) {
-                insert(target, node, anchor);
-              },
-              d: function destroy(detaching) {
-                if (detaching) {
-                  detach(node);
-                }
-              }
-            };
-            return obj;
-          };
-        };
-        await Promise.resolve();
-        if (!this.$$cn || this.$$c) {
-          return;
-        }
-        const $$slots = {};
-        const existing_slots = get_custom_elements_slots(this);
-        for (const name of this.$$s) {
-          if (name in existing_slots) {
-            $$slots[name] = [create_slot(name)];
-          }
-        }
-        for (const attribute of this.attributes) {
-          const name = this.$$g_p(attribute.name);
-          if (!(name in this.$$d)) {
-            this.$$d[name] = get_custom_element_value(name, attribute.value, this.$$p_d, "toProp");
-          }
-        }
-        for (const key in this.$$p_d) {
-          if (!(key in this.$$d) && this[key] !== void 0) {
-            this.$$d[key] = this[key];
-            delete this[key];
-          }
-        }
-        this.$$c = new this.$$ctor({
-          target: this.shadowRoot || this,
-          props: {
-            ...this.$$d,
-            $$slots,
-            $$scope: {
-              ctx: []
-            }
-          }
-        });
-        const reflect_attributes = () => {
-          this.$$r = true;
-          for (const key in this.$$p_d) {
-            this.$$d[key] = this.$$c.$$.ctx[this.$$c.$$.props[key]];
-            if (this.$$p_d[key].reflect) {
-              const attribute_value = get_custom_element_value(
-                key,
-                this.$$d[key],
-                this.$$p_d,
-                "toAttribute"
-              );
-              if (attribute_value == null) {
-                this.removeAttribute(this.$$p_d[key].attribute || key);
-              } else {
-                this.setAttribute(this.$$p_d[key].attribute || key, attribute_value);
-              }
-            }
-          }
-          this.$$r = false;
-        };
-        this.$$c.$$.after_update.push(reflect_attributes);
-        reflect_attributes();
-        for (const type in this.$$l) {
-          for (const listener of this.$$l[type]) {
-            const unsub = this.$$c.$on(type, listener);
-            this.$$l_u.set(listener, unsub);
-          }
-        }
-        this.$$l = {};
-      }
-    }
-    // We don't need this when working within Svelte code, but for compatibility of people using this outside of Svelte
-    // and setting attributes through setAttribute etc, this is helpful
-    attributeChangedCallback(attr2, _oldValue, newValue) {
-      if (this.$$r) return;
-      attr2 = this.$$g_p(attr2);
-      this.$$d[attr2] = get_custom_element_value(attr2, newValue, this.$$p_d, "toProp");
-      this.$$c?.$set({ [attr2]: this.$$d[attr2] });
-    }
-    disconnectedCallback() {
-      this.$$cn = false;
-      Promise.resolve().then(() => {
-        if (!this.$$cn && this.$$c) {
-          this.$$c.$destroy();
-          this.$$c = void 0;
-        }
-      });
-    }
-    $$g_p(attribute_name) {
-      return Object.keys(this.$$p_d).find(
-        (key) => this.$$p_d[key].attribute === attribute_name || !this.$$p_d[key].attribute && key.toLowerCase() === attribute_name
-      ) || attribute_name;
-    }
-  };
-}
-function get_custom_element_value(prop, value, props_definition, transform) {
-  const type = props_definition[prop]?.type;
-  value = type === "Boolean" && typeof value !== "boolean" ? value != null : value;
-  if (!transform || !props_definition[prop]) {
-    return value;
-  } else if (transform === "toAttribute") {
-    switch (type) {
-      case "Object":
-      case "Array":
-        return value == null ? null : JSON.stringify(value);
-      case "Boolean":
-        return value ? "" : null;
-      case "Number":
-        return value == null ? null : value;
-      default:
-        return value;
-    }
-  } else {
-    switch (type) {
-      case "Object":
-      case "Array":
-        return value && JSON.parse(value);
-      case "Boolean":
-        return value;
-      // conversion already handled above
-      case "Number":
-        return value != null ? +value : value;
-      default:
-        return value;
-    }
-  }
-}
-var SvelteComponent = class {
-  /**
-   * ### PRIVATE API
-   *
-   * Do not use, may change at any time
-   *
-   * @type {any}
-   */
-  $$ = void 0;
-  /**
-   * ### PRIVATE API
-   *
-   * Do not use, may change at any time
-   *
-   * @type {any}
-   */
-  $$set = void 0;
-  /** @returns {void} */
-  $destroy() {
-    destroy_component(this, 1);
-    this.$destroy = noop;
-  }
-  /**
-   * @template {Extract<keyof Events, string>} K
-   * @param {K} type
-   * @param {((e: Events[K]) => void) | null | undefined} callback
-   * @returns {() => void}
-   */
-  $on(type, callback) {
-    if (!is_function(callback)) {
-      return noop;
-    }
-    const callbacks = this.$$.callbacks[type] || (this.$$.callbacks[type] = []);
-    callbacks.push(callback);
-    return () => {
-      const index = callbacks.indexOf(callback);
-      if (index !== -1) callbacks.splice(index, 1);
-    };
-  }
-  /**
-   * @param {Partial<Props>} props
-   * @returns {void}
-   */
-  $set(props) {
-    if (this.$$set && !is_empty(props)) {
-      this.$$.skip_bound = true;
-      this.$$set(props);
-      this.$$.skip_bound = false;
-    }
-  }
-};
-
-// node_modules/svelte/src/shared/version.js
-var PUBLIC_VERSION = "4";
-
-// node_modules/svelte/src/runtime/internal/disclose-version/index.js
-if (typeof window !== "undefined")
-  (window.__svelte || (window.__svelte = { v: /* @__PURE__ */ new Set() })).v.add(PUBLIC_VERSION);
+// external-svelte:svelte/internal/client
+var append = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.append)();
+var append_styles = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.append_styles)();
+var bind_checked = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.bind_checked)();
+var bind_select_value = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.bind_select_value)();
+var bind_value = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.bind_value)();
+var child = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.child)();
+var comment = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.comment)();
+var delegate = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.delegate)();
+var derived = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.derived)();
+var each = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.each)();
+var first_child = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.first_child)();
+var from_html = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.from_html)();
+var get = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.get)();
+var index = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.index)();
+var key = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.key)();
+var next = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.next)();
+var pop = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.pop)();
+var prop = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.prop)();
+var proxy = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.proxy)();
+var push = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.push)();
+var remove_input_defaults = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.remove_input_defaults)();
+var reset = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.reset)();
+var set = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.set)();
+var set_class = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.set_class)();
+var set_text = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.set_text)();
+var set_value = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.set_value)();
+var sibling = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.sibling)();
+var snapshot = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.snapshot)();
+var state = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.state)();
+var template_effect = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.template_effect)();
+var if_export = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.if)();
 
 // plugins/Autosplitter/src/constants.ts
 var gamemodes = ["DLD", "Fishtopia", "OneWayOut"];
@@ -897,2412 +228,466 @@ function onFrame(callback) {
 }
 
 // plugins/Autosplitter/src/settings/FullGame.svelte
-function get_each_context(ctx, list, i) {
-  const child_ctx = ctx.slice();
-  child_ctx[7] = list[i];
-  child_ctx[9] = i;
-  return child_ctx;
-}
-function create_each_block(ctx) {
-  let tr;
-  let td0;
-  let t0_value = (
-    /*split*/
-    ctx[7] + ""
-  );
-  let t0;
-  let t1;
-  let td1;
-  let input0;
-  let input0_value_value;
-  let t2;
-  let td2;
-  let input1;
-  let input1_value_value;
-  let t3;
-  let mounted;
-  let dispose;
-  function change_handler(...args) {
-    return (
-      /*change_handler*/
-      ctx[5](
-        /*i*/
-        ctx[9],
-        ...args
-      )
-    );
-  }
-  function change_handler_1(...args) {
-    return (
-      /*change_handler_1*/
-      ctx[6](
-        /*i*/
-        ctx[9],
-        ...args
-      )
-    );
-  }
-  return {
-    c() {
-      tr = element("tr");
-      td0 = element("td");
-      t0 = text(t0_value);
-      t1 = space();
-      td1 = element("td");
-      input0 = element("input");
-      t2 = space();
-      td2 = element("td");
-      input1 = element("input");
-      t3 = space();
-      input0.value = input0_value_value = /*data*/
-      ctx[0].bestSplits[
-        /*category*/
-        ctx[2]
-      ]?.[
-        /*i*/
-        ctx[9]
-      ] ? fmtMs(
-        /*data*/
-        ctx[0].bestSplits[
-          /*category*/
-          ctx[2]
-        ][
-          /*i*/
-          ctx[9]
-        ]
-      ) : "";
-      input1.value = input1_value_value = /*data*/
-      ctx[0].pb[
-        /*category*/
-        ctx[2]
-      ]?.[
-        /*i*/
-        ctx[9]
-      ] ? fmtMs(
-        /*data*/
-        ctx[0].pb[
-          /*category*/
-          ctx[2]
-        ][
-          /*i*/
-          ctx[9]
-        ]
-      ) : "";
-    },
-    m(target, anchor) {
-      insert(target, tr, anchor);
-      append(tr, td0);
-      append(td0, t0);
-      append(tr, t1);
-      append(tr, td1);
-      append(td1, input0);
-      append(tr, t2);
-      append(tr, td2);
-      append(td2, input1);
-      append(tr, t3);
-      if (!mounted) {
-        dispose = [
-          listen(input0, "change", change_handler),
-          listen(input1, "change", change_handler_1)
-        ];
-        mounted = true;
-      }
-    },
-    p(new_ctx, dirty) {
-      ctx = new_ctx;
-      if (dirty & /*splits*/
-      2 && t0_value !== (t0_value = /*split*/
-      ctx[7] + "")) set_data(t0, t0_value);
-      if (dirty & /*data, category*/
-      5 && input0_value_value !== (input0_value_value = /*data*/
-      ctx[0].bestSplits[
-        /*category*/
-        ctx[2]
-      ]?.[
-        /*i*/
-        ctx[9]
-      ] ? fmtMs(
-        /*data*/
-        ctx[0].bestSplits[
-          /*category*/
-          ctx[2]
-        ][
-          /*i*/
-          ctx[9]
-        ]
-      ) : "") && input0.value !== input0_value_value) {
-        input0.value = input0_value_value;
-      }
-      if (dirty & /*data, category*/
-      5 && input1_value_value !== (input1_value_value = /*data*/
-      ctx[0].pb[
-        /*category*/
-        ctx[2]
-      ]?.[
-        /*i*/
-        ctx[9]
-      ] ? fmtMs(
-        /*data*/
-        ctx[0].pb[
-          /*category*/
-          ctx[2]
-        ][
-          /*i*/
-          ctx[9]
-        ]
-      ) : "") && input1.value !== input1_value_value) {
-        input1.value = input1_value_value;
-      }
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(tr);
-      }
-      mounted = false;
-      run_all(dispose);
-    }
-  };
-}
-function create_fragment(ctx) {
-  let div;
-  let t0;
-  let input;
-  let t1;
-  let table;
-  let tr;
-  let t7;
-  let t8;
-  let button;
-  let mounted;
-  let dispose;
-  let each_value = ensure_array_like(
-    /*splits*/
-    ctx[1]
-  );
-  let each_blocks = [];
-  for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
-  }
-  return {
-    c() {
-      div = element("div");
-      t0 = text("Attempts:\n    ");
-      input = element("input");
-      t1 = space();
-      table = element("table");
-      tr = element("tr");
-      tr.innerHTML = `<th style="min-width: 80px">Split</th> <th style="min-width: 80px">Best Split</th> <th style="min-width: 80px">Split during PB</th>`;
-      t7 = space();
-      for (let i = 0; i < each_blocks.length; i += 1) {
-        each_blocks[i].c();
-      }
-      t8 = space();
-      button = element("button");
-      button.textContent = "Reset splits";
-      attr(input, "type", "number");
-    },
-    m(target, anchor) {
-      insert(target, div, anchor);
-      append(div, t0);
-      append(div, input);
-      set_input_value(
-        input,
-        /*data*/
-        ctx[0].attempts[
-          /*category*/
-          ctx[2]
-        ]
-      );
-      insert(target, t1, anchor);
-      insert(target, table, anchor);
-      append(table, tr);
-      append(table, t7);
-      for (let i = 0; i < each_blocks.length; i += 1) {
-        if (each_blocks[i]) {
-          each_blocks[i].m(table, null);
-        }
-      }
-      insert(target, t8, anchor);
-      insert(target, button, anchor);
-      if (!mounted) {
-        dispose = [
-          listen(
-            input,
-            "input",
-            /*input_input_handler*/
-            ctx[4]
-          ),
-          listen(
-            button,
-            "click",
-            /*resetSplits*/
-            ctx[3]
-          )
-        ];
-        mounted = true;
-      }
-    },
-    p(ctx2, [dirty]) {
-      if (dirty & /*data, category*/
-      5 && to_number(input.value) !== /*data*/
-      ctx2[0].attempts[
-        /*category*/
-        ctx2[2]
-      ]) {
-        set_input_value(
-          input,
-          /*data*/
-          ctx2[0].attempts[
-            /*category*/
-            ctx2[2]
-          ]
-        );
-      }
-      if (dirty & /*data, category, undefined, splits*/
-      7) {
-        each_value = ensure_array_like(
-          /*splits*/
-          ctx2[1]
-        );
-        let i;
-        for (i = 0; i < each_value.length; i += 1) {
-          const child_ctx = get_each_context(ctx2, each_value, i);
-          if (each_blocks[i]) {
-            each_blocks[i].p(child_ctx, dirty);
-          } else {
-            each_blocks[i] = create_each_block(child_ctx);
-            each_blocks[i].c();
-            each_blocks[i].m(table, null);
-          }
-        }
-        for (; i < each_blocks.length; i += 1) {
-          each_blocks[i].d(1);
-        }
-        each_blocks.length = each_value.length;
-      }
-    },
-    i: noop,
-    o: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(div);
-        detach(t1);
-        detach(table);
-        detach(t8);
-        detach(button);
-      }
-      destroy_each(each_blocks, detaching);
-      mounted = false;
-      run_all(dispose);
-    }
-  };
-}
-function instance($$self, $$props, $$invalidate) {
-  let { splits } = $$props;
-  let { data } = $$props;
-  let { category } = $$props;
+var root_1 = from_html(`<tr><td> </td><td><input/></td><td><input/></td></tr>`);
+var root = from_html(`<div>Attempts: <input type="number"/></div> <table><thead><tr><th style="min-width: 80px">Split</th><th style="min-width: 80px">Best Split</th><th style="min-width: 80px">Split during PB</th></tr></thead><tbody></tbody></table> <button>Reset splits</button>`, 1);
+function FullGame($$anchor, $$props) {
+  push($$props, true);
+  let data = prop($$props, "data", 15);
   function resetSplits() {
     let conf = confirm("Are you sure you want to reset all splits for this category?");
     if (!conf) return;
-    $$invalidate(0, data.pb[category] = [], data);
-    $$invalidate(0, data.bestSplits[category] = [], data);
+    data(data().pb[$$props.category] = [], true);
+    data(data().bestSplits[$$props.category] = [], true);
   }
-  function input_input_handler() {
-    data.attempts[category] = to_number(this.value);
-    $$invalidate(0, data);
-  }
-  const change_handler = (i, e) => {
-    if (e.currentTarget.value === "") {
-      $$invalidate(0, data.bestSplits[category][i] = void 0, data);
-      return;
-    }
-    let ms = parseTime(e.currentTarget.value);
-    if (!data.bestSplits[category]) $$invalidate(0, data.bestSplits[category] = [], data);
-    $$invalidate(0, data.bestSplits[category][i] = ms, data);
-  };
-  const change_handler_1 = (i, e) => {
-    let ms = parseTime(e.currentTarget.value);
-    if (!data.pb[category]) $$invalidate(0, data.pb[category] = [], data);
-    $$invalidate(0, data.pb[category][i] = ms, data);
-  };
-  $$self.$$set = ($$props2) => {
-    if ("splits" in $$props2) $$invalidate(1, splits = $$props2.splits);
-    if ("data" in $$props2) $$invalidate(0, data = $$props2.data);
-    if ("category" in $$props2) $$invalidate(2, category = $$props2.category);
-  };
-  return [
-    data,
-    splits,
-    category,
-    resetSplits,
-    input_input_handler,
-    change_handler,
-    change_handler_1
-  ];
+  var fragment = root();
+  var div = first_child(fragment);
+  var input = sibling(child(div));
+  remove_input_defaults(input);
+  reset(div);
+  var table = sibling(div, 2);
+  var tbody = sibling(child(table));
+  each(tbody, 21, () => $$props.splits, index, ($$anchor2, split, i) => {
+    var tr = root_1();
+    var td = child(tr);
+    var text = child(td, true);
+    reset(td);
+    var td_1 = sibling(td);
+    var input_1 = child(td_1);
+    remove_input_defaults(input_1);
+    input_1.__change = (e) => {
+      if (e.currentTarget.value === "") {
+        data(data().bestSplits[$$props.category][i] = void 0, true);
+        return;
+      }
+      let ms = parseTime(e.currentTarget.value);
+      if (!data().bestSplits[$$props.category]) data(data().bestSplits[$$props.category] = [], true);
+      data(data().bestSplits[$$props.category][i] = ms, true);
+    };
+    reset(td_1);
+    var td_2 = sibling(td_1);
+    var input_2 = child(td_2);
+    remove_input_defaults(input_2);
+    input_2.__change = (e) => {
+      let ms = parseTime(e.currentTarget.value);
+      if (!data().pb[$$props.category]) data(data().pb[$$props.category] = [], true);
+      data(data().pb[$$props.category][i] = ms, true);
+    };
+    reset(td_2);
+    reset(tr);
+    template_effect(
+      ($0, $1) => {
+        set_text(text, get(split));
+        set_value(input_1, $0);
+        set_value(input_2, $1);
+      },
+      [
+        () => data().bestSplits[$$props.category]?.[i] ? fmtMs(data().bestSplits[$$props.category][i]) : "",
+        () => data().pb[$$props.category]?.[i] ? fmtMs(data().pb[$$props.category][i]) : ""
+      ]
+    );
+    append($$anchor2, tr);
+  });
+  reset(tbody);
+  reset(table);
+  var button = sibling(table, 2);
+  button.__click = resetSplits;
+  bind_value(input, () => data().attempts[$$props.category], ($$value) => data(data().attempts[$$props.category] = $$value, true));
+  append($$anchor, fragment);
+  pop();
 }
-var FullGame = class extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, instance, create_fragment, safe_not_equal, { splits: 1, data: 0, category: 2 });
-  }
-};
-var FullGame_default = FullGame;
+delegate(["change", "click"]);
 
 // plugins/Autosplitter/src/settings/ILSettings.svelte
-function add_css(target) {
-  append_styles(target, "svelte-4osls6", ".grid.svelte-4osls6{display:grid;gap:5px;grid-template-columns:max-content max-content}");
-}
-function create_if_block(ctx) {
-  let h2;
-  let t1;
-  let div2;
-  let div0;
-  let t3;
-  let input0;
-  let t4;
-  let div1;
-  let t6;
-  let input1;
-  let input1_value_value;
-  let mounted;
-  let dispose;
-  return {
-    c() {
-      h2 = element("h2");
-      h2.textContent = "Preboosts";
-      t1 = space();
-      div2 = element("div");
-      div0 = element("div");
-      div0.textContent = "Attempts:";
-      t3 = space();
-      input0 = element("input");
-      t4 = space();
-      div1 = element("div");
-      div1.textContent = "Personal best:";
-      t6 = space();
-      input1 = element("input");
-      attr(input0, "type", "number");
-      input1.value = input1_value_value = /*data*/
-      ctx[0].ilpbs[
-        /*preboostsId*/
-        ctx[3]
-      ] ? fmtMs(
-        /*data*/
-        ctx[0].ilpbs[
-          /*preboostsId*/
-          ctx[3]
-        ]
-      ) : "";
-      attr(div2, "class", "grid svelte-4osls6");
-    },
-    m(target, anchor) {
-      insert(target, h2, anchor);
-      insert(target, t1, anchor);
-      insert(target, div2, anchor);
-      append(div2, div0);
-      append(div2, t3);
-      append(div2, input0);
-      set_input_value(
-        input0,
-        /*data*/
-        ctx[0].attempts[
-          /*preboostsId*/
-          ctx[3]
-        ]
-      );
-      append(div2, t4);
-      append(div2, div1);
-      append(div2, t6);
-      append(div2, input1);
-      if (!mounted) {
-        dispose = [
-          listen(
-            input0,
-            "input",
-            /*input0_input_handler_1*/
-            ctx[7]
-          ),
-          listen(
-            input1,
-            "change",
-            /*change_handler_1*/
-            ctx[8]
-          )
-        ];
-        mounted = true;
-      }
-    },
-    p(ctx2, dirty) {
-      if (dirty & /*data, preboostsId*/
-      9 && to_number(input0.value) !== /*data*/
-      ctx2[0].attempts[
-        /*preboostsId*/
-        ctx2[3]
-      ]) {
-        set_input_value(
-          input0,
-          /*data*/
-          ctx2[0].attempts[
-            /*preboostsId*/
-            ctx2[3]
-          ]
-        );
-      }
-      if (dirty & /*data*/
-      1 && input1_value_value !== (input1_value_value = /*data*/
-      ctx2[0].ilpbs[
-        /*preboostsId*/
-        ctx2[3]
-      ] ? fmtMs(
-        /*data*/
-        ctx2[0].ilpbs[
-          /*preboostsId*/
-          ctx2[3]
-        ]
-      ) : "") && input1.value !== input1_value_value) {
-        input1.value = input1_value_value;
-      }
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(h2);
-        detach(t1);
-        detach(div2);
-      }
-      mounted = false;
-      run_all(dispose);
-    }
-  };
-}
-function create_fragment2(ctx) {
-  let h2;
-  let t1;
-  let div2;
-  let div0;
-  let t3;
-  let input0;
-  let t4;
-  let div1;
-  let t6;
-  let input1;
-  let input1_value_value;
-  let t7;
-  let if_block_anchor;
-  let mounted;
-  let dispose;
-  let if_block = (
-    /*category*/
-    ctx[1] !== "Current Patch" && create_if_block(ctx)
-  );
-  return {
-    c() {
-      h2 = element("h2");
-      h2.textContent = "No Preboosts";
-      t1 = space();
-      div2 = element("div");
-      div0 = element("div");
-      div0.textContent = "Attempts:";
-      t3 = space();
-      input0 = element("input");
-      t4 = space();
-      div1 = element("div");
-      div1.textContent = "Personal best:";
-      t6 = space();
-      input1 = element("input");
-      t7 = space();
-      if (if_block) if_block.c();
-      if_block_anchor = empty();
-      attr(input0, "type", "number");
-      input1.value = input1_value_value = /*data*/
-      ctx[0].ilpbs[
-        /*id*/
-        ctx[2]
-      ] ? fmtMs(
-        /*data*/
-        ctx[0].ilpbs[
-          /*id*/
-          ctx[2]
-        ]
-      ) : "";
-      attr(div2, "class", "grid svelte-4osls6");
-    },
-    m(target, anchor) {
-      insert(target, h2, anchor);
-      insert(target, t1, anchor);
-      insert(target, div2, anchor);
-      append(div2, div0);
-      append(div2, t3);
-      append(div2, input0);
-      set_input_value(
-        input0,
-        /*data*/
-        ctx[0].attempts[
-          /*id*/
-          ctx[2]
-        ]
-      );
-      append(div2, t4);
-      append(div2, div1);
-      append(div2, t6);
-      append(div2, input1);
-      insert(target, t7, anchor);
-      if (if_block) if_block.m(target, anchor);
-      insert(target, if_block_anchor, anchor);
-      if (!mounted) {
-        dispose = [
-          listen(
-            input0,
-            "input",
-            /*input0_input_handler*/
-            ctx[5]
-          ),
-          listen(
-            input1,
-            "change",
-            /*change_handler*/
-            ctx[6]
-          )
-        ];
-        mounted = true;
-      }
-    },
-    p(ctx2, [dirty]) {
-      if (dirty & /*data, id*/
-      5 && to_number(input0.value) !== /*data*/
-      ctx2[0].attempts[
-        /*id*/
-        ctx2[2]
-      ]) {
-        set_input_value(
-          input0,
-          /*data*/
-          ctx2[0].attempts[
-            /*id*/
-            ctx2[2]
-          ]
-        );
-      }
-      if (dirty & /*data*/
-      1 && input1_value_value !== (input1_value_value = /*data*/
-      ctx2[0].ilpbs[
-        /*id*/
-        ctx2[2]
-      ] ? fmtMs(
-        /*data*/
-        ctx2[0].ilpbs[
-          /*id*/
-          ctx2[2]
-        ]
-      ) : "") && input1.value !== input1_value_value) {
-        input1.value = input1_value_value;
-      }
-      if (
-        /*category*/
-        ctx2[1] !== "Current Patch"
-      ) {
-        if (if_block) {
-          if_block.p(ctx2, dirty);
-        } else {
-          if_block = create_if_block(ctx2);
-          if_block.c();
-          if_block.m(if_block_anchor.parentNode, if_block_anchor);
-        }
-      } else if (if_block) {
-        if_block.d(1);
-        if_block = null;
-      }
-    },
-    i: noop,
-    o: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(h2);
-        detach(t1);
-        detach(div2);
-        detach(t7);
-        detach(if_block_anchor);
-      }
-      if (if_block) if_block.d(detaching);
-      mounted = false;
-      run_all(dispose);
-    }
-  };
-}
-function instance2($$self, $$props, $$invalidate) {
-  let { data } = $$props;
-  let { category } = $$props;
-  let { summit } = $$props;
-  let id = `${category}-${summit}`;
-  let preboostsId = `${category}-${summit}-preboosts`;
-  function input0_input_handler() {
-    data.attempts[id] = to_number(this.value);
-    $$invalidate(0, data);
-  }
-  const change_handler = (e) => {
-    if (!e.currentTarget.value) {
-      $$invalidate(0, data.ilpbs[id] = null, data);
-      return;
-    }
-    let ms = parseTime(e.currentTarget.value);
-    $$invalidate(0, data.ilpbs[id] = ms, data);
-  };
-  function input0_input_handler_1() {
-    data.attempts[preboostsId] = to_number(this.value);
-    $$invalidate(0, data);
-  }
-  const change_handler_1 = (e) => {
-    if (!e.currentTarget.value) {
-      $$invalidate(0, data.ilpbs[preboostsId] = null, data);
-      return;
-    }
-    let ms = parseTime(e.currentTarget.value);
-    $$invalidate(0, data.ilpbs[preboostsId] = ms, data);
-  };
-  $$self.$$set = ($$props2) => {
-    if ("data" in $$props2) $$invalidate(0, data = $$props2.data);
-    if ("category" in $$props2) $$invalidate(1, category = $$props2.category);
-    if ("summit" in $$props2) $$invalidate(4, summit = $$props2.summit);
-  };
-  return [
-    data,
-    category,
-    id,
-    preboostsId,
-    summit,
-    input0_input_handler,
-    change_handler,
-    input0_input_handler_1,
-    change_handler_1
-  ];
-}
-var ILSettings = class extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, instance2, create_fragment2, safe_not_equal, { data: 0, category: 1, summit: 4 }, add_css);
-  }
+var root_12 = from_html(`<h2>Preboosts</h2> <div class="grid svelte-1a0zhct"><div>Attempts:</div> <input type="number"/> <div>Personal best:</div> <input/></div>`, 1);
+var root2 = from_html(`<h2>No Preboosts</h2> <div class="grid svelte-1a0zhct"><div>Attempts:</div> <input type="number"/> <div>Personal best:</div> <input/></div> <!>`, 1);
+var $$css = {
+  hash: "svelte-1a0zhct",
+  code: ".grid.svelte-1a0zhct {display:grid;gap:5px;grid-template-columns:max-content max-content;}"
 };
-var ILSettings_default = ILSettings;
+function ILSettings($$anchor, $$props) {
+  push($$props, true);
+  append_styles($$anchor, $$css);
+  let data = prop($$props, "data", 15);
+  let id = `${$$props.category}-${$$props.summit}`;
+  let preboostsId = `${$$props.category}-${$$props.summit}-preboosts`;
+  var fragment = root2();
+  var div = sibling(first_child(fragment), 2);
+  var input = sibling(child(div), 2);
+  remove_input_defaults(input);
+  var input_1 = sibling(input, 4);
+  remove_input_defaults(input_1);
+  input_1.__change = (e) => {
+    if (!e.currentTarget.value) {
+      data(data().ilpbs[id] = null, true);
+      return;
+    }
+    let ms = parseTime(e.currentTarget.value);
+    data(data().ilpbs[id] = ms, true);
+  };
+  reset(div);
+  var node = sibling(div, 2);
+  {
+    var consequent = ($$anchor2) => {
+      var fragment_1 = root_12();
+      var div_1 = sibling(first_child(fragment_1), 2);
+      var input_2 = sibling(child(div_1), 2);
+      remove_input_defaults(input_2);
+      var input_3 = sibling(input_2, 4);
+      remove_input_defaults(input_3);
+      input_3.__change = (e) => {
+        if (!e.currentTarget.value) {
+          data(data().ilpbs[preboostsId] = null, true);
+          return;
+        }
+        let ms = parseTime(e.currentTarget.value);
+        data(data().ilpbs[preboostsId] = ms, true);
+      };
+      reset(div_1);
+      template_effect(($0) => set_value(input_3, $0), [
+        () => data().ilpbs[preboostsId] ? fmtMs(data().ilpbs[preboostsId]) : ""
+      ]);
+      bind_value(input_2, () => data().attempts[preboostsId], ($$value) => data(data().attempts[preboostsId] = $$value, true));
+      append($$anchor2, fragment_1);
+    };
+    if_export(node, ($$render) => {
+      if ($$props.category !== "Current Patch") $$render(consequent);
+    });
+  }
+  template_effect(($0) => set_value(input_1, $0), [() => data().ilpbs[id] ? fmtMs(data().ilpbs[id]) : ""]);
+  bind_value(input, () => data().attempts[id], ($$value) => data(data().attempts[id] = $$value, true));
+  append($$anchor, fragment);
+  pop();
+}
+delegate(["change"]);
 
 // plugins/Autosplitter/src/settings/DLDToggles.svelte
-function add_css2(target) {
-  append_styles(target, "svelte-1f1cdw0", ".row.svelte-1f1cdw0{display:flex;align-items:center;gap:10px}input.svelte-1f1cdw0{width:20px;height:20px;appearance:auto !important}.note.svelte-1f1cdw0{font-size:0.7em;color:gray}.error.svelte-1f1cdw0{color:red}");
-}
-function create_fragment3(ctx) {
-  let div0;
-  let select;
-  let option0;
-  let option1;
-  let option2;
-  let option3;
-  let t4;
-  let t5;
-  let div1;
-  let input0;
-  let t6;
-  let t7;
-  let div2;
-  let input1;
-  let t8;
-  let t9;
-  let div3;
-  let input2;
-  let t10;
-  let t11;
-  let div4;
-  let input3;
-  let t12;
-  let t13;
-  let div5;
-  let input4;
-  let t14;
-  let t15;
-  let div6;
-  let input5;
-  let t16;
-  let t17;
-  let div7;
-  let t19;
-  let div8;
-  let input6;
-  let t20;
-  let t21;
-  let div9;
-  let mounted;
-  let dispose;
-  return {
-    c() {
-      div0 = element("div");
-      select = element("select");
-      option0 = element("option");
-      option0.textContent = "Top left";
-      option1 = element("option");
-      option1.textContent = "Top right";
-      option2 = element("option");
-      option2.textContent = "Bottom left";
-      option3 = element("option");
-      option3.textContent = "Bottom right";
-      t4 = text("\n    Timer position");
-      t5 = space();
-      div1 = element("div");
-      input0 = element("input");
-      t6 = text("\n    Show splits");
-      t7 = space();
-      div2 = element("div");
-      input1 = element("input");
-      t8 = text("\n    Show split times");
-      t9 = space();
-      div3 = element("div");
-      input2 = element("input");
-      t10 = text("\n    Show split comparisons");
-      t11 = space();
-      div4 = element("div");
-      input3 = element("input");
-      t12 = text("\n    Show split time at end");
-      t13 = space();
-      div5 = element("div");
-      input4 = element("input");
-      t14 = text("\n    Show time of split in PB");
-      t15 = space();
-      div6 = element("div");
-      input5 = element("input");
-      t16 = text("\n    Start ILs upon using savestates to warp there");
-      t17 = space();
-      div7 = element("div");
-      div7.textContent = "For summit one this will only happen if you don't have full game selected";
-      t19 = space();
-      div8 = element("div");
-      input6 = element("input");
-      t20 = text("\n    Automatically record all runs and save PBs");
-      t21 = space();
-      div9 = element("div");
-      div9.textContent = `This requires that you have the InputRecorder plugin installed and enabled${/*hasInputRecorder*/
-      ctx[1] ? "" : " (which you don't)"}`;
-      option0.__value = "top left";
-      set_input_value(option0, option0.__value);
-      option1.__value = "top right";
-      set_input_value(option1, option1.__value);
-      option2.__value = "bottom left";
-      set_input_value(option2, option2.__value);
-      option3.__value = "bottom right";
-      set_input_value(option3, option3.__value);
-      if (
-        /*data*/
-        ctx[0].timerPosition === void 0
-      ) add_render_callback(() => (
-        /*select_change_handler*/
-        ctx[2].call(select)
-      ));
-      attr(div0, "class", "row svelte-1f1cdw0");
-      attr(input0, "type", "checkbox");
-      attr(input0, "class", "svelte-1f1cdw0");
-      attr(div1, "class", "row svelte-1f1cdw0");
-      attr(input1, "type", "checkbox");
-      attr(input1, "class", "svelte-1f1cdw0");
-      attr(div2, "class", "row svelte-1f1cdw0");
-      attr(input2, "type", "checkbox");
-      attr(input2, "class", "svelte-1f1cdw0");
-      attr(div3, "class", "row svelte-1f1cdw0");
-      attr(input3, "type", "checkbox");
-      attr(input3, "class", "svelte-1f1cdw0");
-      attr(div4, "class", "row svelte-1f1cdw0");
-      attr(input4, "type", "checkbox");
-      attr(input4, "class", "svelte-1f1cdw0");
-      attr(div5, "class", "row svelte-1f1cdw0");
-      attr(input5, "type", "checkbox");
-      attr(input5, "class", "svelte-1f1cdw0");
-      attr(div6, "class", "row svelte-1f1cdw0");
-      attr(div7, "class", "note svelte-1f1cdw0");
-      attr(input6, "type", "checkbox");
-      attr(input6, "class", "svelte-1f1cdw0");
-      attr(div8, "class", "row svelte-1f1cdw0");
-      attr(div9, "class", "note svelte-1f1cdw0");
-      toggle_class(div9, "error", !/*hasInputRecorder*/
-      ctx[1]);
-    },
-    m(target, anchor) {
-      insert(target, div0, anchor);
-      append(div0, select);
-      append(select, option0);
-      append(select, option1);
-      append(select, option2);
-      append(select, option3);
-      select_option(
-        select,
-        /*data*/
-        ctx[0].timerPosition,
-        true
-      );
-      append(div0, t4);
-      insert(target, t5, anchor);
-      insert(target, div1, anchor);
-      append(div1, input0);
-      input0.checked = /*data*/
-      ctx[0].showSplits;
-      append(div1, t6);
-      insert(target, t7, anchor);
-      insert(target, div2, anchor);
-      append(div2, input1);
-      input1.checked = /*data*/
-      ctx[0].showSplitTimes;
-      append(div2, t8);
-      insert(target, t9, anchor);
-      insert(target, div3, anchor);
-      append(div3, input2);
-      input2.checked = /*data*/
-      ctx[0].showSplitComparisons;
-      append(div3, t10);
-      insert(target, t11, anchor);
-      insert(target, div4, anchor);
-      append(div4, input3);
-      input3.checked = /*data*/
-      ctx[0].showSplitTimeAtEnd;
-      append(div4, t12);
-      insert(target, t13, anchor);
-      insert(target, div5, anchor);
-      append(div5, input4);
-      input4.checked = /*data*/
-      ctx[0].showPbSplits;
-      append(div5, t14);
-      insert(target, t15, anchor);
-      insert(target, div6, anchor);
-      append(div6, input5);
-      input5.checked = /*data*/
-      ctx[0].autostartILs;
-      append(div6, t16);
-      insert(target, t17, anchor);
-      insert(target, div7, anchor);
-      insert(target, t19, anchor);
-      insert(target, div8, anchor);
-      append(div8, input6);
-      input6.checked = /*data*/
-      ctx[0].autoRecord;
-      append(div8, t20);
-      insert(target, t21, anchor);
-      insert(target, div9, anchor);
-      if (!mounted) {
-        dispose = [
-          listen(
-            select,
-            "change",
-            /*select_change_handler*/
-            ctx[2]
-          ),
-          listen(
-            input0,
-            "change",
-            /*input0_change_handler*/
-            ctx[3]
-          ),
-          listen(
-            input1,
-            "change",
-            /*input1_change_handler*/
-            ctx[4]
-          ),
-          listen(
-            input2,
-            "change",
-            /*input2_change_handler*/
-            ctx[5]
-          ),
-          listen(
-            input3,
-            "change",
-            /*input3_change_handler*/
-            ctx[6]
-          ),
-          listen(
-            input4,
-            "change",
-            /*input4_change_handler*/
-            ctx[7]
-          ),
-          listen(
-            input5,
-            "change",
-            /*input5_change_handler*/
-            ctx[8]
-          ),
-          listen(
-            input6,
-            "change",
-            /*input6_change_handler*/
-            ctx[9]
-          )
-        ];
-        mounted = true;
-      }
-    },
-    p(ctx2, [dirty]) {
-      if (dirty & /*data*/
-      1) {
-        select_option(
-          select,
-          /*data*/
-          ctx2[0].timerPosition
-        );
-      }
-      if (dirty & /*data*/
-      1) {
-        input0.checked = /*data*/
-        ctx2[0].showSplits;
-      }
-      if (dirty & /*data*/
-      1) {
-        input1.checked = /*data*/
-        ctx2[0].showSplitTimes;
-      }
-      if (dirty & /*data*/
-      1) {
-        input2.checked = /*data*/
-        ctx2[0].showSplitComparisons;
-      }
-      if (dirty & /*data*/
-      1) {
-        input3.checked = /*data*/
-        ctx2[0].showSplitTimeAtEnd;
-      }
-      if (dirty & /*data*/
-      1) {
-        input4.checked = /*data*/
-        ctx2[0].showPbSplits;
-      }
-      if (dirty & /*data*/
-      1) {
-        input5.checked = /*data*/
-        ctx2[0].autostartILs;
-      }
-      if (dirty & /*data*/
-      1) {
-        input6.checked = /*data*/
-        ctx2[0].autoRecord;
-      }
-    },
-    i: noop,
-    o: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(div0);
-        detach(t5);
-        detach(div1);
-        detach(t7);
-        detach(div2);
-        detach(t9);
-        detach(div3);
-        detach(t11);
-        detach(div4);
-        detach(t13);
-        detach(div5);
-        detach(t15);
-        detach(div6);
-        detach(t17);
-        detach(div7);
-        detach(t19);
-        detach(div8);
-        detach(t21);
-        detach(div9);
-      }
-      mounted = false;
-      run_all(dispose);
-    }
-  };
-}
-function instance3($$self, $$props, $$invalidate) {
-  let { data } = $$props;
-  let hasInputRecorder = api.plugins.isEnabled("InputRecorder");
-  function select_change_handler() {
-    data.timerPosition = select_value(this);
-    $$invalidate(0, data);
-  }
-  function input0_change_handler() {
-    data.showSplits = this.checked;
-    $$invalidate(0, data);
-  }
-  function input1_change_handler() {
-    data.showSplitTimes = this.checked;
-    $$invalidate(0, data);
-  }
-  function input2_change_handler() {
-    data.showSplitComparisons = this.checked;
-    $$invalidate(0, data);
-  }
-  function input3_change_handler() {
-    data.showSplitTimeAtEnd = this.checked;
-    $$invalidate(0, data);
-  }
-  function input4_change_handler() {
-    data.showPbSplits = this.checked;
-    $$invalidate(0, data);
-  }
-  function input5_change_handler() {
-    data.autostartILs = this.checked;
-    $$invalidate(0, data);
-  }
-  function input6_change_handler() {
-    data.autoRecord = this.checked;
-    $$invalidate(0, data);
-  }
-  $$self.$$set = ($$props2) => {
-    if ("data" in $$props2) $$invalidate(0, data = $$props2.data);
-  };
-  return [
-    data,
-    hasInputRecorder,
-    select_change_handler,
-    input0_change_handler,
-    input1_change_handler,
-    input2_change_handler,
-    input3_change_handler,
-    input4_change_handler,
-    input5_change_handler,
-    input6_change_handler
-  ];
-}
-var DLDToggles = class extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, instance3, create_fragment3, safe_not_equal, { data: 0 }, add_css2);
-  }
+var root3 = from_html(`<div class="row svelte-qo9uk0"><select><option>Top left</option><option>Top right</option><option>Bottom left</option><option>Bottom right</option></select> Timer position</div> <div class="row svelte-qo9uk0"><input type="checkbox" class="svelte-qo9uk0"/> Show splits</div> <div class="row svelte-qo9uk0"><input type="checkbox" class="svelte-qo9uk0"/> Show split times</div> <div class="row svelte-qo9uk0"><input type="checkbox" class="svelte-qo9uk0"/> Show split comparisons</div> <div class="row svelte-qo9uk0"><input type="checkbox" class="svelte-qo9uk0"/> Show split time at end</div> <div class="row svelte-qo9uk0"><input type="checkbox" class="svelte-qo9uk0"/> Show time of split in PB</div> <div class="row svelte-qo9uk0"><input type="checkbox" class="svelte-qo9uk0"/> Start ILs upon using savestates to warp there</div> <div class="note svelte-qo9uk0">For summit one this will only happen if you don't have full game selected</div> <div class="row svelte-qo9uk0"><input type="checkbox" class="svelte-qo9uk0"/> Automatically record all runs and save PBs</div> <div> </div>`, 1);
+var $$css2 = {
+  hash: "svelte-qo9uk0",
+  code: ".row.svelte-qo9uk0 {display:flex;align-items:center;gap:10px;}input.svelte-qo9uk0 {width:20px;height:20px;appearance:auto !important;}.note.svelte-qo9uk0 {font-size:0.7em;color:gray;}.error.svelte-qo9uk0 {color:red;}"
 };
-var DLDToggles_default = DLDToggles;
+function DLDToggles($$anchor, $$props) {
+  push($$props, true);
+  append_styles($$anchor, $$css2);
+  let data = prop($$props, "data", 15);
+  let hasInputRecorder = api.plugins.isEnabled("InputRecorder");
+  var fragment = root3();
+  var div = first_child(fragment);
+  var select = child(div);
+  var option = child(select);
+  option.value = option.__value = "top left";
+  var option_1 = sibling(option);
+  option_1.value = option_1.__value = "top right";
+  var option_2 = sibling(option_1);
+  option_2.value = option_2.__value = "bottom left";
+  var option_3 = sibling(option_2);
+  option_3.value = option_3.__value = "bottom right";
+  reset(select);
+  next();
+  reset(div);
+  var div_1 = sibling(div, 2);
+  var input = child(div_1);
+  remove_input_defaults(input);
+  next();
+  reset(div_1);
+  var div_2 = sibling(div_1, 2);
+  var input_1 = child(div_2);
+  remove_input_defaults(input_1);
+  next();
+  reset(div_2);
+  var div_3 = sibling(div_2, 2);
+  var input_2 = child(div_3);
+  remove_input_defaults(input_2);
+  next();
+  reset(div_3);
+  var div_4 = sibling(div_3, 2);
+  var input_3 = child(div_4);
+  remove_input_defaults(input_3);
+  next();
+  reset(div_4);
+  var div_5 = sibling(div_4, 2);
+  var input_4 = child(div_5);
+  remove_input_defaults(input_4);
+  next();
+  reset(div_5);
+  var div_6 = sibling(div_5, 2);
+  var input_5 = child(div_6);
+  remove_input_defaults(input_5);
+  next();
+  reset(div_6);
+  var div_7 = sibling(div_6, 4);
+  var input_6 = child(div_7);
+  remove_input_defaults(input_6);
+  next();
+  reset(div_7);
+  var div_8 = sibling(div_7, 2);
+  let classes;
+  var text = child(div_8);
+  reset(div_8);
+  template_effect(() => {
+    classes = set_class(div_8, 1, "note svelte-qo9uk0", null, classes, { error: !hasInputRecorder });
+    set_text(text, `This requires that you have the InputRecorder plugin installed and enabled${hasInputRecorder ? "" : " (which you don't)"}`);
+  });
+  bind_select_value(select, () => data().timerPosition, ($$value) => data(data().timerPosition = $$value, true));
+  bind_checked(input, () => data().showSplits, ($$value) => data(data().showSplits = $$value, true));
+  bind_checked(input_1, () => data().showSplitTimes, ($$value) => data(data().showSplitTimes = $$value, true));
+  bind_checked(input_2, () => data().showSplitComparisons, ($$value) => data(data().showSplitComparisons = $$value, true));
+  bind_checked(input_3, () => data().showSplitTimeAtEnd, ($$value) => data(data().showSplitTimeAtEnd = $$value, true));
+  bind_checked(input_4, () => data().showPbSplits, ($$value) => data(data().showPbSplits = $$value, true));
+  bind_checked(input_5, () => data().autostartILs, ($$value) => data(data().autostartILs = $$value, true));
+  bind_checked(input_6, () => data().autoRecord, ($$value) => data(data().autoRecord = $$value, true));
+  append($$anchor, fragment);
+  pop();
+}
 
 // plugins/Autosplitter/src/settings/DLD.svelte
-function get_each_context2(ctx, list, i) {
-  const child_ctx = ctx.slice();
-  child_ctx[5] = list[i];
-  child_ctx[7] = i;
-  return child_ctx;
-}
-function get_each_context_1(ctx, list, i) {
-  const child_ctx = ctx.slice();
-  child_ctx[2] = list[i];
-  return child_ctx;
-}
-function create_each_block_1(ctx) {
-  let option;
-  let option_value_value;
-  return {
-    c() {
-      option = element("option");
-      option.textContent = `${/*category*/
-      ctx[2]}`;
-      option.__value = option_value_value = /*category*/
-      ctx[2];
-      set_input_value(option, option.__value);
-    },
-    m(target, anchor) {
-      insert(target, option, anchor);
-    },
-    p: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(option);
+var root_13 = from_html(`<option> </option>`);
+var root_2 = from_html(`<option> </option>`);
+var root4 = from_html(`<select></select> <select><option>Full Game</option><!></select> <!> <hr/> <!>`, 1);
+function DLD($$anchor, $$props) {
+  push($$props, true);
+  let data = prop($$props, "data", 15);
+  let category = state(proxy(categories[0]));
+  let mode = state("Full Game");
+  var fragment = root4();
+  var select = first_child(fragment);
+  each(select, 21, () => categories, index, ($$anchor2, category2, $$index, $$array) => {
+    var option = root_13();
+    var text = child(option, true);
+    reset(option);
+    var option_value = {};
+    template_effect(() => {
+      set_text(text, get(category2));
+      if (option_value !== (option_value = get(category2))) {
+        option.value = (option.__value = get(category2)) ?? "";
       }
-    }
-  };
-}
-function create_each_block2(ctx) {
-  let option;
-  let option_value_value;
-  return {
-    c() {
-      option = element("option");
-      option.textContent = `${/*split*/
-      ctx[5]}`;
-      option.__value = option_value_value = /*i*/
-      ctx[7];
-      set_input_value(option, option.__value);
-    },
-    m(target, anchor) {
-      insert(target, option, anchor);
-    },
-    p: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(option);
-      }
-    }
-  };
-}
-function create_else_block(ctx) {
-  let fullgame;
-  let current;
-  fullgame = new FullGame_default({
-    props: {
-      splits: DLDSplits,
-      data: (
-        /*data*/
-        ctx[0]
-      ),
-      category: (
-        /*category*/
-        ctx[2]
-      )
-    }
+    });
+    append($$anchor2, option);
   });
-  return {
-    c() {
-      create_component(fullgame.$$.fragment);
-    },
-    m(target, anchor) {
-      mount_component(fullgame, target, anchor);
-      current = true;
-    },
-    p(ctx2, dirty) {
-      const fullgame_changes = {};
-      if (dirty & /*data*/
-      1) fullgame_changes.data = /*data*/
-      ctx2[0];
-      if (dirty & /*category*/
-      4) fullgame_changes.category = /*category*/
-      ctx2[2];
-      fullgame.$set(fullgame_changes);
-    },
-    i(local) {
-      if (current) return;
-      transition_in(fullgame.$$.fragment, local);
-      current = true;
-    },
-    o(local) {
-      transition_out(fullgame.$$.fragment, local);
-      current = false;
-    },
-    d(detaching) {
-      destroy_component(fullgame, detaching);
-    }
-  };
-}
-function create_if_block2(ctx) {
-  let ilsettings;
-  let current;
-  ilsettings = new ILSettings_default({
-    props: {
-      data: (
-        /*data*/
-        ctx[0]
-      ),
-      category: (
-        /*category*/
-        ctx[2]
-      ),
-      summit: parseInt(
-        /*mode*/
-        ctx[1]
-      )
-    }
+  reset(select);
+  var select_1 = sibling(select, 2);
+  var option_1 = child(select_1);
+  option_1.value = option_1.__value = "Full Game";
+  var node = sibling(option_1);
+  each(node, 17, () => DLDSplits, index, ($$anchor2, split, i) => {
+    var option_2 = root_2();
+    var text_1 = child(option_2, true);
+    reset(option_2);
+    option_2.value = option_2.__value = i;
+    template_effect(() => set_text(text_1, get(split)));
+    append($$anchor2, option_2);
   });
-  return {
-    c() {
-      create_component(ilsettings.$$.fragment);
-    },
-    m(target, anchor) {
-      mount_component(ilsettings, target, anchor);
-      current = true;
-    },
-    p(ctx2, dirty) {
-      const ilsettings_changes = {};
-      if (dirty & /*data*/
-      1) ilsettings_changes.data = /*data*/
-      ctx2[0];
-      if (dirty & /*category*/
-      4) ilsettings_changes.category = /*category*/
-      ctx2[2];
-      if (dirty & /*mode*/
-      2) ilsettings_changes.summit = parseInt(
-        /*mode*/
-        ctx2[1]
-      );
-      ilsettings.$set(ilsettings_changes);
-    },
-    i(local) {
-      if (current) return;
-      transition_in(ilsettings.$$.fragment, local);
-      current = true;
-    },
-    o(local) {
-      transition_out(ilsettings.$$.fragment, local);
-      current = false;
-    },
-    d(detaching) {
-      destroy_component(ilsettings, detaching);
-    }
-  };
-}
-function create_key_block_1(ctx) {
-  let current_block_type_index;
-  let if_block;
-  let if_block_anchor;
-  let current;
-  const if_block_creators = [create_if_block2, create_else_block];
-  const if_blocks = [];
-  function select_block_type(ctx2, dirty) {
-    if (
-      /*mode*/
-      ctx2[1] !== "Full Game"
-    ) return 0;
-    return 1;
-  }
-  current_block_type_index = select_block_type(ctx, -1);
-  if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-  return {
-    c() {
-      if_block.c();
-      if_block_anchor = empty();
-    },
-    m(target, anchor) {
-      if_blocks[current_block_type_index].m(target, anchor);
-      insert(target, if_block_anchor, anchor);
-      current = true;
-    },
-    p(ctx2, dirty) {
-      let previous_block_index = current_block_type_index;
-      current_block_type_index = select_block_type(ctx2, dirty);
-      if (current_block_type_index === previous_block_index) {
-        if_blocks[current_block_type_index].p(ctx2, dirty);
-      } else {
-        group_outros();
-        transition_out(if_blocks[previous_block_index], 1, 1, () => {
-          if_blocks[previous_block_index] = null;
+  reset(select_1);
+  var node_1 = sibling(select_1, 2);
+  key(node_1, () => get(mode), ($$anchor2) => {
+    var fragment_1 = comment();
+    var node_2 = first_child(fragment_1);
+    key(node_2, () => get(category), ($$anchor3) => {
+      var fragment_2 = comment();
+      var node_3 = first_child(fragment_2);
+      {
+        var consequent = ($$anchor4) => {
+          {
+            let $0 = derived(() => parseInt(get(mode)));
+            ILSettings($$anchor4, {
+              get category() {
+                return get(category);
+              },
+              get summit() {
+                return get($0);
+              },
+              get data() {
+                return data();
+              },
+              set data($$value) {
+                data($$value);
+              }
+            });
+          }
+        };
+        var alternate = ($$anchor4) => {
+          FullGame($$anchor4, {
+            get splits() {
+              return DLDSplits;
+            },
+            get category() {
+              return get(category);
+            },
+            get data() {
+              return data();
+            },
+            set data($$value) {
+              data($$value);
+            }
+          });
+        };
+        if_export(node_3, ($$render) => {
+          if (get(mode) !== "Full Game") $$render(consequent);
+          else $$render(alternate, false);
         });
-        check_outros();
-        if_block = if_blocks[current_block_type_index];
-        if (!if_block) {
-          if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx2);
-          if_block.c();
-        } else {
-          if_block.p(ctx2, dirty);
-        }
-        transition_in(if_block, 1);
-        if_block.m(if_block_anchor.parentNode, if_block_anchor);
       }
+      append($$anchor3, fragment_2);
+    });
+    append($$anchor2, fragment_1);
+  });
+  var node_4 = sibling(node_1, 4);
+  DLDToggles(node_4, {
+    get data() {
+      return data();
     },
-    i(local) {
-      if (current) return;
-      transition_in(if_block);
-      current = true;
-    },
-    o(local) {
-      transition_out(if_block);
-      current = false;
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(if_block_anchor);
-      }
-      if_blocks[current_block_type_index].d(detaching);
+    set data($$value) {
+      data($$value);
     }
-  };
+  });
+  bind_select_value(select, () => get(category), ($$value) => set(category, $$value));
+  bind_select_value(select_1, () => get(mode), ($$value) => set(mode, $$value));
+  append($$anchor, fragment);
+  pop();
 }
-function create_key_block(ctx) {
-  let previous_key = (
-    /*category*/
-    ctx[2]
-  );
-  let key_block_anchor;
-  let current;
-  let key_block = create_key_block_1(ctx);
-  return {
-    c() {
-      key_block.c();
-      key_block_anchor = empty();
-    },
-    m(target, anchor) {
-      key_block.m(target, anchor);
-      insert(target, key_block_anchor, anchor);
-      current = true;
-    },
-    p(ctx2, dirty) {
-      if (dirty & /*category*/
-      4 && safe_not_equal(previous_key, previous_key = /*category*/
-      ctx2[2])) {
-        group_outros();
-        transition_out(key_block, 1, 1, noop);
-        check_outros();
-        key_block = create_key_block_1(ctx2);
-        key_block.c();
-        transition_in(key_block, 1);
-        key_block.m(key_block_anchor.parentNode, key_block_anchor);
-      } else {
-        key_block.p(ctx2, dirty);
-      }
-    },
-    i(local) {
-      if (current) return;
-      transition_in(key_block);
-      current = true;
-    },
-    o(local) {
-      transition_out(key_block);
-      current = false;
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(key_block_anchor);
-      }
-      key_block.d(detaching);
-    }
-  };
-}
-function create_fragment4(ctx) {
-  let select0;
-  let t0;
-  let select1;
-  let option;
-  let t2;
-  let previous_key = (
-    /*mode*/
-    ctx[1]
-  );
-  let t3;
-  let hr;
-  let t4;
-  let dldtoggles;
-  let current;
-  let mounted;
-  let dispose;
-  let each_value_1 = ensure_array_like(categories);
-  let each_blocks_1 = [];
-  for (let i = 0; i < each_value_1.length; i += 1) {
-    each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
-  }
-  let each_value = ensure_array_like(DLDSplits);
-  let each_blocks = [];
-  for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block2(get_each_context2(ctx, each_value, i));
-  }
-  let key_block = create_key_block(ctx);
-  dldtoggles = new DLDToggles_default({ props: { data: (
-    /*data*/
-    ctx[0]
-  ) } });
-  return {
-    c() {
-      select0 = element("select");
-      for (let i = 0; i < each_blocks_1.length; i += 1) {
-        each_blocks_1[i].c();
-      }
-      t0 = space();
-      select1 = element("select");
-      option = element("option");
-      option.textContent = "Full Game";
-      for (let i = 0; i < each_blocks.length; i += 1) {
-        each_blocks[i].c();
-      }
-      t2 = space();
-      key_block.c();
-      t3 = space();
-      hr = element("hr");
-      t4 = space();
-      create_component(dldtoggles.$$.fragment);
-      if (
-        /*category*/
-        ctx[2] === void 0
-      ) add_render_callback(() => (
-        /*select0_change_handler*/
-        ctx[3].call(select0)
-      ));
-      option.__value = "Full Game";
-      set_input_value(option, option.__value);
-      if (
-        /*mode*/
-        ctx[1] === void 0
-      ) add_render_callback(() => (
-        /*select1_change_handler*/
-        ctx[4].call(select1)
-      ));
-    },
-    m(target, anchor) {
-      insert(target, select0, anchor);
-      for (let i = 0; i < each_blocks_1.length; i += 1) {
-        if (each_blocks_1[i]) {
-          each_blocks_1[i].m(select0, null);
-        }
-      }
-      select_option(
-        select0,
-        /*category*/
-        ctx[2],
-        true
-      );
-      insert(target, t0, anchor);
-      insert(target, select1, anchor);
-      append(select1, option);
-      for (let i = 0; i < each_blocks.length; i += 1) {
-        if (each_blocks[i]) {
-          each_blocks[i].m(select1, null);
-        }
-      }
-      select_option(
-        select1,
-        /*mode*/
-        ctx[1],
-        true
-      );
-      insert(target, t2, anchor);
-      key_block.m(target, anchor);
-      insert(target, t3, anchor);
-      insert(target, hr, anchor);
-      insert(target, t4, anchor);
-      mount_component(dldtoggles, target, anchor);
-      current = true;
-      if (!mounted) {
-        dispose = [
-          listen(
-            select0,
-            "change",
-            /*select0_change_handler*/
-            ctx[3]
-          ),
-          listen(
-            select1,
-            "change",
-            /*select1_change_handler*/
-            ctx[4]
-          )
-        ];
-        mounted = true;
-      }
-    },
-    p(ctx2, [dirty]) {
-      if (dirty & /*category*/
-      4) {
-        select_option(
-          select0,
-          /*category*/
-          ctx2[2]
-        );
-      }
-      if (dirty & /*mode*/
-      2) {
-        select_option(
-          select1,
-          /*mode*/
-          ctx2[1]
-        );
-      }
-      if (dirty & /*mode*/
-      2 && safe_not_equal(previous_key, previous_key = /*mode*/
-      ctx2[1])) {
-        group_outros();
-        transition_out(key_block, 1, 1, noop);
-        check_outros();
-        key_block = create_key_block(ctx2);
-        key_block.c();
-        transition_in(key_block, 1);
-        key_block.m(t3.parentNode, t3);
-      } else {
-        key_block.p(ctx2, dirty);
-      }
-      const dldtoggles_changes = {};
-      if (dirty & /*data*/
-      1) dldtoggles_changes.data = /*data*/
-      ctx2[0];
-      dldtoggles.$set(dldtoggles_changes);
-    },
-    i(local) {
-      if (current) return;
-      transition_in(key_block);
-      transition_in(dldtoggles.$$.fragment, local);
-      current = true;
-    },
-    o(local) {
-      transition_out(key_block);
-      transition_out(dldtoggles.$$.fragment, local);
-      current = false;
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(select0);
-        detach(t0);
-        detach(select1);
-        detach(t2);
-        detach(t3);
-        detach(hr);
-        detach(t4);
-      }
-      destroy_each(each_blocks_1, detaching);
-      destroy_each(each_blocks, detaching);
-      key_block.d(detaching);
-      destroy_component(dldtoggles, detaching);
-      mounted = false;
-      run_all(dispose);
-    }
-  };
-}
-function instance4($$self, $$props, $$invalidate) {
-  let { data } = $$props;
-  let category = categories[0];
-  let mode = "Full Game";
-  function select0_change_handler() {
-    category = select_value(this);
-    $$invalidate(2, category);
-  }
-  function select1_change_handler() {
-    mode = select_value(this);
-    $$invalidate(1, mode);
-  }
-  $$self.$$set = ($$props2) => {
-    if ("data" in $$props2) $$invalidate(0, data = $$props2.data);
-  };
-  return [data, mode, category, select0_change_handler, select1_change_handler];
-}
-var DLD = class extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, instance4, create_fragment4, safe_not_equal, { data: 0 });
-  }
-};
-var DLD_default = DLD;
 
 // plugins/Autosplitter/src/settings/SplitsToggles.svelte
-function add_css3(target) {
-  append_styles(target, "svelte-j38q7p", ".row.svelte-j38q7p{display:flex;align-items:center;gap:10px}input.svelte-j38q7p{width:20px;height:20px;appearance:auto !important}");
-}
-function create_fragment5(ctx) {
-  let div0;
-  let select;
-  let option0;
-  let option1;
-  let option2;
-  let option3;
-  let t4;
-  let t5;
-  let div1;
-  let input0;
-  let t6;
-  let t7;
-  let div2;
-  let input1;
-  let t8;
-  let t9;
-  let div3;
-  let input2;
-  let t10;
-  let t11;
-  let div4;
-  let input3;
-  let t12;
-  let t13;
-  let div5;
-  let input4;
-  let t14;
-  let mounted;
-  let dispose;
-  return {
-    c() {
-      div0 = element("div");
-      select = element("select");
-      option0 = element("option");
-      option0.textContent = "Top left";
-      option1 = element("option");
-      option1.textContent = "Top right";
-      option2 = element("option");
-      option2.textContent = "Bottom left";
-      option3 = element("option");
-      option3.textContent = "Bottom right";
-      t4 = text("\n    Timer position");
-      t5 = space();
-      div1 = element("div");
-      input0 = element("input");
-      t6 = text("\n    Show splits");
-      t7 = space();
-      div2 = element("div");
-      input1 = element("input");
-      t8 = text("\n    Show split times");
-      t9 = space();
-      div3 = element("div");
-      input2 = element("input");
-      t10 = text("\n    Show split comparisons");
-      t11 = space();
-      div4 = element("div");
-      input3 = element("input");
-      t12 = text("\n    Show split time at end");
-      t13 = space();
-      div5 = element("div");
-      input4 = element("input");
-      t14 = text("\n    Show time of split in PB");
-      option0.__value = "top left";
-      set_input_value(option0, option0.__value);
-      option1.__value = "top right";
-      set_input_value(option1, option1.__value);
-      option2.__value = "bottom left";
-      set_input_value(option2, option2.__value);
-      option3.__value = "bottom right";
-      set_input_value(option3, option3.__value);
-      if (
-        /*data*/
-        ctx[0].timerPosition === void 0
-      ) add_render_callback(() => (
-        /*select_change_handler*/
-        ctx[1].call(select)
-      ));
-      attr(div0, "class", "row svelte-j38q7p");
-      attr(input0, "type", "checkbox");
-      attr(input0, "class", "svelte-j38q7p");
-      attr(div1, "class", "row svelte-j38q7p");
-      attr(input1, "type", "checkbox");
-      attr(input1, "class", "svelte-j38q7p");
-      attr(div2, "class", "row svelte-j38q7p");
-      attr(input2, "type", "checkbox");
-      attr(input2, "class", "svelte-j38q7p");
-      attr(div3, "class", "row svelte-j38q7p");
-      attr(input3, "type", "checkbox");
-      attr(input3, "class", "svelte-j38q7p");
-      attr(div4, "class", "row svelte-j38q7p");
-      attr(input4, "type", "checkbox");
-      attr(input4, "class", "svelte-j38q7p");
-      attr(div5, "class", "row svelte-j38q7p");
-    },
-    m(target, anchor) {
-      insert(target, div0, anchor);
-      append(div0, select);
-      append(select, option0);
-      append(select, option1);
-      append(select, option2);
-      append(select, option3);
-      select_option(
-        select,
-        /*data*/
-        ctx[0].timerPosition,
-        true
-      );
-      append(div0, t4);
-      insert(target, t5, anchor);
-      insert(target, div1, anchor);
-      append(div1, input0);
-      input0.checked = /*data*/
-      ctx[0].showSplits;
-      append(div1, t6);
-      insert(target, t7, anchor);
-      insert(target, div2, anchor);
-      append(div2, input1);
-      input1.checked = /*data*/
-      ctx[0].showSplitTimes;
-      append(div2, t8);
-      insert(target, t9, anchor);
-      insert(target, div3, anchor);
-      append(div3, input2);
-      input2.checked = /*data*/
-      ctx[0].showSplitComparisons;
-      append(div3, t10);
-      insert(target, t11, anchor);
-      insert(target, div4, anchor);
-      append(div4, input3);
-      input3.checked = /*data*/
-      ctx[0].showSplitTimeAtEnd;
-      append(div4, t12);
-      insert(target, t13, anchor);
-      insert(target, div5, anchor);
-      append(div5, input4);
-      input4.checked = /*data*/
-      ctx[0].showPbSplits;
-      append(div5, t14);
-      if (!mounted) {
-        dispose = [
-          listen(
-            select,
-            "change",
-            /*select_change_handler*/
-            ctx[1]
-          ),
-          listen(
-            input0,
-            "change",
-            /*input0_change_handler*/
-            ctx[2]
-          ),
-          listen(
-            input1,
-            "change",
-            /*input1_change_handler*/
-            ctx[3]
-          ),
-          listen(
-            input2,
-            "change",
-            /*input2_change_handler*/
-            ctx[4]
-          ),
-          listen(
-            input3,
-            "change",
-            /*input3_change_handler*/
-            ctx[5]
-          ),
-          listen(
-            input4,
-            "change",
-            /*input4_change_handler*/
-            ctx[6]
-          )
-        ];
-        mounted = true;
-      }
-    },
-    p(ctx2, [dirty]) {
-      if (dirty & /*data*/
-      1) {
-        select_option(
-          select,
-          /*data*/
-          ctx2[0].timerPosition
-        );
-      }
-      if (dirty & /*data*/
-      1) {
-        input0.checked = /*data*/
-        ctx2[0].showSplits;
-      }
-      if (dirty & /*data*/
-      1) {
-        input1.checked = /*data*/
-        ctx2[0].showSplitTimes;
-      }
-      if (dirty & /*data*/
-      1) {
-        input2.checked = /*data*/
-        ctx2[0].showSplitComparisons;
-      }
-      if (dirty & /*data*/
-      1) {
-        input3.checked = /*data*/
-        ctx2[0].showSplitTimeAtEnd;
-      }
-      if (dirty & /*data*/
-      1) {
-        input4.checked = /*data*/
-        ctx2[0].showPbSplits;
-      }
-    },
-    i: noop,
-    o: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(div0);
-        detach(t5);
-        detach(div1);
-        detach(t7);
-        detach(div2);
-        detach(t9);
-        detach(div3);
-        detach(t11);
-        detach(div4);
-        detach(t13);
-        detach(div5);
-      }
-      mounted = false;
-      run_all(dispose);
-    }
-  };
-}
-function instance5($$self, $$props, $$invalidate) {
-  let { data } = $$props;
-  function select_change_handler() {
-    data.timerPosition = select_value(this);
-    $$invalidate(0, data);
-  }
-  function input0_change_handler() {
-    data.showSplits = this.checked;
-    $$invalidate(0, data);
-  }
-  function input1_change_handler() {
-    data.showSplitTimes = this.checked;
-    $$invalidate(0, data);
-  }
-  function input2_change_handler() {
-    data.showSplitComparisons = this.checked;
-    $$invalidate(0, data);
-  }
-  function input3_change_handler() {
-    data.showSplitTimeAtEnd = this.checked;
-    $$invalidate(0, data);
-  }
-  function input4_change_handler() {
-    data.showPbSplits = this.checked;
-    $$invalidate(0, data);
-  }
-  $$self.$$set = ($$props2) => {
-    if ("data" in $$props2) $$invalidate(0, data = $$props2.data);
-  };
-  return [
-    data,
-    select_change_handler,
-    input0_change_handler,
-    input1_change_handler,
-    input2_change_handler,
-    input3_change_handler,
-    input4_change_handler
-  ];
-}
-var SplitsToggles = class extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, instance5, create_fragment5, safe_not_equal, { data: 0 }, add_css3);
-  }
+var root5 = from_html(`<div class="row svelte-xkkpx7"><select><option>Top left</option><option>Top right</option><option>Bottom left</option><option>Bottom right</option></select> Timer position</div> <div class="row svelte-xkkpx7"><input type="checkbox" class="svelte-xkkpx7"/> Show splits</div> <div class="row svelte-xkkpx7"><input type="checkbox" class="svelte-xkkpx7"/> Show split times</div> <div class="row svelte-xkkpx7"><input type="checkbox" class="svelte-xkkpx7"/> Show split comparisons</div> <div class="row svelte-xkkpx7"><input type="checkbox" class="svelte-xkkpx7"/> Show split time at end</div> <div class="row svelte-xkkpx7"><input type="checkbox" class="svelte-xkkpx7"/> Show time of split in PB</div>`, 1);
+var $$css3 = {
+  hash: "svelte-xkkpx7",
+  code: ".row.svelte-xkkpx7 {display:flex;align-items:center;gap:10px;}input.svelte-xkkpx7 {width:20px;height:20px;appearance:auto !important;}"
 };
-var SplitsToggles_default = SplitsToggles;
+function SplitsToggles($$anchor, $$props) {
+  push($$props, true);
+  append_styles($$anchor, $$css3);
+  let data = prop($$props, "data", 15);
+  var fragment = root5();
+  var div = first_child(fragment);
+  var select = child(div);
+  var option = child(select);
+  option.value = option.__value = "top left";
+  var option_1 = sibling(option);
+  option_1.value = option_1.__value = "top right";
+  var option_2 = sibling(option_1);
+  option_2.value = option_2.__value = "bottom left";
+  var option_3 = sibling(option_2);
+  option_3.value = option_3.__value = "bottom right";
+  reset(select);
+  next();
+  reset(div);
+  var div_1 = sibling(div, 2);
+  var input = child(div_1);
+  remove_input_defaults(input);
+  next();
+  reset(div_1);
+  var div_2 = sibling(div_1, 2);
+  var input_1 = child(div_2);
+  remove_input_defaults(input_1);
+  next();
+  reset(div_2);
+  var div_3 = sibling(div_2, 2);
+  var input_2 = child(div_3);
+  remove_input_defaults(input_2);
+  next();
+  reset(div_3);
+  var div_4 = sibling(div_3, 2);
+  var input_3 = child(div_4);
+  remove_input_defaults(input_3);
+  next();
+  reset(div_4);
+  var div_5 = sibling(div_4, 2);
+  var input_4 = child(div_5);
+  remove_input_defaults(input_4);
+  next();
+  reset(div_5);
+  bind_select_value(select, () => data().timerPosition, ($$value) => data(data().timerPosition = $$value, true));
+  bind_checked(input, () => data().showSplits, ($$value) => data(data().showSplits = $$value, true));
+  bind_checked(input_1, () => data().showSplitTimes, ($$value) => data(data().showSplitTimes = $$value, true));
+  bind_checked(input_2, () => data().showSplitComparisons, ($$value) => data(data().showSplitComparisons = $$value, true));
+  bind_checked(input_3, () => data().showSplitTimeAtEnd, ($$value) => data(data().showSplitTimeAtEnd = $$value, true));
+  bind_checked(input_4, () => data().showPbSplits, ($$value) => data(data().showPbSplits = $$value, true));
+  append($$anchor, fragment);
+  pop();
+}
 
 // plugins/Autosplitter/src/settings/Fishtopia.svelte
-function create_fragment6(ctx) {
-  let fullgame;
-  let t0;
-  let hr;
-  let t1;
-  let fishtopiatoggles;
-  let current;
-  fullgame = new FullGame_default({
-    props: {
-      splits: fishtopiaSplits,
-      data: (
-        /*data*/
-        ctx[0]
-      ),
-      category: "fishtopia"
+var root6 = from_html(`<!> <hr/> <!>`, 1);
+function Fishtopia($$anchor, $$props) {
+  push($$props, true);
+  let data = prop($$props, "data", 15);
+  var fragment = root6();
+  var node = first_child(fragment);
+  FullGame(node, {
+    get splits() {
+      return fishtopiaSplits;
+    },
+    category: "fishtopia",
+    get data() {
+      return data();
+    },
+    set data($$value) {
+      data($$value);
     }
   });
-  fishtopiatoggles = new SplitsToggles_default({ props: { data: (
-    /*data*/
-    ctx[0]
-  ) } });
-  return {
-    c() {
-      create_component(fullgame.$$.fragment);
-      t0 = space();
-      hr = element("hr");
-      t1 = space();
-      create_component(fishtopiatoggles.$$.fragment);
+  var node_1 = sibling(node, 4);
+  SplitsToggles(node_1, {
+    get data() {
+      return data();
     },
-    m(target, anchor) {
-      mount_component(fullgame, target, anchor);
-      insert(target, t0, anchor);
-      insert(target, hr, anchor);
-      insert(target, t1, anchor);
-      mount_component(fishtopiatoggles, target, anchor);
-      current = true;
-    },
-    p(ctx2, [dirty]) {
-      const fullgame_changes = {};
-      if (dirty & /*data*/
-      1) fullgame_changes.data = /*data*/
-      ctx2[0];
-      fullgame.$set(fullgame_changes);
-      const fishtopiatoggles_changes = {};
-      if (dirty & /*data*/
-      1) fishtopiatoggles_changes.data = /*data*/
-      ctx2[0];
-      fishtopiatoggles.$set(fishtopiatoggles_changes);
-    },
-    i(local) {
-      if (current) return;
-      transition_in(fullgame.$$.fragment, local);
-      transition_in(fishtopiatoggles.$$.fragment, local);
-      current = true;
-    },
-    o(local) {
-      transition_out(fullgame.$$.fragment, local);
-      transition_out(fishtopiatoggles.$$.fragment, local);
-      current = false;
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(t0);
-        detach(hr);
-        detach(t1);
-      }
-      destroy_component(fullgame, detaching);
-      destroy_component(fishtopiatoggles, detaching);
+    set data($$value) {
+      data($$value);
     }
-  };
+  });
+  append($$anchor, fragment);
+  pop();
 }
-function instance6($$self, $$props, $$invalidate) {
-  let { data } = $$props;
-  $$self.$$set = ($$props2) => {
-    if ("data" in $$props2) $$invalidate(0, data = $$props2.data);
-  };
-  return [data];
-}
-var Fishtopia = class extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, instance6, create_fragment6, safe_not_equal, { data: 0 });
-  }
-};
-var Fishtopia_default = Fishtopia;
 
 // plugins/Autosplitter/src/settings/OneWayOut.svelte
-function create_fragment7(ctx) {
-  let fullgame;
-  let t0;
-  let hr;
-  let t1;
-  let fishtopiatoggles;
-  let current;
-  fullgame = new FullGame_default({
-    props: {
-      splits: oneWayOutSplits,
-      data: (
-        /*data*/
-        ctx[0]
-      ),
-      category: "OneWayOut"
+var root7 = from_html(`<!> <hr/> <!>`, 1);
+function OneWayOut($$anchor, $$props) {
+  push($$props, true);
+  let data = prop($$props, "data", 15);
+  var fragment = root7();
+  var node = first_child(fragment);
+  FullGame(node, {
+    get splits() {
+      return oneWayOutSplits;
+    },
+    category: "OneWayOut",
+    get data() {
+      return data();
+    },
+    set data($$value) {
+      data($$value);
     }
   });
-  fishtopiatoggles = new SplitsToggles_default({ props: { data: (
-    /*data*/
-    ctx[0]
-  ) } });
-  return {
-    c() {
-      create_component(fullgame.$$.fragment);
-      t0 = space();
-      hr = element("hr");
-      t1 = space();
-      create_component(fishtopiatoggles.$$.fragment);
+  var node_1 = sibling(node, 4);
+  SplitsToggles(node_1, {
+    get data() {
+      return data();
     },
-    m(target, anchor) {
-      mount_component(fullgame, target, anchor);
-      insert(target, t0, anchor);
-      insert(target, hr, anchor);
-      insert(target, t1, anchor);
-      mount_component(fishtopiatoggles, target, anchor);
-      current = true;
-    },
-    p(ctx2, [dirty]) {
-      const fullgame_changes = {};
-      if (dirty & /*data*/
-      1) fullgame_changes.data = /*data*/
-      ctx2[0];
-      fullgame.$set(fullgame_changes);
-      const fishtopiatoggles_changes = {};
-      if (dirty & /*data*/
-      1) fishtopiatoggles_changes.data = /*data*/
-      ctx2[0];
-      fishtopiatoggles.$set(fishtopiatoggles_changes);
-    },
-    i(local) {
-      if (current) return;
-      transition_in(fullgame.$$.fragment, local);
-      transition_in(fishtopiatoggles.$$.fragment, local);
-      current = true;
-    },
-    o(local) {
-      transition_out(fullgame.$$.fragment, local);
-      transition_out(fishtopiatoggles.$$.fragment, local);
-      current = false;
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(t0);
-        detach(hr);
-        detach(t1);
-      }
-      destroy_component(fullgame, detaching);
-      destroy_component(fishtopiatoggles, detaching);
+    set data($$value) {
+      data($$value);
     }
-  };
+  });
+  append($$anchor, fragment);
+  pop();
 }
-function instance7($$self, $$props, $$invalidate) {
-  let { data } = $$props;
-  $$self.$$set = ($$props2) => {
-    if ("data" in $$props2) $$invalidate(0, data = $$props2.data);
-  };
-  return [data];
-}
-var OneWayOut = class extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, instance7, create_fragment7, safe_not_equal, { data: 0 });
-  }
-};
-var OneWayOut_default = OneWayOut;
 
 // plugins/Autosplitter/src/settings/Settings.svelte
-function add_css4(target) {
-  append_styles(target, "svelte-94qc7l", "div:has(> .wrap){height:100%}.wrap.svelte-94qc7l.svelte-94qc7l{height:100%}.settings-content.svelte-94qc7l.svelte-94qc7l{height:calc(100% - 40px);overflow-y:auto}.tabs.svelte-94qc7l.svelte-94qc7l{display:flex;padding-left:10px;gap:10px;border-bottom:1px solid gray;height:37px}.tab.svelte-94qc7l.svelte-94qc7l{background-color:lightgray;border:1px solid gray;border-bottom:none;border-radius:10px;border-bottom-left-radius:0;border-bottom-right-radius:0}.tab.active.svelte-94qc7l.svelte-94qc7l{background-color:white}.actions.svelte-94qc7l.svelte-94qc7l{height:100%;display:flex;align-items:center;gap:10px}.actions.svelte-94qc7l button.svelte-94qc7l{margin:6px 0;padding:0 8px;height:25px;display:flex;align-items:center;justify-content:center;text-wrap:nowrap}");
-}
-function get_each_context3(ctx, list, i) {
-  const child_ctx = ctx.slice();
-  child_ctx[9] = list[i];
-  return child_ctx;
-}
-function create_each_block3(ctx) {
-  let button;
-  let mounted;
-  let dispose;
-  function click_handler() {
-    return (
-      /*click_handler*/
-      ctx[7](
-        /*tab*/
-        ctx[9]
-      )
-    );
-  }
-  return {
-    c() {
-      button = element("button");
-      button.textContent = `${/*tab*/
-      ctx[9]}`;
-      attr(button, "class", "tab svelte-94qc7l");
-      toggle_class(
-        button,
-        "active",
-        /*activeTab*/
-        ctx[0] === /*tab*/
-        ctx[9]
-      );
-    },
-    m(target, anchor) {
-      insert(target, button, anchor);
-      if (!mounted) {
-        dispose = listen(button, "click", click_handler);
-        mounted = true;
-      }
-    },
-    p(new_ctx, dirty) {
-      ctx = new_ctx;
-      if (dirty & /*activeTab*/
-      1) {
-        toggle_class(
-          button,
-          "active",
-          /*activeTab*/
-          ctx[0] === /*tab*/
-          ctx[9]
-        );
-      }
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(button);
-      }
-      mounted = false;
-      dispose();
-    }
-  };
-}
-function create_if_block_2(ctx) {
-  let onewayout;
-  let current;
-  onewayout = new OneWayOut_default({
-    props: { data: (
-      /*data*/
-      ctx[1].OneWayOut
-    ) }
-  });
-  return {
-    c() {
-      create_component(onewayout.$$.fragment);
-    },
-    m(target, anchor) {
-      mount_component(onewayout, target, anchor);
-      current = true;
-    },
-    p(ctx2, dirty) {
-      const onewayout_changes = {};
-      if (dirty & /*data*/
-      2) onewayout_changes.data = /*data*/
-      ctx2[1].OneWayOut;
-      onewayout.$set(onewayout_changes);
-    },
-    i(local) {
-      if (current) return;
-      transition_in(onewayout.$$.fragment, local);
-      current = true;
-    },
-    o(local) {
-      transition_out(onewayout.$$.fragment, local);
-      current = false;
-    },
-    d(detaching) {
-      destroy_component(onewayout, detaching);
-    }
-  };
-}
-function create_if_block_1(ctx) {
-  let fishtopia;
-  let current;
-  fishtopia = new Fishtopia_default({
-    props: { data: (
-      /*data*/
-      ctx[1].Fishtopia
-    ) }
-  });
-  return {
-    c() {
-      create_component(fishtopia.$$.fragment);
-    },
-    m(target, anchor) {
-      mount_component(fishtopia, target, anchor);
-      current = true;
-    },
-    p(ctx2, dirty) {
-      const fishtopia_changes = {};
-      if (dirty & /*data*/
-      2) fishtopia_changes.data = /*data*/
-      ctx2[1].Fishtopia;
-      fishtopia.$set(fishtopia_changes);
-    },
-    i(local) {
-      if (current) return;
-      transition_in(fishtopia.$$.fragment, local);
-      current = true;
-    },
-    o(local) {
-      transition_out(fishtopia.$$.fragment, local);
-      current = false;
-    },
-    d(detaching) {
-      destroy_component(fishtopia, detaching);
-    }
-  };
-}
-function create_if_block3(ctx) {
-  let dld;
-  let current;
-  dld = new DLD_default({ props: { data: (
-    /*data*/
-    ctx[1].DLD
-  ) } });
-  return {
-    c() {
-      create_component(dld.$$.fragment);
-    },
-    m(target, anchor) {
-      mount_component(dld, target, anchor);
-      current = true;
-    },
-    p(ctx2, dirty) {
-      const dld_changes = {};
-      if (dirty & /*data*/
-      2) dld_changes.data = /*data*/
-      ctx2[1].DLD;
-      dld.$set(dld_changes);
-    },
-    i(local) {
-      if (current) return;
-      transition_in(dld.$$.fragment, local);
-      current = true;
-    },
-    o(local) {
-      transition_out(dld.$$.fragment, local);
-      current = false;
-    },
-    d(detaching) {
-      destroy_component(dld, detaching);
-    }
-  };
-}
-function create_fragment8(ctx) {
-  let div3;
-  let div1;
-  let t0;
-  let div0;
-  let button0;
-  let t2;
-  let button1;
-  let t4;
-  let button2;
-  let t6;
-  let button3;
-  let t8;
-  let div2;
-  let current_block_type_index;
-  let if_block;
-  let current;
-  let mounted;
-  let dispose;
-  let each_value = ensure_array_like(gamemodes);
-  let each_blocks = [];
-  for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block3(get_each_context3(ctx, each_value, i));
-  }
-  const if_block_creators = [create_if_block3, create_if_block_1, create_if_block_2];
-  const if_blocks = [];
-  function select_block_type(ctx2, dirty) {
-    if (
-      /*activeTab*/
-      ctx2[0] === "DLD"
-    ) return 0;
-    if (
-      /*activeTab*/
-      ctx2[0] === "Fishtopia"
-    ) return 1;
-    if (
-      /*activeTab*/
-      ctx2[0] === "OneWayOut"
-    ) return 2;
-    return -1;
-  }
-  if (~(current_block_type_index = select_block_type(ctx, -1))) {
-    if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-  }
-  return {
-    c() {
-      div3 = element("div");
-      div1 = element("div");
-      for (let i = 0; i < each_blocks.length; i += 1) {
-        each_blocks[i].c();
-      }
-      t0 = space();
-      div0 = element("div");
-      button0 = element("button");
-      button0.textContent = "All \u2B73";
-      t2 = space();
-      button1 = element("button");
-      button1.textContent = "All \u2B71";
-      t4 = space();
-      button2 = element("button");
-      button2.textContent = "Mode \u2B73";
-      t6 = space();
-      button3 = element("button");
-      button3.textContent = "Mode \u2B71";
-      t8 = space();
-      div2 = element("div");
-      if (if_block) if_block.c();
-      attr(button0, "class", "svelte-94qc7l");
-      attr(button1, "class", "svelte-94qc7l");
-      attr(button2, "class", "svelte-94qc7l");
-      attr(button3, "class", "svelte-94qc7l");
-      attr(div0, "class", "actions svelte-94qc7l");
-      attr(div1, "class", "tabs svelte-94qc7l");
-      attr(div2, "class", "settings-content svelte-94qc7l");
-      attr(div3, "class", "wrap svelte-94qc7l");
-    },
-    m(target, anchor) {
-      insert(target, div3, anchor);
-      append(div3, div1);
-      for (let i = 0; i < each_blocks.length; i += 1) {
-        if (each_blocks[i]) {
-          each_blocks[i].m(div1, null);
-        }
-      }
-      append(div1, t0);
-      append(div1, div0);
-      append(div0, button0);
-      append(div0, t2);
-      append(div0, button1);
-      append(div0, t4);
-      append(div0, button2);
-      append(div0, t6);
-      append(div0, button3);
-      append(div3, t8);
-      append(div3, div2);
-      if (~current_block_type_index) {
-        if_blocks[current_block_type_index].m(div2, null);
-      }
-      current = true;
-      if (!mounted) {
-        dispose = [
-          listen(
-            button0,
-            "click",
-            /*exportAll*/
-            ctx[2]
-          ),
-          listen(
-            button1,
-            "click",
-            /*importAll*/
-            ctx[3]
-          ),
-          listen(
-            button2,
-            "click",
-            /*exportMode*/
-            ctx[4]
-          ),
-          listen(
-            button3,
-            "click",
-            /*importMode*/
-            ctx[5]
-          )
-        ];
-        mounted = true;
-      }
-    },
-    p(ctx2, [dirty]) {
-      if (dirty & /*activeTab*/
-      1) {
-        each_value = ensure_array_like(gamemodes);
-        let i;
-        for (i = 0; i < each_value.length; i += 1) {
-          const child_ctx = get_each_context3(ctx2, each_value, i);
-          if (each_blocks[i]) {
-            each_blocks[i].p(child_ctx, dirty);
-          } else {
-            each_blocks[i] = create_each_block3(child_ctx);
-            each_blocks[i].c();
-            each_blocks[i].m(div1, t0);
-          }
-        }
-        for (; i < each_blocks.length; i += 1) {
-          each_blocks[i].d(1);
-        }
-        each_blocks.length = each_value.length;
-      }
-      let previous_block_index = current_block_type_index;
-      current_block_type_index = select_block_type(ctx2, dirty);
-      if (current_block_type_index === previous_block_index) {
-        if (~current_block_type_index) {
-          if_blocks[current_block_type_index].p(ctx2, dirty);
-        }
-      } else {
-        if (if_block) {
-          group_outros();
-          transition_out(if_blocks[previous_block_index], 1, 1, () => {
-            if_blocks[previous_block_index] = null;
-          });
-          check_outros();
-        }
-        if (~current_block_type_index) {
-          if_block = if_blocks[current_block_type_index];
-          if (!if_block) {
-            if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx2);
-            if_block.c();
-          } else {
-            if_block.p(ctx2, dirty);
-          }
-          transition_in(if_block, 1);
-          if_block.m(div2, null);
-        } else {
-          if_block = null;
-        }
-      }
-    },
-    i(local) {
-      if (current) return;
-      transition_in(if_block);
-      current = true;
-    },
-    o(local) {
-      transition_out(if_block);
-      current = false;
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(div3);
-      }
-      destroy_each(each_blocks, detaching);
-      if (~current_block_type_index) {
-        if_blocks[current_block_type_index].d();
-      }
-      mounted = false;
-      run_all(dispose);
-    }
-  };
-}
-function instance8($$self, $$props, $$invalidate) {
-  let activeTab = gamemodes[0];
+var root_14 = from_html(`<button> </button>`);
+var root8 = from_html(`<div class="wrap"><div class="tabs svelte-du1p18"><!> <div class="actions svelte-du1p18"><button class="svelte-du1p18">All &#11123;</button> <button class="svelte-du1p18">All &#11121;</button> <button class="svelte-du1p18">Mode &#11123;</button> <button class="svelte-du1p18">Mode &#11121;</button></div></div> <div class="settings-content svelte-du1p18"><!></div></div>`);
+var $$css4 = {
+  hash: "svelte-du1p18",
+  code: ".settings-content.svelte-du1p18 {max-height:calc(100% - 40px);overflow-y:auto;}.tabs.svelte-du1p18 {display:flex;padding-left:10px;gap:10px;border-bottom:1px solid gray;height:37px;}.tab.svelte-du1p18 {background-color:lightgray;border:1px solid gray;border-bottom:none;border-radius:10px;border-bottom-left-radius:0;border-bottom-right-radius:0;}.tab.active.svelte-du1p18 {background-color:white;}.actions.svelte-du1p18 {height:100%;display:flex;align-items:center;gap:10px;}.actions.svelte-du1p18 button:where(.svelte-du1p18) {margin:6px 0;padding:0 8px;height:25px;display:flex;align-items:center;justify-content:center;text-wrap:nowrap;}"
+};
+function Settings($$anchor, $$props) {
+  push($$props, true);
+  append_styles($$anchor, $$css4);
+  let activeTab = state(proxy(gamemodes[0]));
   let dataObj = {};
   for (let gamemode of gamemodes) {
     dataObj[gamemode] = getGamemodeData(gamemode);
   }
-  let data = dataObj;
+  let data = proxy(dataObj);
   function save() {
+    console.log(snapshot(data));
     for (let gamemode of gamemodes) {
-      api.storage.setValue(`${gamemode}Data`, data[gamemode]);
+      api.storage.setValue(`${gamemode}Data`, snapshot(data[gamemode]));
     }
   }
   function exportAll() {
@@ -3318,43 +703,121 @@ function instance8($$self, $$props, $$invalidate) {
     readFile().then((newData) => {
       for (let gamemode of gamemodes) {
         if (!newData[gamemode]) continue;
-        $$invalidate(1, data[gamemode] = newData[gamemode], data);
+        data[gamemode] = newData[gamemode];
         api.storage.setValue(`${gamemode}Data`, newData[gamemode]);
       }
     });
   }
   function exportMode() {
-    let json = data[activeTab];
-    downloadFile(JSON.stringify(json), `${activeTab}.json`);
+    let json = data[get(activeTab)];
+    downloadFile(JSON.stringify(json), `${get(activeTab)}.json`);
   }
   function importMode() {
     readFile().then((newData) => {
-      $$invalidate(1, data[activeTab] = newData, data);
-      api.storage.setValue(`${activeTab}Data`, newData);
+      data[get(activeTab)] = newData;
+      api.storage.setValue(`${get(activeTab)}Data`, newData);
     });
   }
-  const click_handler = (tab) => $$invalidate(0, activeTab = tab);
-  return [
-    activeTab,
-    data,
-    exportAll,
-    importAll,
-    exportMode,
-    importMode,
-    save,
-    click_handler
-  ];
+  var $$exports = { save };
+  var div = root8();
+  var div_1 = child(div);
+  var node = child(div_1);
+  each(node, 17, () => gamemodes, index, ($$anchor2, tab) => {
+    var button = root_14();
+    let classes;
+    button.__click = () => set(activeTab, get(tab), true);
+    var text = child(button, true);
+    reset(button);
+    template_effect(() => {
+      classes = set_class(button, 1, "tab svelte-du1p18", null, classes, { active: get(activeTab) === get(tab) });
+      set_text(text, get(tab));
+    });
+    append($$anchor2, button);
+  });
+  var div_2 = sibling(node, 2);
+  var button_1 = child(div_2);
+  button_1.__click = exportAll;
+  var button_2 = sibling(button_1, 2);
+  button_2.__click = importAll;
+  var button_3 = sibling(button_2, 2);
+  button_3.__click = exportMode;
+  var button_4 = sibling(button_3, 2);
+  button_4.__click = importMode;
+  reset(div_2);
+  reset(div_1);
+  var div_3 = sibling(div_1, 2);
+  var node_1 = child(div_3);
+  {
+    var consequent = ($$anchor2) => {
+      DLD($$anchor2, {
+        get data() {
+          return data.DLD;
+        },
+        set data($$value) {
+          data.DLD = $$value;
+        }
+      });
+    };
+    var alternate_1 = ($$anchor2) => {
+      var fragment_1 = comment();
+      var node_2 = first_child(fragment_1);
+      {
+        var consequent_1 = ($$anchor3) => {
+          Fishtopia($$anchor3, {
+            get data() {
+              return data.Fishtopia;
+            },
+            set data($$value) {
+              data.Fishtopia = $$value;
+            }
+          });
+        };
+        var alternate = ($$anchor3) => {
+          var fragment_3 = comment();
+          var node_3 = first_child(fragment_3);
+          {
+            var consequent_2 = ($$anchor4) => {
+              OneWayOut($$anchor4, {
+                get data() {
+                  return data.OneWayOut;
+                },
+                set data($$value) {
+                  data.OneWayOut = $$value;
+                }
+              });
+            };
+            if_export(
+              node_3,
+              ($$render) => {
+                if (get(activeTab) === "OneWayOut") $$render(consequent_2);
+              },
+              true
+            );
+          }
+          append($$anchor3, fragment_3);
+        };
+        if_export(
+          node_2,
+          ($$render) => {
+            if (get(activeTab) === "Fishtopia") $$render(consequent_1);
+            else $$render(alternate, false);
+          },
+          true
+        );
+      }
+      append($$anchor2, fragment_1);
+    };
+    if_export(node_1, ($$render) => {
+      if (get(activeTab) === "DLD") $$render(consequent);
+      else $$render(alternate_1, false);
+    });
+  }
+  reset(div_3);
+  reset(div);
+  append($$anchor, div);
+  return pop($$exports);
 }
-var Settings = class extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, instance8, create_fragment8, safe_not_equal, { save: 6 }, add_css4);
-  }
-  get save() {
-    return this.$$.ctx[6];
-  }
-};
-var Settings_default = Settings;
+delegate(["click"]);
 
 // plugins/Autosplitter/src/timers/basic.ts
 var BasicTimer = class {
@@ -3515,16 +978,16 @@ var SplitsUI = class extends BasicUI {
   splitRows = [];
   splitDatas = [];
   activeSplit = null;
-  setActiveSplit(index) {
-    if (index >= this.splitRows.length) {
+  setActiveSplit(index2) {
+    if (index2 >= this.splitRows.length) {
       if (this.previousActiveRow) this.previousActiveRow.classList.remove("active");
       this.activeSplit = null;
       return;
     }
     if (this.previousActiveRow) this.previousActiveRow.classList.remove("active");
-    this.splitRows[index].classList.add("active");
-    this.previousActiveRow = this.splitRows[index];
-    this.activeSplit = index;
+    this.splitRows[index2].classList.add("active");
+    this.previousActiveRow = this.splitRows[index2];
+    this.activeSplit = index2;
   }
   updateSplit(totalMs, splitIndex, splitMs) {
     this.splitDatas[splitIndex][1].innerText = fmtMs(splitMs);
@@ -3558,8 +1021,8 @@ var SplitsUI = class extends BasicUI {
 };
 
 // plugins/Autosplitter/src/ui/DLD.ts
-function addDLDUI(element2, autosplitter2) {
-  const topBar = element2.querySelector(".bar");
+function addDLDUI(element, autosplitter2) {
+  const topBar = element.querySelector(".bar");
   const categorySelect = document.createElement("select");
   topBar.firstChild.before(categorySelect);
   for (const category of categories) {
@@ -3613,8 +1076,8 @@ function addDLDUI(element2, autosplitter2) {
   });
   topBar.after(runTypeBar);
 }
-function lockInCategory(element2, autosplitter2) {
-  const selects = element2.querySelectorAll("select");
+function lockInCategory(element, autosplitter2) {
+  const selects = element.querySelectorAll("select");
   for (const select of selects) {
     select.disabled = true;
     select.title = "Cannot be altered mid-run";
@@ -3625,7 +1088,7 @@ function lockInCategory(element2, autosplitter2) {
   resetButton.addEventListener("click", () => {
     autosplitter2.reset();
   });
-  element2.firstChild?.firstChild?.before(resetButton);
+  element.firstChild?.firstChild?.before(resetButton);
 }
 var DLDFullGameUI = class extends SplitsUI {
   constructor(autosplitter2) {
@@ -3939,8 +1402,8 @@ var FishtopiaAutosplitter = class extends SplitsAutosplitter {
       });
     });
     const id = api.stores.phaser.mainCharacter.id;
-    api.net.room.state.characters.get(id).inventory.slots.onChange((_, key) => {
-      if (key === "gim-fish") {
+    api.net.room.state.characters.get(id).inventory.slots.onChange((_, key2) => {
+      if (key2 === "gim-fish") {
         this.timer.split();
         this.timer.stop();
       }
@@ -4150,6 +1613,9 @@ var styles_default = `#timer {
   color: gold;
 }`;
 
+// external-svelte:svelte
+var mount = /* @__PURE__ */ (() => GL.svelte_5_43_0.Index.mount)();
+
 // plugins/Autosplitter/src/index.ts
 api.UI.addStyles(styles_default);
 var autosplitter;
@@ -4164,14 +1630,12 @@ api.net.onLoad((_, gamemode) => {
 });
 api.openSettingsMenu(() => {
   const div = document.createElement("div");
-  const settings = new Settings_default({
-    target: div
-  });
+  const settings = mount(Settings, { target: div });
   api.UI.showModal(div, {
     title: "Manage Autosplitter data",
     buttons: [{ text: "Close", style: "close" }],
     id: "Autosplitter Settings",
-    style: "min-width: min(600px, 90%); height: 90%;",
+    style: "min-width: min(600px, 90%);",
     closeOnBackgroundClick: false,
     onClosed: () => {
       settings.save();

@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { oneWayOutSplits } from "../constants";
     import type { SplitsData } from "../types";
-    import FishtopiaToggles from "./SplitsToggles.svelte";
+    import { oneWayOutSplits } from "../constants";
+    import SplitsToggles from "./SplitsToggles.svelte";
     import FullGame from "./FullGame.svelte";
 
-    export let data: SplitsData;
+    let { data = $bindable() }: { data: SplitsData } = $props();
 </script>
 
-<FullGame splits={oneWayOutSplits} {data} category="OneWayOut" />
+<FullGame splits={oneWayOutSplits} bind:data category="OneWayOut" />
 <hr>
-<FishtopiaToggles {data} />
+<SplitsToggles bind:data />

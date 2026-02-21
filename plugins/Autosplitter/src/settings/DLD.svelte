@@ -1,14 +1,14 @@
 <script lang="ts">
-    import { categories, DLDSplits } from "../constants";
     import type { DLDData } from "../types";
+    import { categories, DLDSplits } from "../constants";
     import FullGame from "./FullGame.svelte";
     import IlSettings from "./ILSettings.svelte";
     import DLDToggles from "./DLDToggles.svelte";
 
-    export let data: DLDData;
+    let { data = $bindable() }: { data: DLDData } = $props();
 
-    let category = categories[0];
-    let mode = "Full Game";
+    let category = $state(categories[0]);
+    let mode = $state("Full Game");
 </script>
 
 <select bind:value={category}>
@@ -28,13 +28,13 @@
 {#key mode}
     {#key category}
         {#if mode !== "Full Game"}
-            <IlSettings {data} {category} summit={parseInt(mode)} />
+            <IlSettings bind:data {category} summit={parseInt(mode)} />
         {:else}
-            <FullGame splits={DLDSplits} {data} {category} />
+            <FullGame splits={DLDSplits} bind:data {category} />
         {/if}
     {/key}
 {/key}
 
 <hr>
 
-<DLDToggles {data} />
+<DLDToggles bind:data />

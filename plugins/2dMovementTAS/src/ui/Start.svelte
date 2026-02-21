@@ -4,11 +4,11 @@
     import { uploadFile } from "../util";
     import UI from "./UI.svelte";
 
-    let begun = false;
+    let begun = $state(false);
     let save = api.storage.getValue("save");
 
-    let frames: IFrame[] = [];
-    let startPos: Vector | undefined;
+    let frames: IFrame[] = $state([]);
+    let startPos: Vector | undefined = $state();
 
     function continueTAS() {
         frames = save.frames;
@@ -47,14 +47,14 @@
 {:else}
     <div>
         {#if save}
-            <button on:click={continueTAS}>
+            <button onclick={continueTAS}>
                 Continue TAS
             </button>
         {/if}
-        <button on:click={newTAS}>
+        <button onclick={newTAS}>
             New TAS at current position
         </button>
-        <button on:click={loadTAS}>
+        <button onclick={loadTAS}>
             Load TAS from file
         </button>
     </div>

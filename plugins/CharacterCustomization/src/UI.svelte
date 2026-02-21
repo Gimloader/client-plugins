@@ -1,16 +1,14 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import type CosmeticChanger from "./cosmeticChanger";
+    import CosmeticChanger from "./cosmeticChanger";
     import { decompress } from "compress-json";
 
-    export let cosmeticChanger: CosmeticChanger;
-
-    let skinType = cosmeticChanger.skinType;
-    let skinId = cosmeticChanger.skinId;
-    let trailType = cosmeticChanger.trailType;
-    let trailId = cosmeticChanger.trailId;
-    let customSkinFile: File | null = cosmeticChanger.customSkinFile;
-    let selectedStyles: Record<string, string> = cosmeticChanger.selectedStyles;
+    let skinType = $state(CosmeticChanger.skinType);
+    let skinId = $state(CosmeticChanger.skinId);
+    let trailType = $state(CosmeticChanger.trailType);
+    let trailId = $state(CosmeticChanger.trailId);
+    let customSkinFile: File | null = $state(CosmeticChanger.customSkinFile);
+    let selectedStyles: Record<string, string> = $state(CosmeticChanger.selectedStyles);
 
     function uploadSkin() {
         let input = document.createElement("input");
@@ -29,7 +27,7 @@
         input.click();
     }
 
-    let styles: any | null;
+    let styles: any = $state();
 
     async function onSkinIdEntered() {
         styles = null;
@@ -46,7 +44,6 @@
 
         if(!skinData.style) return;
         styles = skinData.style;
-        console.log(styles);
 
         for(let style of styles.categories) {
             if(style.type === "color") {
@@ -56,8 +53,8 @@
     }
 
     export function save() {
-        cosmeticChanger.setSkin(skinType, skinId, customSkinFile, selectedStyles);
-        cosmeticChanger.setTrail(trailType, trailId);
+        CosmeticChanger.setSkin(skinType, skinId, customSkinFile, selectedStyles);
+        CosmeticChanger.setTrail(trailType, trailId);
     }
 
     onMount(onSkinIdEntered);
@@ -71,7 +68,7 @@
         <option value="custom">Custom</option>
     </select>
     {#if skinType === "id"}
-        <input bind:value={skinId} type="text" placeholder="Skin ID" on:change={onSkinIdEntered} on:keydown={(e) => e.stopPropagation()} />
+        <input bind:value={skinId} type="text" placeholder="Skin ID" onchange={onSkinIdEntered} onkeydown={(e) => e.stopPropagation()} />
         {#if styles}
             {#each styles.categories as category}
                 <h2>{category.name}</h2>
@@ -84,7 +81,8 @@
                                 class="color"
                                 style:background-color={option.preview.color}
                                 class:selected={selectedStyles[category.name] ? selectedStyles[category.name] === option.name : i === 0}
-                                on:click={() => selectedStyles[category.name] = option.name}
+                                onclick={() => selectedStyles[category.name] = option.name}
+                                title={option.name}
                             >
                             </button>
                         {/each}
@@ -93,7 +91,7 @@
             {/each}
         {/if}
     {:else if skinType === "custom"}
-        <button on:click={uploadSkin}>
+        <button onclick={uploadSkin}>
             Current: {customSkinFile ? customSkinFile.name : "None"}. Upload skin
         </button>
     {/if}

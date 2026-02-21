@@ -16,7 +16,7 @@ api.net.onLoad(() => {
             .filter(char => char.type === "player" && char.id !== api.stores.network.authId);
 
     api.commands.addCommand({
-        text: "[Teleport] Teleport to Player",
+        text: "Teleport: Teleport to Player",
         hidden: () => otherPlayers().length === 0
     }, async (context) => {
         const player = await context.select({
