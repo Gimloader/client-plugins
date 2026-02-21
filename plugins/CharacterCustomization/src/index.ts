@@ -1,16 +1,9 @@
-import CosmeticChanger from "./cosmeticChanger";
 import UI from "./UI.svelte";
-
-const cosmeticChanger = new CosmeticChanger();
+import { mount, unmount } from "svelte";
 
 function showUI() {
     const div = document.createElement("div");
-    const ui = new UI({
-        target: div,
-        props: {
-            cosmeticChanger
-        }
-    });
+    const ui = mount(UI, { target: div });
 
     api.UI.showModal(div, {
         id: "CharacterCustomization",
@@ -18,7 +11,7 @@ function showUI() {
         closeOnBackgroundClick: false,
         style: "min-width: min(90vw, 500px)",
         onClosed() {
-            ui.$destroy();
+            unmount(ui);
         },
         buttons: [
             {

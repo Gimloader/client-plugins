@@ -1,19 +1,26 @@
 <script lang="ts">
     import { between, blankFrame, showAnglePicker } from "../util";
     import type { IFrame } from "../types";
-    import { currentFrame } from "../stores";
-    import TASTools from "../tools";
+    import TASTools from "../tools.svelte";
     import type { Vector } from "@dimforge/rapier2d-compat";
+    import { innerHeight } from "svelte/reactivity/window";
+    import { untrack } from "svelte";
 
-    export let frames: IFrame[];
-    export let startPos: Vector | undefined;
-    let height: number;
-    let offset = 0;
-    $: rows = Math.floor(height / 26) - 1;
-
-    $: for(let i = offset; i < offset + rows; i++) {
-        if(!frames[i]) frames[i] = { ...blankFrame };
+    interface Props {
+        frames: IFrame[];
+        startPos?: Vector;
     }
+
+    let { frames, startPos }: Props = $props();
+    let rows = $derived(Math.floor(innerHeight.current! / 26) - 1);
+    let offset = $state(0);
+
+    function addBlankFrames() {
+        for(let i = offset; i < offset + rows; i++) {
+            if(!frames[i]) frames[i] = { ...blankFrame };
+        }
+    }
+    addBlankFrames();
 
     function setFrames(newFrames: IFrame[]) {
         frames = newFrames;
@@ -25,6 +32,7 @@
         if(e.deltaY > 0) offset += 1;
         if(e.deltaY < 0) offset -= 1;
         offset = Math.max(0, offset);
+        addBlankFrames();
     }
 
     let dragging = false;
@@ -33,7 +41,7 @@
     let dragStart: number;
 
     function onClick(index: number, key: "moving") {
-        if($currentFrame > index) tools.goBackToFrame(index);
+        if(tools.currentFrame > index) tools.goBackToFrame(index);
         dragFill = !frames[index][key];
         frames[index][key] = dragFill;
         dragStart = index;
@@ -41,20 +49,34 @@
         dragging = true;
     }
 
-    function onMouseover(index: number) {
-        if(!dragging) return;
-        if($currentFrame > index) tools.goBackToFrame(index);
+    let draggingMovement = $state(false);
+    let draggingMovementStart = $state(0);
+    let draggingMovementEnd = $state(0);
+    let draggingMovementAngle = 0;
 
-        let delta = dragStart < index ? 1 : -1;
-        for(let i = dragStart; i !== index + delta; i += delta) {
-            frames[i][dragKey] = dragFill;
+    function onMouseover(index: number) {
+        // Dragging actions
+        if(dragging) {
+            if(tools.currentFrame > index) tools.goBackToFrame(index);
+
+            let delta = dragStart < index ? 1 : -1;
+            for(let i = dragStart; i !== index + delta; i += delta) {
+                frames[i][dragKey] = dragFill;
+            }
+        }
+
+        // Dragging movement
+        if(draggingMovement) {
+            if(tools.currentFrame > index) tools.goBackToFrame(index);
+            draggingMovementEnd = index;
+
+            // copy the start frame
+            let delta = draggingMovementStart < index ? 1 : -1;
+            for(let i = draggingMovementStart; i !== index + delta; i += delta) {
+                frames[i].angle = draggingMovementAngle;
+            }
         }
     }
-
-    let draggingMovement = false;
-    let draggingMovementStart: number;
-    let draggingMovementAngle: number;
-    let draggingMovementEnd: number;
 
     function onArrowClick(index: number) {
         draggingMovement = true;
@@ -63,24 +85,11 @@
         draggingMovementEnd = index;
     }
 
-    function onAngleMouseover(index: number) {
-        if(!draggingMovement) return;
-
-        if($currentFrame > index) tools.goBackToFrame(index);
-        draggingMovementEnd = index;
-
-        // copy the start frame
-        let delta = draggingMovementStart < index ? 1 : -1;
-        for(let i = draggingMovementStart; i !== index + delta; i += delta) {
-            frames[i].angle = draggingMovementAngle;
-        }
-    }
-
     let pickingAngle = false;
 
     function updateAngle(index: number) {
         pickingAngle = true;
-        if($currentFrame > index) tools.goBackToFrame(index);
+        if(tools.currentFrame > index) tools.goBackToFrame(index);
 
         showAnglePicker(frames[index].angle)
             .then((angle) => {
@@ -89,7 +98,7 @@
             });
     }
 
-    let playing = false;
+    let playing = $state(false);
 
     function onKeydown(e: KeyboardEvent) {
         if(playing || pickingAngle) return;
@@ -99,17 +108,22 @@
             if(e.shiftKey) { for(let i = 0; i < 5; i++) tools.advanceFrame(); }
             else tools.advanceFrame();
         } else if(e.key === "ArrowLeft") {
-            if(e.shiftKey) tools.goBackToFrame(Math.max(0, $currentFrame - 5));
-            else if($currentFrame >= 1) tools.backFrame();
+            if(e.shiftKey) tools.goBackToFrame(Math.max(0, tools.currentFrame - 5));
+            else if(tools.currentFrame >= 1) tools.backFrame();
         }
     }
 
     function keepActiveVisible() {
-        if($currentFrame - 2 < offset) offset = Math.max(0, $currentFrame - 2);
-        if($currentFrame + 3 > offset + rows) offset = $currentFrame - rows + 3;
+        console.log("Keep active visilbe?");
+        if(tools.currentFrame - 2 < offset) offset = Math.max(0, tools.currentFrame - 2);
+        if(tools.currentFrame + 3 > offset + rows) offset = tools.currentFrame - rows + 3;
+        addBlankFrames();
     }
 
-    currentFrame.subscribe(keepActiveVisible);
+    $effect(() => {
+        tools.currentFrame;
+        untrack(() => keepActiveVisible());
+    });
 
     function togglePlaying() {
         if(pickingAngle) return;
@@ -119,7 +133,7 @@
     }
 
     function toggleBlockingAction(index: number, key: "answer" | "purchase") {
-        if($currentFrame > index) tools.goBackToFrame(index);
+        if(tools.currentFrame > index) tools.goBackToFrame(index);
         frames[index][key] = !frames[index][key];
 
         // turn off disabled things other stuff
@@ -140,69 +154,79 @@
     }
 </script>
 
-<svelte:window bind:innerHeight={height} on:pointerup={() => dragging = false} on:pointerup={() => draggingMovement = false} on:keydown={onKeydown} />
+<svelte:window
+    onpointerup={() => {
+        dragging = false;
+        draggingMovement = false;
+    }}
+    onkeydown={onKeydown}
+/>
 
-<div class="UI" on:wheel={onScroll}>
+<div class="UI" onwheel={onScroll}>
     <div class="controls">
-        <button on:click={() => tools.backFrame()}>
+        <button onclick={() => tools.backFrame()}>
             &larr;
         </button>
-        <button on:click={togglePlaying}>
+        <button onclick={togglePlaying}>
             {playing ? "⏹" : "▶"}
         </button>
-        <button on:click={() => tools.advanceFrame()}>
+        <button onclick={() => tools.advanceFrame()}>
             &rarr;
         </button>
-        <button on:click={() => tools.download()}>
+        <button onclick={() => tools.download()}>
             &#11123;
         </button>
-        <button on:click={() => tools.load()}>
+        <button onclick={() => tools.load()}>
             &#11121;
         </button>
     </div>
     <table>
-        <tr>
-            <th>Frame #</th>
-            <th>Answer</th>
-            <th>Purchase</th>
-            <th>Move</th>
-            <th>Angle</th>
-        </tr>
-        {#each { length: rows } as _, i}
-            {@const index = offset + i}
-
-            {@const answerDisabled = frames[index].purchase || frames[index - 1]?.answer || frames[index - 2]?.answer
-                || frames[index - 1]?.purchase || frames[index - 2]?.purchase}
-
-            {@const purchaseDisabled = frames[index].answer || frames[index - 1]?.answer || frames[index - 2]?.answer
-                || frames[index - 1]?.purchase || frames[index - 2]?.purchase}
-
-            {@const moveDisabled = frames[index].answer || frames[index - 1]?.answer}
-
-            <tr on:pointerover={() => onAngleMouseover(index)} on:pointerover={() => onMouseover(index)} class:active={$currentFrame === index}>
-                <td class="frame">{index}</td>
-                <td on:mousedown={() => answerDisabled || toggleBlockingAction(index, "answer")}>
-                    <input type="checkbox" on:click|preventDefault bind:checked={frames[index].answer} class:disabled={answerDisabled} />
-                </td>
-                <td on:mousedown={() => purchaseDisabled || toggleBlockingAction(index, "purchase")}>
-                    <input type="checkbox" on:click|preventDefault bind:checked={frames[index].purchase} class:disabled={purchaseDisabled} />
-                </td>
-                <td on:mousedown={() => moveDisabled || onClick(index, "moving")}>
-                    <input type="checkbox" on:click|preventDefault bind:checked={frames[index].moving} class:disabled={moveDisabled} />
-                </td>
-                <td class="angle" class:dragged={draggingMovement && between(index, draggingMovementStart, draggingMovementEnd)}>
-                    <div class="number" on:pointerdown={() => updateAngle(index)}>
-                        <div style="transform: rotate({frames[index].angle + 90}deg)">
-                            &uArr;
-                        </div>
-                        {Math.round(frames[index].angle * 100) / 100}°
-                    </div>
-                    <div class="drag" on:pointerdown={() => onArrowClick(index)}>
-                        &updownarrow;
-                    </div>
-                </td>
+        <thead>
+            <tr>
+                <th>Frame #</th>
+                <th>Answer</th>
+                <th>Purchase</th>
+                <th>Move</th>
+                <th>Angle</th>
             </tr>
-        {/each}
+        </thead>
+        <tbody>
+            {#each { length: rows } as _, i}
+                {@const index = offset + i}
+
+                {@const answerDisabled = frames[index].purchase || frames[index - 1]?.answer || frames[index - 2]?.answer
+                    || frames[index - 1]?.purchase || frames[index - 2]?.purchase}
+
+                {@const purchaseDisabled = frames[index].answer || frames[index - 1]?.answer || frames[index - 2]?.answer
+                    || frames[index - 1]?.purchase || frames[index - 2]?.purchase}
+
+                {@const moveDisabled = frames[index].answer || frames[index - 1]?.answer}
+
+                <tr onpointerover={() => onMouseover(index)} class:active={tools.currentFrame === index}>
+                    <td class="frame">{index}</td>
+                    <td onmousedown={() => answerDisabled || toggleBlockingAction(index, "answer")}>
+                        <input type="checkbox" bind:checked={frames[index].answer} class:disabled={answerDisabled} />
+                    </td>
+                    <td onmousedown={() => purchaseDisabled || toggleBlockingAction(index, "purchase")}>
+                        <input type="checkbox" bind:checked={frames[index].purchase} class:disabled={purchaseDisabled} />
+                    </td>
+                    <td onmousedown={() => moveDisabled || onClick(index, "moving")}>
+                        <input type="checkbox" bind:checked={frames[index].moving} class:disabled={moveDisabled} />
+                    </td>
+                    <td class="angle" class:dragged={draggingMovement && between(index, draggingMovementStart, draggingMovementEnd)}>
+                        <div class="number" onpointerdown={() => updateAngle(index)}>
+                            <div style="transform: rotate({frames[index].angle + 90}deg)">
+                                &uArr;
+                            </div>
+                            {Math.round(frames[index].angle * 100) / 100}°
+                        </div>
+                        <div class="drag" onpointerdown={() => onArrowClick(index)}>
+                            &updownarrow;
+                        </div>
+                    </td>
+                </tr>
+            {/each}
+        </tbody>
     </table>
 </div>
 

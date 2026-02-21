@@ -1,4 +1,5 @@
-import type { EasyAccessWritable, IFrame } from "./types";
+import type { IFrame } from "./types";
+import { mount, unmount } from "svelte";
 import AnglePicker from "./ui/AnglePicker.svelte";
 
 export const blankFrame: IFrame = {
@@ -16,18 +17,16 @@ export function between(number: number, bound1: number, bound2: number) {
 export function showAnglePicker(initial: number) {
     return new Promise<number>((res) => {
         const div = document.createElement("div");
-        const anglePicker = new AnglePicker({
+        const anglePicker = mount(AnglePicker, {
             target: div,
-            props: {
-                angle: initial
-            }
+            props: { angle: initial }
         });
 
         api.UI.showModal(div, {
             title: "Pick an angle",
             closeOnBackgroundClick: false,
             onClosed() {
-                anglePicker.$destroy();
+                unmount(anglePicker);
             },
             buttons: [{
                 text: "Cancel",
@@ -44,33 +43,6 @@ export function showAnglePicker(initial: number) {
             }]
         });
     });
-}
-
-export function easyAccessWritable<T = any>(initial: T) {
-    const returnObj: EasyAccessWritable<T> = {
-        value: initial,
-        subscribe,
-        set
-    };
-
-    const subscribers = new Set<(val: T) => void>();
-
-    function subscribe(callback: (val: T) => void) {
-        subscribers.add(callback);
-        callback(returnObj.value);
-        return () => {
-            subscribers.delete(callback);
-        };
-    }
-
-    function set(val: T) {
-        returnObj.value = val;
-        for(const subscriber of subscribers) {
-            subscriber(val);
-        }
-    }
-
-    return returnObj;
 }
 
 export const defaultState: Record<string, any> = {

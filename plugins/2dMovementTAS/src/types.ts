@@ -7,12 +7,6 @@ export interface IFrame {
     purchase: boolean;
 }
 
-export interface EasyAccessWritable<T> {
-    value: T;
-    subscribe: (callback: (val: T) => void) => () => void;
-    set: (val: T) => void;
-}
-
 export interface IPreviousFrame {
     position: Vector;
     state: string;

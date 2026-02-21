@@ -6,7 +6,7 @@ interface Skin {
     editStyles: Record<string, string>;
 }
 
-export default class CosmeticChanger {
+export default new class CosmeticChanger {
     skinType: string = api.storage.getValue("skinType", "default");
     trailType: string = api.storage.getValue("trailType", "default");
     skinId: string = api.storage.getValue("skinId", "");
@@ -257,4 +257,4 @@ export default class CosmeticChanger {
             URL.revokeObjectURL(this.skinUrl);
         }
     }
-}
+}();
