@@ -9,7 +9,7 @@ function showUI() {
         id: "CharacterCustomization",
         title: "Character Customization",
         closeOnBackgroundClick: false,
-        style: "min-width: min(90vw, 500px)",
+        style: "min-width: min(90vw, 500px); width: max-content",
         onClosed() {
             unmount(ui);
         },

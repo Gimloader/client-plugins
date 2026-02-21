@@ -2,12 +2,12 @@
  * @name CharacterCustomization
  * @description Allows you to use any gim or a custom gim client-side
  * @author TheLazySquid
- * @version 0.7.0
+ * @version 0.7.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/CharacterCustomization.js
  * @webpage https://gimloader.github.io/plugins/charactercustomization
  * @hasSettings true
  * @gamemode 2d
- * @changelog Updater the UI to svelte 5
+ * @changelog Fixed UI overflowing on smaller screens
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -1105,7 +1105,7 @@ function showUI() {
     id: "CharacterCustomization",
     title: "Character Customization",
     closeOnBackgroundClick: false,
-    style: "min-width: min(90vw, 500px)",
+    style: "min-width: min(90vw, 500px); width: max-content",
     onClosed() {
       unmount(ui);
     },
