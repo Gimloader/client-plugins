@@ -5,10 +5,10 @@ export default singleConfig({
     name: "2dMovementTAS",
     description: "Allows for making TASes of CTF and tag",
     author: "TheLazySquid",
-    version: "0.4.0",
+    version: "0.4.1",
     reloadRequired: "ingame",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/2dMovementTAS.js",
-    webpage: "https://gimloader.github.io/plugins/movementtas",
+    webpage: "https://gimloader.github.io/plugins/2dMovementTAS",
     gamemodes: ["ctf", "tag"],
-    changelog: ["Updated UI to svelte 5"]
+    changelog: ["Updated webpage url"]
 });

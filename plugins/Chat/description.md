@@ -1,0 +1,1 @@
+The chat plugin allows you to chat with other people using the chat plugin in 2d modes. Due to technical limitations, it only works while a game is active (you cannot be in the lobby or building in creative). A keybind can be used to quickly open the chat, which is Y by default.

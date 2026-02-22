@@ -1,0 +1,1 @@
+InputRecorder allows you to record your actions in [Don't Look Down](https://gimkit.wiki/wiki/Don%27t_Look_Down) by hitting a Alt + R. Hitting Alt + R again will stop the recording, which you can then save for later. Hitting Alt + B will bring up a file picker which you can select the recording with to see it played back.

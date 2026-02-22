@@ -5,8 +5,9 @@ export default singleConfig({
     name: "AutoJoinName",
     description: "Automatically joins games with a configured name",
     author: "retrozy",
-    version: "0.1.0",
+    version: "0.1.1",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/AutoJoinName.js",
-    webpage: "https://gimloader.github.io/plugins/autojoinname",
-    hasSettings: true
+    webpage: "https://gimloader.github.io/plugins/AutoJoinName",
+    hasSettings: true,
+    changelog: ["Updated webpage url"]
 });

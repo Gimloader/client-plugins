@@ -6,6 +6,7 @@ export default singleConfig({
     description: "Opens gamemodes in the current tab instead of a new tab.",
     author: "retrozy",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/SingleTab.js",
-    webpage: "https://gimloader.github.io/plugins/singletab",
-    version: "0.1.0"
+    webpage: "https://gimloader.github.io/plugins/SingleTab",
+    version: "0.1.1",
+    changelog: ["Updated webpage url"]
 });

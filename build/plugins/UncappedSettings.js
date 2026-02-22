@@ -2,9 +2,10 @@
  * @name UncappedSettings
  * @description Lets you start games with a much wider range of settings than normal
  * @author TheLazySquid
- * @version 0.3.0
+ * @version 0.3.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/UncappedSettings.js
- * @webpage https://gimloader.github.io/plugins/uncappedsettings
+ * @webpage https://gimloader.github.io/plugins/UncappedSettings
+ * @changelog Updated webpage url
  */
 
 // plugins/UncappedSettings/src/index.ts

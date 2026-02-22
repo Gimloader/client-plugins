@@ -1,0 +1,1 @@
+UncappedSettings allows you to use less restricted settings when creating games. The amount of items you get per-question (energy, snowballs etc) can be set to anything between negative and positive 100 billion. Additionally, games can be as short as one minute or as long as 60 (1 minute longer than usual).

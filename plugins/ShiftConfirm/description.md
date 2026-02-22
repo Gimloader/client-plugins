@@ -1,0 +1,1 @@
+ShiftConfirm makes the confirm popups ("Are you sure you want to do this") instantly resolve when holding shift, just like how you can hold shift to instantly delete or pin Discord messages. This can be a nice quality of life for things like ending games.

@@ -2,12 +2,12 @@
  * @name GamemodeLinks
  * @description Creates game rooms from links, particularly useful in bookmarks.
  * @author retrozy
- * @version 0.3.1
+ * @version 0.3.2
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/GamemodeLinks.js
- * @webpage https://gimloader.github.io/plugins/gamemodelinks
+ * @webpage https://gimloader.github.io/plugins/GamemodeLinks
  * @reloadRequired notingame
  * @hasSettings true
- * @changelog Used Gimkit's error modal for link errors
+ * @changelog Updated webpage url
  */
 
 // shared/rewritingUtils.ts

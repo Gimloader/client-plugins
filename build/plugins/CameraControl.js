@@ -2,12 +2,13 @@
  * @name CameraControl
  * @description Lets you freely move and zoom your camera
  * @author TheLazySquid
- * @version 0.7.1
+ * @version 0.7.2
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/CameraControl.js
+ * @webpage https://gimloader.github.io/plugins/CameraControl
  * @optionalLib CommandLine | https://raw.githubusercontent.com/Blackhole927/gimkitmods/main/libraries/CommandLine/CommandLine.js
  * @hasSettings true
  * @gamemode 2d
- * @changelog Fixed freecam resetting when going into area with restricted camera bounds
+ * @changelog Updated webpage url
  */
 
 // plugins/CameraControl/src/index.ts

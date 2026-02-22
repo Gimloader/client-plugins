@@ -1,0 +1,1 @@
+PerformantGims replaces certain gims with static pngs, which can greatly improve performance in gamemodes such as [Apocalypse](https://gimkit.wiki/wiki/Apocalypse). The plugin can be set to affect everyone (including yourself), everyone else, or only sentries.

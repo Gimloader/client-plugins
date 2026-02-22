@@ -2,12 +2,12 @@
  * @name GuestControls
  * @description Allows guests to perform host actions in 2d modes, when the host has this plugin on
  * @author retrozy
- * @version 0.1.1
+ * @version 0.1.2
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/GuestControls.js
- * @webpage https://gimloader.github.io/plugins/guestcontrols
+ * @webpage https://gimloader.github.io/plugins/GuestControls
  * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Fixed sending the initial message when the game ends
+ * @changelog Updated webpage url
  */
 
 // plugins/GuestControls/src/index.ts

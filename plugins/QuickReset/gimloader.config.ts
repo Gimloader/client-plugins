@@ -6,8 +6,8 @@ export default singleConfig({
     description: "Quickly lets you restart 2d gamemodes",
     author: "TheLazySquid",
     downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/QuickReset.js",
-    webpage: "https://gimloader.github.io/plugins/quickreset",
-    version: "0.4.1",
-    changelog: ["Supported restarting to lobby with GuestControls enabled"],
+    webpage: "https://gimloader.github.io/plugins/QuickReset",
+    version: "0.4.2",
+    changelog: ["Updated webpage url"],
     gamemodes: ["2d"]
 });

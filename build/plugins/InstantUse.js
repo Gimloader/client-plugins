@@ -2,10 +2,10 @@
  * @name InstantUse
  * @description Instantly use nearby devices without any wait
  * @author TheLazySquid
- * @version 0.2.5
+ * @version 0.2.6
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/InstantUse.js
- * @webpage https://gimloader.github.io/plugins/instantuse
- * @changelog Fixed using devices after the game has ended
+ * @webpage https://gimloader.github.io/plugins/InstantUse
+ * @changelog Updated webpage url
  */
 
 // plugins/InstantUse/src/index.ts

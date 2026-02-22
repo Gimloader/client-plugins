@@ -2,10 +2,11 @@
  * @name NoSchoolHours
  * @description Bypasses the creative discovery page school hours
  * @author retrozy
- * @version 0.1.0
+ * @version 0.1.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/NoSchoolHours.js
- * @webpage https://gimloader.github.io/plugins/noschoolhours
+ * @webpage https://gimloader.github.io/plugins/NoSchoolHours
  * @reloadRequired notingame
+ * @changelog Updated webpage url
  */
 
 // shared/rewritingUtils.ts

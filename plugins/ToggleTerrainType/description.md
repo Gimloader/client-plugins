@@ -1,0 +1,1 @@
+With ToggleTerrainType installed you can hit a hotkey (Alt + T by default) to switch between placing walls and placing floors in [Creative](https://gimkit.wiki/wiki/Gimkit_Creative). This also allows you to place floors in platformer modes, where this would normally be impossible- players will go behind these floors and not interact with them in any way.

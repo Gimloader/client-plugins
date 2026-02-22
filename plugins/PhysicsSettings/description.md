@@ -1,0 +1,1 @@
+PhysicsSettings allows you to tweak a few things about the physics in platformer modes. Currently it allows you to change your jump height, the number of jumps you have, and your move speed on the ground.

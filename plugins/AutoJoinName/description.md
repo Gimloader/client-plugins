@@ -1,0 +1,1 @@
+AutoJoinName skips the step of having to enter a name in when joining games, by instantly joining the game with the name you entered in the plugin settings. The name cannot be empty or longer than 20 characters.

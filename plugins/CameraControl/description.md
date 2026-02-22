@@ -1,0 +1,1 @@
+When using CameraControl you can hold shift and scroll to zoom your camera in and out. Additionally, you can hit the freecam hotkey (Shift + F by default) to detach your camera from the character. When freecamming, you can click and drag with your mouse or use the arrow keys to pan around.

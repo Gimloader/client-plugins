@@ -2,14 +2,12 @@
  * @name InfoLines
  * @description Displays a configurable list of info on the screen
  * @author TheLazySquid
- * @version 1.0.0
+ * @version 1.0.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/InfoLines.js
- * @webpage https://gimloader.github.io/plugins/infolines
+ * @webpage https://gimloader.github.io/plugins/InfoLines
  * @hasSettings true
  * @gamemode 2d
- * @changelog Switched to native Gimloader settings. Your old settings have been reset!
- * @changelog Fixed ping not hiding when disabled
- * @changelog Made FPS more accurate
+ * @changelog Updated webpage url
  */
 
 // plugins/InfoLines/src/styles.scss
