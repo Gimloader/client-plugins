@@ -22,8 +22,8 @@
         "check": "biome lint && dprint check && svelte-check",
         "format": "dprint fmt",
         "lint": "biome lint",
-        "build": "gimloader build",
-        "serve": "gimloader serve"
+        "build": "bunx --bun gimloader build",
+        "serve": "bunx --bun gimloader serve"
     },
     "type": "module"
 }

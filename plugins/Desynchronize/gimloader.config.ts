@@ -1,16 +1,12 @@
-import { singleConfig } from "@gimloader/build";
+import { officialScriptConfig } from "$shared/config";
 
-export default singleConfig({
+export default officialScriptConfig({
     input: "src/index.ts",
     name: "Desynchronize",
     description: "Disables the client being snapped back by the server, others cannot see you move. Breaks most gamemodes.",
     author: "TheLazySquid",
-    downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js",
-    webpage: "https://gimloader.github.io/plugins/desynchronize",
-    version: "0.2.1",
-    changelog: ["Fixed grounded state sometimes not being sent when landing"],
-    optionalLibs: [
-        "Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js"
-    ],
+    version: "0.2.2",
+    changelog: ["Updated webpage url"],
+    optionalLibs: ["Communication"],
     gamemodes: ["2d"]
 });

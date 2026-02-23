@@ -2,14 +2,14 @@
  * @name BringBackBoosts
  * @description Restores boosts in Don't Look Down. Will cause you to desync, so others cannot see you move.
  * @author TheLazySquid
- * @version 0.6.1
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/BringBackBoosts.js
- * @webpage https://gimloader.github.io/plugins/bringbackboosts
+ * @version 0.6.2
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/BringBackBoosts.js
+ * @webpage https://gimloader.github.io/plugins/BringBackBoosts
  * @reloadRequired ingame
- * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Desynchronize.js
  * @hasSettings true
  * @gamemode dontLookDown
- * @changelog Replace DLDUtils with Desynchronize dependency
+ * @changelog Updated webpage url
  */
 
 // plugins/BringBackBoosts/src/index.ts

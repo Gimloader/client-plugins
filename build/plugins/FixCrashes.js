@@ -2,10 +2,11 @@
  * @name FixCrashes
  * @description Attempts to prevent natural game crashes
  * @author retrozy
- * @version 0.1.0
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/FixCrashes.js
- * @webpage https://gimloader.github.io/plugins/fixcrashes
+ * @version 0.1.1
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/FixCrashes.js
+ * @webpage https://gimloader.github.io/plugins/FixCrashes
  * @reloadRequired ingame
+ * @changelog Updated webpage url
  */
 
 // shared/rewritingUtils.ts

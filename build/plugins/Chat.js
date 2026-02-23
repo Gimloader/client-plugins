@@ -4,7 +4,7 @@
  * @author TheLazySquid
  * @version 0.3.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Chat.js
- * @webpage https://gimloader.github.io/plugins/chat
+ * @webpage https://gimloader.github.io/plugins/Chat
  * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @gamemode 2d
  * @changelog Added typing indicator

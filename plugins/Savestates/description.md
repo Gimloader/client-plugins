@@ -1,0 +1,1 @@
+With Savestates you can save your location and speed in [Don't Look Down](https://gimkit.wiki/wiki/Don%27t_Look_Down) by hitting a hotkey (Alt + Comma by default). You can then load that state with another hotkey (Alt + Period by default). Savestates also adds hotkeys to teleport to the various summits. Shift + Alt + 1 for summit 1, Shift + Alt + 2 for summit 2, etc.

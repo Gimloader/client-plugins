@@ -1,0 +1,1 @@
+IdleForXp will perform certain actions that allow you to go AFK while still earning [XP](https://gimkit.wiki/wiki/XP). Simply join and start any [2D Gamemode](https://gimkit.wiki/wiki/Gamemodes#2D_Gamemodes) and you will passively earn XP, regardless of what you do.

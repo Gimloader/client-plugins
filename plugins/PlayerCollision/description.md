@@ -1,0 +1,1 @@
+Normally, players overlap with each other and don't have a hitbox to collide with others, but PlayerCollision makes you collide with others by putting an invisible wall on everyone. In platformer mode this means that you can jump on other players to do higher jumps, which can be fun to play around with.

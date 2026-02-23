@@ -1,0 +1,3 @@
+Desynchronize prevents the server from snapping your player back, either due to plugins messing with its location or due to lag. Others will not be able to see you move, and most gamemodes will not work properly. The one exception to this is Don't Look Down, which has its logic re-implemented to accomodate speedrunning.
+
+The "Plugin Sync" setting allows you to synchronize your position with other players who have the setting enabled, allowing them to see your movement and vice-versa. Note that there may be a significant amount of delay between players with this setting, especially with higher ping.
