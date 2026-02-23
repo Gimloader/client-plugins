@@ -3,7 +3,7 @@
  * @description Lets you freely move and zoom your camera
  * @author TheLazySquid
  * @version 0.7.2
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/CameraControl.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/CameraControl.js
  * @webpage https://gimloader.github.io/plugins/CameraControl
  * @optionalLib CommandLine | https://raw.githubusercontent.com/Blackhole927/gimkitmods/main/libraries/CommandLine/CommandLine.js
  * @hasSettings true

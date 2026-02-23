@@ -3,9 +3,9 @@
  * @description Makes you collide with other players in 2d gamemodes
  * @author retrozy
  * @version 0.2.1
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/PlayerCollision.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/PlayerCollision.js
  * @webpage https://gimloader.github.io/plugins/PlayerCollision
- * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Desynchronize.js
  * @gamemode 2d
  * @changelog Updated webpage url
  */

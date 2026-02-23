@@ -3,7 +3,7 @@
  * @description Creates game rooms from links, particularly useful in bookmarks.
  * @author retrozy
  * @version 0.3.2
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/GamemodeLinks.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/GamemodeLinks.js
  * @webpage https://gimloader.github.io/plugins/GamemodeLinks
  * @reloadRequired notingame
  * @hasSettings true

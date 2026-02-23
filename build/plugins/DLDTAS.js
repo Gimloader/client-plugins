@@ -5,7 +5,7 @@
  * @version 0.5.3
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js
  * @webpage https://gimloader.github.io/plugins/DLDTAS
- * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
  * @changelog Updated webpage url
  */

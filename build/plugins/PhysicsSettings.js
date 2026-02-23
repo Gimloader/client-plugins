@@ -3,9 +3,9 @@
  * @description Allows you to configure various things about the physics in platformer modes (client-side only)
  * @author TheLazySquid
  * @version 0.3.1
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/PhysicsSettings.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/PhysicsSettings.js
  * @webpage https://gimloader.github.io/plugins/PhysicsSettings
- * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Desynchronize.js
  * @hasSettings true
  * @gamemode 2d
  * @changelog Updated webpage url
