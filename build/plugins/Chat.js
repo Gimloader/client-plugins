@@ -2,12 +2,12 @@
  * @name Chat
  * @description Adds an in-game chat to 2d gamemodes
  * @author TheLazySquid
- * @version 0.2.7
+ * @version 0.2.8
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Chat.js
- * @webpage https://gimloader.github.io/plugins/chat
+ * @webpage https://gimloader.github.io/plugins/Chat
  * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Added message showing when message fails to send
+ * @changelog Updated webpage url
  */
 
 // plugins/Chat/src/consts.ts

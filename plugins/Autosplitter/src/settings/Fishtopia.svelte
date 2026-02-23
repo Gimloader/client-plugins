@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { fishtopiaSplits } from "../constants";
     import type { SplitsData } from "../types";
+    import { fishtopiaSplits } from "../constants";
     import FishtopiaToggles from "./SplitsToggles.svelte";
     import FullGame from "./FullGame.svelte";
 
-    export let data: SplitsData;
+    let { data = $bindable() }: { data: SplitsData } = $props();
 </script>
 
-<FullGame splits={fishtopiaSplits} {data} category="fishtopia" />
+<FullGame splits={fishtopiaSplits} bind:data category="fishtopia" />
 <hr>
-<FishtopiaToggles {data} />
+<FishtopiaToggles bind:data />

@@ -1,0 +1,1 @@
+AutoKicker lets you set up rules to automatically kick certain players from games you are hosting. You can blacklist certain names, kick players who have duplicate names, kick players who have no cosmetics, and kick players who haven't moved in a certain amount of time.

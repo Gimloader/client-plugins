@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { SplitsData } from "../types";
 
-    export let data: SplitsData;
+    let { data = $bindable() }: { data: SplitsData } = $props();
 </script>
 
 <div class="row">

@@ -1,22 +1,23 @@
 <script lang="ts">
-    import type { GamemodesData, SplitsData } from "../types";
+    import type { GamemodesData } from "../types";
     import { gamemodes } from "../constants";
     import { downloadFile, getGamemodeData, readFile } from "../util";
     import Dld from "./DLD.svelte";
     import Fishtopia from "./Fishtopia.svelte";
     import OneWayOut from "./OneWayOut.svelte";
 
-    let activeTab = gamemodes[0];
+    let activeTab = $state(gamemodes[0]);
     let dataObj: any = {};
     for(let gamemode of gamemodes) {
         dataObj[gamemode] = getGamemodeData(gamemode);
     }
 
-    let data: GamemodesData = dataObj;
+    let data: GamemodesData = $state(dataObj);
 
     export function save() {
+        console.log($state.snapshot(data));
         for(let gamemode of gamemodes) {
-            api.storage.setValue(`${gamemode}Data`, data[gamemode]);
+            api.storage.setValue(`${gamemode}Data`, $state.snapshot(data[gamemode]));
         }
     }
 
@@ -60,40 +61,32 @@
 <div class="wrap">
     <div class="tabs">
         {#each gamemodes as tab}
-            <button class="tab" class:active={activeTab === tab} on:click={() => activeTab = tab}>
+            <button class="tab" class:active={activeTab === tab} onclick={() => activeTab = tab}>
                 {tab}
             </button>
         {/each}
         <div class="actions">
-            <button on:click={exportAll}>All &#11123;</button>
-            <button on:click={importAll}>All &#11121;</button>
-            <button on:click={exportMode}>Mode &#11123;</button>
-            <button on:click={importMode}>Mode &#11121;</button>
+            <button onclick={exportAll}>All &#11123;</button>
+            <button onclick={importAll}>All &#11121;</button>
+            <button onclick={exportMode}>Mode &#11123;</button>
+            <button onclick={importMode}>Mode &#11121;</button>
         </div>
     </div>
 
     <div class="settings-content">
         {#if activeTab === "DLD"}
-            <Dld data={data.DLD} />
+            <Dld bind:data={data.DLD} />
         {:else if activeTab === "Fishtopia"}
-            <Fishtopia data={data.Fishtopia} />
+            <Fishtopia bind:data={data.Fishtopia} />
         {:else if activeTab === "OneWayOut"}
-            <OneWayOut data={data.OneWayOut} />
+            <OneWayOut bind:data={data.OneWayOut} />
         {/if}
     </div>
 </div>
 
 <style>
-    :global(div:has(> .wrap)) {
-        height: 100%;
-    }
-
-    .wrap {
-        height: 100%;
-    }
-
     .settings-content {
-        height: calc(100% - 40px);
+        max-height: calc(100% - 40px);
         overflow-y: auto;
     }
 

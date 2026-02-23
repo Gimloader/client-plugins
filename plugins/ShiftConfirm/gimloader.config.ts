@@ -1,11 +1,10 @@
-import { singleConfig } from "@gimloader/build";
+import { officialScriptConfig } from "$shared/config";
 
-export default singleConfig({
+export default officialScriptConfig({
     input: "src/index.ts",
     name: "ShiftConfirm",
     description: "Makes confirm popups resolve instantly when holding shift.",
     author: "retrozy",
-    downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/ShiftConfirm.js",
-    webpage: "https://gimloader.github.io/plugins/shiftconfirm",
-    version: "0.1.0"
+    version: "0.1.1",
+    changelog: ["Updated webpage url"]
 });

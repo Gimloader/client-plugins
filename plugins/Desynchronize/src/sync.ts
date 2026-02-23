@@ -28,14 +28,15 @@ const round = (num: number, decimals: number) => Math.round(num * 10 * decimals)
 export default class Sync {
     private readonly Comms = api.lib("Communication");
     private readonly comms = new this.Comms<number | string>("Desynchronize");
+    private publicGrounded = false;
     private publicPosition: Vector | null = null;
     private readonly playerPositions = new Map<string, Vector>();
     private readonly body = api.stores.phaser.mainCharacter.physics.getBody();
     private sending = false;
     private readonly unsub: () => void;
 
-    private get isGrounded(): boolean {
-        return (this.body.character as any).controller.computedGrounded();
+    private isGrounded() {
+        return this.body.character.controller.computedGrounded();
     }
 
     private async sendOffset() {
@@ -48,8 +49,10 @@ export default class Sync {
 
             const xOffset = round(translation.x - this.publicPosition.x, 1);
             const yOffset = round(this.publicPosition.y - translation.y, 1);
+            const isGrounded = this.isGrounded();
 
-            if(!xOffset && !yOffset) break;
+            if(!xOffset && !yOffset && isGrounded === this.publicGrounded) break;
+            this.publicGrounded = isGrounded;
 
             this.publicPosition.x += xOffset;
             this.publicPosition.y -= yOffset;
@@ -58,7 +61,7 @@ export default class Sync {
                 await this.updatePublicPosition();
             } else {
                 const encodedOffset = encodeOffset(xOffset, yOffset);
-                await this.comms.send(this.isGrounded ? -encodedOffset : encodedOffset);
+                await this.comms.send(isGrounded ? -encodedOffset : encodedOffset);
             }
         }
 
@@ -120,8 +123,10 @@ export default class Sync {
         const publicX = round(translation.x, 2);
         const publicY = round(translation.y, 2);
         this.publicPosition = { x: publicX, y: publicY };
+        const isGrounded = this.isGrounded();
+        this.publicGrounded = isGrounded;
 
-        const separator = this.isGrounded ? "_" : " ";
+        const separator = isGrounded ? "_" : " ";
         await this.comms.send(this.publicPosition.x * 100 + separator + this.publicPosition.y * 100);
     }
 

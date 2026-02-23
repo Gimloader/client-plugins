@@ -1,9 +1,13 @@
 <script lang="ts">
     import { fmtMs, parseTime } from "../util";
 
-    export let data: Record<string, any>;
-    export let category: string;
-    export let summit: number;
+    interface Props {
+        data: Record<string, any>;
+        category: string;
+        summit: number;
+    }
+
+    let { data = $bindable(), category, summit }: Props = $props();
 
     let id = `${category}-${summit}`;
     let preboostsId = `${category}-${summit}-preboosts`;
@@ -16,7 +20,7 @@
     <div>Personal best:</div>
     <input
         value={data.ilpbs[id] ? fmtMs(data.ilpbs[id]) : ""}
-        on:change={(e) => {
+        onchange={(e) => {
             if(!e.currentTarget.value) {
                 data.ilpbs[id] = null;
                 return;
@@ -34,7 +38,7 @@
         <div>Personal best:</div>
         <input
             value={data.ilpbs[preboostsId] ? fmtMs(data.ilpbs[preboostsId]) : ""}
-            on:change={(e) => {
+            onchange={(e) => {
                 if(!e.currentTarget.value) {
                     data.ilpbs[preboostsId] = null;
                     return;

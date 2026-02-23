@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { DLDData } from "../types";
 
-    export let data: DLDData;
+    let { data = $bindable() }: { data: DLDData } = $props();
 
     let hasInputRecorder = api.plugins.isEnabled("InputRecorder");
 </script>

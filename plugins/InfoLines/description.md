@@ -1,0 +1,1 @@
+InfoLines can display various information while in [2D Gamemodes](https://gimkit.wiki/wiki/Gamemodes#2D_Gamemodes). This includes physics coordinates, visual coordinates, velocity, and framerate. You can choose which corner of the screen it is displayed in, as well as how many decimal places should be used.

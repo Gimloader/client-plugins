@@ -1,5 +1,4 @@
 import type { Vector } from "@dimforge/rapier2d-compat";
-import { currentFrame } from "./stores";
 import type { IFrame, IPreviousFrame } from "./types";
 import { defaultState, downloadFile, getFrameState, makeFrameState, updateDeviceState, uploadFile } from "./util";
 
@@ -12,8 +11,9 @@ api.net.on("PHYSICS_STATE", (_, editFn) => {
 (window as any).expectedPoses = [];
 
 export default class TASTools {
-    startPos: Vector;
+    currentFrame = $state(0);
 
+    startPos: Vector;
     physicsManager = api.stores.phaser.scene.worldManager.physics;
     nativeStep = this.physicsManager.physicsStep;
     inputManager = api.stores.phaser.scene.inputManager;
@@ -98,7 +98,7 @@ export default class TASTools {
 
     goBackToFrame(number: number) {
         // apply all the undoDeviceChanges
-        for(let i = currentFrame.value - 1; i >= number; i--) {
+        for(let i = this.currentFrame - 1; i >= number; i--) {
             const frame = this.prevFrameStates[i];
             if(!frame) continue;
             frame.undoDeviceChanges?.();
@@ -107,7 +107,7 @@ export default class TASTools {
         const frame = this.prevFrameStates[number];
         if(!frame) return;
 
-        currentFrame.set(number);
+        this.currentFrame = number;
 
         this.rb.setTranslation(frame.position, true);
         api.stores.phaser.mainCharacter.physics.state = getFrameState(frame.state);
@@ -122,14 +122,14 @@ export default class TASTools {
     }
 
     backFrame() {
-        if(currentFrame.value <= 0) return;
-        this.goBackToFrame(currentFrame.value - 1);
+        if(this.currentFrame <= 0) return;
+        this.goBackToFrame(this.currentFrame - 1);
     }
 
     advanceFrame() {
-        const frame = this.frames[currentFrame.value];
+        const frame = this.frames[this.currentFrame];
         const save = this.getState();
-        this.prevFrameStates[currentFrame.value] = save;
+        this.prevFrameStates[this.currentFrame] = save;
 
         // save the state
         this.updateDevices(frame);
@@ -138,7 +138,7 @@ export default class TASTools {
         this.inputManager.getPhysicsInput = () => this.getPhysicsInput();
         this.nativeStep(0);
 
-        currentFrame.set(currentFrame.value + 1);
+        this.currentFrame++;
     }
 
     hideUI() {
@@ -150,7 +150,7 @@ export default class TASTools {
         for(const [countdown, purchase] of this.purchaseTimeouts) {
             if(countdown === 0) {
                 const undo = purchase();
-                this.prevFrameStates[currentFrame.value].undoDeviceChanges = undo;
+                this.prevFrameStates[this.currentFrame].undoDeviceChanges = undo;
             }
         }
 
@@ -250,7 +250,7 @@ export default class TASTools {
         if(frame.moving && this.energyTimeout <= 0) {
             if(this.energyTimeout === 0) this.setEnergy(Math.max(0, this.getEnergy() - this.energyUsage));
 
-            const prevFrame = this.frames[currentFrame.value - 1];
+            const prevFrame = this.frames[this.currentFrame - 1];
             // if we're already moving, 0.5ms
             if(prevFrame?.moving) {
                 this.energyTimeout = 6;
@@ -289,7 +289,7 @@ export default class TASTools {
     }
 
     updateUI() {
-        const frame = this.frames[currentFrame.value];
+        const frame = this.frames[this.currentFrame];
 
         // open the device
         if(frame.answer) {
@@ -307,7 +307,7 @@ export default class TASTools {
         }
     }
 
-    getPhysicsInput(index = currentFrame.value) {
+    getPhysicsInput(index = this.currentFrame) {
         const frame = this.frames[index];
         const prevFrame = this.frames[index - 1];
 
@@ -354,9 +354,9 @@ export default class TASTools {
     startPlayback() {
         this.physicsManager.physicsStep = (delta: number) => {
             // save the state
-            const frame = this.frames[currentFrame.value];
+            const frame = this.frames[this.currentFrame];
             const save = this.getState();
-            this.prevFrameStates[currentFrame.value] = save;
+            this.prevFrameStates[this.currentFrame] = save;
 
             // save the state
             this.updateDevices(frame);
@@ -367,7 +367,7 @@ export default class TASTools {
 
             this.nativeStep(delta);
 
-            currentFrame.set(currentFrame.value + 1);
+            this.currentFrame++;
         };
     }
 

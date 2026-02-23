@@ -2,11 +2,11 @@
  * @name QuickReset
  * @description Quickly lets you restart 2d gamemodes
  * @author TheLazySquid
- * @version 0.4.1
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/QuickReset.js
- * @webpage https://gimloader.github.io/plugins/quickreset
+ * @version 0.4.2
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/QuickReset.js
+ * @webpage https://gimloader.github.io/plugins/QuickReset
  * @gamemode 2d
- * @changelog Supported restarting to lobby with GuestControls enabled
+ * @changelog Updated webpage url
  */
 
 // plugins/QuickReset/src/index.ts

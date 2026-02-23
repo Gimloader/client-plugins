@@ -1,17 +1,13 @@
-import { singleConfig } from "@gimloader/build";
+import { officialScriptConfig } from "$shared/config";
 
-export default singleConfig({
+export default officialScriptConfig({
     input: "./src/index.ts",
     name: "InputRecorder",
     description: "Records your inputs in Don't Look Down",
     author: "TheLazySquid",
-    version: "0.4.0",
+    version: "0.4.1",
     reloadRequired: "ingame",
-    downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/InputRecorder.js",
-    webpage: "https://gimloader.github.io/plugins/inputrecorder",
-    needsPlugins: [
-        "Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js"
-    ],
+    needsPlugins: ["Desynchronize"],
     gamemodes: ["dontLookDown"],
-    changelog: ["Added Gimloader commands"]
+    changelog: ["Updated webpage url"]
 });

@@ -4,8 +4,8 @@
  * @author TheLazySquid
  * @version 0.6.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js
- * @webpage https://gimloader.github.io/plugins/dldtas
- * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
+ * @webpage https://gimloader.github.io/plugins/DLDTAS
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
  * @changelog Added a command for jumping to any frame
  */
@@ -20,7 +20,7 @@ var styles_default = `#startTasBtn {
   background-color: rgba(0, 0, 0, 0.5);
   color: white;
   cursor: pointer;
-  z-index: 99999999999;
+  z-index: 101;
   border-radius: 5px;
   user-select: none;
 }
@@ -31,7 +31,7 @@ var styles_default = `#startTasBtn {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 99999999999;
+  z-index: 49;
   pointer-events: none;
 }
 
@@ -40,7 +40,7 @@ var styles_default = `#startTasBtn {
   top: 0;
   left: 0;
   height: 100%;
-  z-index: 1000;
+  z-index: 49;
   background-color: rgba(255, 255, 255, 0.5);
 }
 #inputTable .btns {

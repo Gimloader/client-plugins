@@ -1,0 +1,1 @@
+CrazyFlag lets you change the speed and amplitude of the swing of the flags found in [Capture The Flag](https://gimkit.wiki/wiki/Capture_The_Flag) and [Creative](https://gimkit.wiki/wiki/Gimkit_Creative). This has no practical purpose, but it's funny to see the flag spinning like crazy.

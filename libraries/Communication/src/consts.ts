@@ -5,5 +5,10 @@ export enum Type {
     Float,
     ThreeCharacters,
     String,
-    Object
+    Object,
+    SmallObject,
+    Byte,
+    TwoBytes,
+    ThreeBytes,
+    SeveralBytes
 }

@@ -1,13 +1,12 @@
-import { singleConfig } from "@gimloader/build";
+import { officialScriptConfig } from "$shared/config";
 
-export default singleConfig({
+export default officialScriptConfig({
     input: "src/index.ts",
     name: "CharacterCustomization",
     description: "Allows you to use any gim or a custom gim client-side",
     author: "TheLazySquid",
-    version: "0.6.2",
-    downloadUrl: "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/CharacterCustomization.js",
-    webpage: "https://gimloader.github.io/plugins/charactercustomization",
+    version: "0.7.2",
     hasSettings: true,
-    gamemodes: ["2d"]
+    gamemodes: ["2d"],
+    changelog: ["Updated webpage url"]
 });

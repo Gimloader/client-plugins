@@ -2,12 +2,12 @@
  * @name Desynchronize
  * @description Disables the client being snapped back by the server, others cannot see you move. Breaks most gamemodes.
  * @author TheLazySquid
- * @version 0.2.0
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/plugins/Desynchronize.js
- * @webpage https://gimloader.github.io/plugins/desynchronize
+ * @version 0.2.2
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Desynchronize.js
+ * @webpage https://gimloader.github.io/plugins/Desynchronize
  * @optionalLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Added plugin sync setting to sync your position with other Desynchronize users
+ * @changelog Updated webpage url
  */
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
@@ -36,12 +36,13 @@ var round = (num, decimals) => Math.round(num * 10 * decimals) / (10 * decimals)
 var Sync = class {
   Comms = api.lib("Communication");
   comms = new this.Comms("Desynchronize");
+  publicGrounded = false;
   publicPosition = null;
   playerPositions = /* @__PURE__ */ new Map();
   body = api.stores.phaser.mainCharacter.physics.getBody();
   sending = false;
   unsub;
-  get isGrounded() {
+  isGrounded() {
     return this.body.character.controller.computedGrounded();
   }
   async sendOffset() {
@@ -51,14 +52,16 @@ var Sync = class {
       const translation = this.body.rigidBody.translation();
       const xOffset = round(translation.x - this.publicPosition.x, 1);
       const yOffset = round(this.publicPosition.y - translation.y, 1);
-      if (!xOffset && !yOffset) break;
+      const isGrounded = this.isGrounded();
+      if (!xOffset && !yOffset && isGrounded === this.publicGrounded) break;
+      this.publicGrounded = isGrounded;
       this.publicPosition.x += xOffset;
       this.publicPosition.y -= yOffset;
       if (Math.abs(xOffset) > 204.7 || Math.abs(yOffset) > 204.7) {
         await this.updatePublicPosition();
       } else {
         const encodedOffset = encodeOffset(xOffset, yOffset);
-        await this.comms.send(this.isGrounded ? -encodedOffset : encodedOffset);
+        await this.comms.send(isGrounded ? -encodedOffset : encodedOffset);
       }
     }
     this.sending = false;
@@ -106,7 +109,9 @@ var Sync = class {
     const publicX = round(translation.x, 2);
     const publicY = round(translation.y, 2);
     this.publicPosition = { x: publicX, y: publicY };
-    const separator = this.isGrounded ? "_" : " ";
+    const isGrounded = this.isGrounded();
+    this.publicGrounded = isGrounded;
+    const separator = isGrounded ? "_" : " ";
     await this.comms.send(this.publicPosition.x * 100 + separator + this.publicPosition.y * 100);
   }
   stop() {

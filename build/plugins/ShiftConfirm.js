@@ -2,9 +2,10 @@
  * @name ShiftConfirm
  * @description Makes confirm popups resolve instantly when holding shift.
  * @author retrozy
- * @version 0.1.0
+ * @version 0.1.1
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/ShiftConfirm.js
- * @webpage https://gimloader.github.io/plugins/shiftconfirm
+ * @webpage https://gimloader.github.io/plugins/ShiftConfirm
+ * @changelog Updated webpage url
  */
 
 // plugins/ShiftConfirm/src/index.ts
