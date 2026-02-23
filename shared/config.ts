@@ -1,6 +1,6 @@
 import { singleConfig, type SingleConfig } from "@gimloader/build";
 
-type DistributiveOmit<T, K extends keyof T> = T extends any ? Omit<T, K> : never
+type DistributiveOmit<T, K extends keyof T> = T extends any ? Omit<T, K> : never;
 type ConfigInfo = DistributiveOmit<SingleConfig, "downloadUrl" | "webpage">;
 type Category = "libraries" | "plugins";
 
@@ -8,10 +8,10 @@ const baseDownloadUrl = "https://raw.githubusercontent.com/Gimloader/client-plug
 const baseWebpageUrl = "https://gimloader.github.io";
 
 function mapDependency(category: Category) {
-    return function(dependency: string) {
+    return (dependency: string) => {
         if(dependency.includes("|")) return dependency;
         return `${dependency} | ${baseDownloadUrl}/${category}/${dependency}.js`;
-    }
+    };
 }
 
 export function officialScriptConfig(info: ConfigInfo) {
