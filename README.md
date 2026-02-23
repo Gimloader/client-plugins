@@ -18,6 +18,11 @@ This repository uses the [Gimloader build tools](https://github.com/Gimloader/bu
 
 If you want to add a new script, create a new subdirectory inside /plugins or /libraries with the files `gimloader.config.ts` and `src/index.ts` in it. See the [build tools readme](https://github.com/Gimloader/build) or look at other scripts for information on what to include in the `gimloader.config.ts` file.
 
+Official plugins must follow Gimkit's statement on modding. Do not add a plugin here that
+- gives an advantage over other players (that isn't just quality of life)
+- bypasses paywalls
+- spams Gimkit server
+
 ### Before committing
 
 Before committing your changes, run `bun run format` to format the code. Then, run `bun run check` to confirm that code is linted and without type errors.
