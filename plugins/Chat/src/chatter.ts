@@ -18,6 +18,10 @@ enum Op {
     NotTyping
 }
 
+function getSkinId(char: any) {
+    return JSON.parse(char.appearance.skin).id.replace("character_", "");
+}
+
 export default class Chatter {
     private readonly comms = new Comms<string | Op>("Chat");
     private readonly me = api.net.room.state.characters.get(api.stores.network.authId);
@@ -27,6 +31,7 @@ export default class Chatter {
 
     constructor(
         private readonly addMessage: (text: string, forceScroll?: boolean) => void,
+        private readonly addPlayerMessage: (skinId: string, text: string) => void,
         private readonly updatePlayersTypingText: (playersTyping: string) => void,
         setEnabled: (enabled: boolean) => void
     ) {
@@ -50,24 +55,26 @@ export default class Chatter {
                 this.playersTyping = this.playersTyping.filter(c => c !== char);
             };
 
+            const skinId = getSkinId(char);
+
             if(typeof message === "string") {
-                this.addMessage(`${char.name}: ${message}`);
+                this.addPlayerMessage(skinId, `${char.name}: ${message}`);
                 removePlayerTyping();
             } else {
                 switch (message) {
                     case Op.Join:
                         if(joinedPlayers.has(char.id)) return;
-                        this.addMessage(`${char.name} connected to the chat`);
+                        this.addPlayerMessage(skinId, `${char.name} connected to the chat`);
                         joinedPlayers.add(char.id);
                         break;
                     case Op.Leave:
-                        this.addMessage(`${char.name} left the chat`);
+                        this.addPlayerMessage(skinId, `${char.name} left the chat`);
                         joinedPlayers.delete(char.id);
                         removePlayerTyping();
                         this.playersTyping = this.playersTyping.filter(c => c !== char);
                         break;
                     case Op.Greet:
-                        addMessage(`${char.name} connected to the chat`);
+                        this.addPlayerMessage(skinId, `${char.name} connected to the chat`);
                         // resend that we have joined whenever someone joins the chat mid-game
                         this.comms.send(Op.Join);
                         joinedPlayers.add(char.id);
@@ -135,7 +142,7 @@ export default class Chatter {
     async send(text: string) {
         try {
             await this.comms.send(text);
-            this.addMessage(`${this.me.name}: ${text}`, true);
+            this.addPlayerMessage(getSkinId(this.me), `${this.me.name}: ${text}`);
         } catch {
             this.addMessage("Message failed to send", true);
         }

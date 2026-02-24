@@ -27,7 +27,12 @@
         input.focus();
     });
 
-    let messages = $state<string[]>([]);
+    type Message = string | {
+        skinId: string;
+        text: string;
+    };
+
+    let messages = $state<Message[]>([]);
     let playersTypingText = $state("");
     let inputText = $state("");
     let enabled = $state(false);
@@ -41,16 +46,26 @@
         return "...";
     });
 
+    const shouldScroll = () => wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
+    const scroll = () => {
+        wrap.scrollTop = wrap.scrollHeight;
+    };
+
     function addMessage(text: string, forceScroll = false) {
         if(format) text = format({ inputText: text });
         if(messages.length === 100) messages.splice(0, 1);
         messages.push(text);
-        const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
-        if(shouldScroll || forceScroll) wrap.scrollTop = wrap.scrollHeight;
+        if(shouldScroll() || forceScroll) scroll();
+    }
+
+    function addPlayerMessage(skinId: string, text: string) {
+        messages.push({ skinId, text });
+        scroll();
     }
 
     const chatter = new Chatter(
         addMessage,
+        addPlayerMessage,
         (text: string) => playersTypingText = text,
         (e: boolean) => enabled = e
     );
@@ -61,7 +76,19 @@
     <div bind:this={wrap} class="chat-messages-wrap">
         <div class="chat-messages">
             {#each messages as message}
-                <div>{message}</div>
+                <div class="flex">
+                    {#if typeof message === "string"}
+                        {@html message}
+                    {:else}
+                        <img
+                            alt="Player"
+                            width={25}
+                            height={25}
+                            src={`https://www.gimkit.com/assets/map/characters/spine/preview/${message.skinId}.png`}
+                        >
+                        <div>{message.text}</div>
+                    {/if}
+                </div>
             {/each}
         </div>
         <div class="typing-text">{playersTypingText}</div>
@@ -108,6 +135,10 @@
 </div>
 
 <style>
+    .flex {
+        display: flex;
+    }
+
     .gl-chat {
         position: fixed;
         background-color: rgba(0, 0, 0, 0.3);

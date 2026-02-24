@@ -2,12 +2,12 @@
  * @name Chat
  * @description Adds an in-game chat to 2d gamemodes
  * @author TheLazySquid
- * @version 0.3.0
+ * @version 0.4.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Chat.js
  * @webpage https://gimloader.github.io/plugins/Chat
  * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Added typing indicator
+ * @changelog Added player skins next to messages
  */
 
 // external-svelte:svelte
@@ -21,12 +21,15 @@ var append_styles = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.append_styles
 var bind_this = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.bind_this)();
 var bind_value = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.bind_value)();
 var child = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.child)();
+var comment = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.comment)();
 var delegate = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.delegate)();
 var derived = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.derived)();
 var each = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.each)();
 var event = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.event)();
+var first_child = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.first_child)();
 var from_html = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.from_html)();
 var get = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.get)();
+var html = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.html)();
 var index = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.index)();
 var pop = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.pop)();
 var proxy = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.proxy)();
@@ -39,6 +42,7 @@ var set_text = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.set_text)();
 var sibling = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.sibling)();
 var state = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.state)();
 var template_effect = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.template_effect)();
+var if_export = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.if)();
 
 // plugins/Chat/src/chatter.ts
 var Comms = api.lib("Communication");
@@ -51,9 +55,13 @@ var settings = api.settings.create([
     default: true
   }
 ]);
+function getSkinId(char) {
+  return JSON.parse(char.appearance.skin).id.replace("character_", "");
+}
 var Chatter = class {
-  constructor(addMessage, updatePlayersTypingText, setEnabled) {
+  constructor(addMessage, addPlayerMessage, updatePlayersTypingText, setEnabled) {
     this.addMessage = addMessage;
+    this.addPlayerMessage = addPlayerMessage;
     this.updatePlayersTypingText = updatePlayersTypingText;
     api.net.on("ACTIVITY_FEED_MESSAGE", (message, editFn) => {
       addMessage(`> ${message.message}`);
@@ -70,24 +78,25 @@ var Chatter = class {
       const removePlayerTyping = () => {
         this.playersTyping = this.playersTyping.filter((c) => c !== char);
       };
+      const skinId = getSkinId(char);
       if (typeof message === "string") {
-        this.addMessage(`${char.name}: ${message}`);
+        this.addPlayerMessage(skinId, `${char.name}: ${message}`);
         removePlayerTyping();
       } else {
         switch (message) {
           case 0 /* Join */:
             if (joinedPlayers.has(char.id)) return;
-            this.addMessage(`${char.name} connected to the chat`);
+            this.addPlayerMessage(skinId, `${char.name} connected to the chat`);
             joinedPlayers.add(char.id);
             break;
           case 1 /* Leave */:
-            this.addMessage(`${char.name} left the chat`);
+            this.addPlayerMessage(skinId, `${char.name} left the chat`);
             joinedPlayers.delete(char.id);
             removePlayerTyping();
             this.playersTyping = this.playersTyping.filter((c) => c !== char);
             break;
           case 2 /* Greet */:
-            addMessage(`${char.name} connected to the chat`);
+            this.addPlayerMessage(skinId, `${char.name} connected to the chat`);
             this.comms.send(0 /* Join */);
             joinedPlayers.add(char.id);
             break;
@@ -152,7 +161,7 @@ var Chatter = class {
   async send(text) {
     try {
       await this.comms.send(text);
-      this.addMessage(`${this.me.name}: ${text}`, true);
+      this.addPlayerMessage(getSkinId(this.me), `${this.me.name}: ${text}`);
     } catch {
       this.addMessage("Message failed to send", true);
     }
@@ -176,11 +185,12 @@ var Chatter = class {
 };
 
 // plugins/Chat/src/UI.svelte
-var root_1 = from_html(`<div> </div>`);
+var root_3 = from_html(`<img alt="Player"/> <div> </div>`, 1);
+var root_1 = from_html(`<div class="flex svelte-9jbcin"><!></div>`);
 var root = from_html(`<div class="gl-chat svelte-9jbcin"><div class="chat-spacer svelte-9jbcin"></div> <div class="chat-messages-wrap svelte-9jbcin"><div class="chat-messages svelte-9jbcin"></div> <div class="typing-text svelte-9jbcin"> </div></div> <input class="svelte-9jbcin"/></div>`);
 var $$css = {
   hash: "svelte-9jbcin",
-  code: ".gl-chat.svelte-9jbcin {position:fixed;background-color:rgba(0, 0, 0, 0.3);transition:background 0.5s;bottom:15vh;left:15px;width:350px;z-index:50;min-height:300px;display:flex;flex-direction:column;}.chat-spacer.svelte-9jbcin {flex-grow:1;}.chat-messages-wrap.svelte-9jbcin {max-height:400px;overflow-y:auto;scrollbar-color:rgba(255, 255, 255, 0.5) transparent;}.chat-messages.svelte-9jbcin {display:flex;flex-direction:column;justify-content:flex-end;color:white;padding:5px;}.typing-text.svelte-9jbcin {padding-left:5px;height:1.5rem;color:white;font-size:small;}.gl-chat.svelte-9jbcin input:where(.svelte-9jbcin) {width:100%;border:none;}"
+  code: ".flex.svelte-9jbcin {display:flex;}.gl-chat.svelte-9jbcin {position:fixed;background-color:rgba(0, 0, 0, 0.3);transition:background 0.5s;bottom:15vh;left:15px;width:350px;z-index:50;min-height:300px;display:flex;flex-direction:column;}.chat-spacer.svelte-9jbcin {flex-grow:1;}.chat-messages-wrap.svelte-9jbcin {max-height:400px;overflow-y:auto;scrollbar-color:rgba(255, 255, 255, 0.5) transparent;}.chat-messages.svelte-9jbcin {display:flex;flex-direction:column;justify-content:flex-end;color:white;padding:5px;}.typing-text.svelte-9jbcin {padding-left:5px;height:1.5rem;color:white;font-size:small;}.gl-chat.svelte-9jbcin input:where(.svelte-9jbcin) {width:100%;border:none;}"
 };
 function UI($$anchor, $$props) {
   push($$props, true);
@@ -218,28 +228,60 @@ function UI($$anchor, $$props) {
     if (get(sending)) return "Sending...";
     return "...";
   });
+  const shouldScroll = () => wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
+  const scroll = () => {
+    wrap.scrollTop = wrap.scrollHeight;
+  };
   function addMessage(text, forceScroll = false) {
     if (format) text = format({ inputText: text });
     if (messages.length === 100) messages.splice(0, 1);
     messages.push(text);
-    const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
-    if (shouldScroll || forceScroll) wrap.scrollTop = wrap.scrollHeight;
+    if (shouldScroll() || forceScroll) scroll();
   }
-  const chatter = new Chatter(addMessage, (text) => set(playersTypingText, text, true), (e) => set(enabled, e, true));
+  function addPlayerMessage(skinId, text) {
+    messages.push({ skinId, text });
+    scroll();
+  }
+  const chatter = new Chatter(addMessage, addPlayerMessage, (text) => set(playersTypingText, text, true), (e) => set(enabled, e, true));
   var div = root();
   var div_1 = sibling(child(div), 2);
   var div_2 = child(div_1);
   each(div_2, 21, () => messages, index, ($$anchor2, message) => {
     var div_3 = root_1();
-    var text_1 = child(div_3, true);
+    var node = child(div_3);
+    {
+      var consequent = ($$anchor3) => {
+        var fragment = comment();
+        var node_1 = first_child(fragment);
+        html(node_1, () => get(message));
+        append($$anchor3, fragment);
+      };
+      var alternate = ($$anchor3) => {
+        var fragment_1 = root_3();
+        var img = first_child(fragment_1);
+        set_attribute(img, "width", 25);
+        set_attribute(img, "height", 25);
+        var div_4 = sibling(img, 2);
+        var text_1 = child(div_4, true);
+        reset(div_4);
+        template_effect(() => {
+          set_attribute(img, "src", `https://www.gimkit.com/assets/map/characters/spine/preview/${get(message).skinId}.png`);
+          set_text(text_1, get(message).text);
+        });
+        append($$anchor3, fragment_1);
+      };
+      if_export(node, ($$render) => {
+        if (typeof get(message) === "string") $$render(consequent);
+        else $$render(alternate, false);
+      });
+    }
     reset(div_3);
-    template_effect(() => set_text(text_1, get(message)));
     append($$anchor2, div_3);
   });
   reset(div_2);
-  var div_4 = sibling(div_2, 2);
-  var text_2 = child(div_4, true);
-  reset(div_4);
+  var div_5 = sibling(div_2, 2);
+  var text_2 = child(div_5, true);
+  reset(div_5);
   reset(div_1);
   bind_this(div_1, ($$value) => wrap = $$value, () => wrap);
   var input_1 = sibling(div_1, 2);
