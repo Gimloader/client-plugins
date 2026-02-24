@@ -14,9 +14,33 @@ export function createUI() {
 
     initOverlay();
 
-    const tools = new TASTools(values, () => {
+    function update() {
         scrollTable();
         updateTable();
+    }
+
+    const tools = new TASTools(values, update);
+
+    api.commands.addCommand({
+        text: "DLDTAS: Go to frame"
+    }, async (context) => {
+        const frame = await context.number({
+            title: "Frame",
+            decimal: false,
+            min: 0,
+            max: values.frames.findLastIndex(({ up, left, right }) => up || left || right)
+        });
+
+        if(frame < values.currentFrame) {
+            tools.setFrame(frame);
+        } else {
+            const framesToGo = frame - values.currentFrame;
+            for(let i = 0; i < framesToGo; i++) {
+                tools.advanceFrame();
+            }
+        }
+
+        update();
     });
 
     const div = document.createElement("div");
@@ -247,8 +271,7 @@ export function createUI() {
             const checkPos = () => {
                 if(i + rowOffset < values.currentFrame) {
                     tools.setFrame(i + rowOffset);
-                    scrollTable();
-                    updateTable();
+                    update();
                 }
             };
 
@@ -332,8 +355,7 @@ export function createUI() {
             tools.advanceFrame();
         }
 
-        scrollTable();
-        updateTable();
+        update();
     }
 
     function onBack(event: MouseEvent | KeyboardEvent) {
@@ -344,8 +366,7 @@ export function createUI() {
             tools.setFrame(Math.max(0, values.currentFrame - 1));
         }
 
-        scrollTable();
-        updateTable();
+        update();
     }
 
     // move the table when scrolling

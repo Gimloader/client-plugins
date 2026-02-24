@@ -2,12 +2,12 @@
  * @name DLDTAS
  * @description Allows you to create TASes for Dont Look Down
  * @author TheLazySquid
- * @version 0.5.3
+ * @version 0.6.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js
  * @webpage https://gimloader.github.io/plugins/DLDTAS
  * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Desynchronize.js
  * @gamemode dontLookDown
- * @changelog Updated webpage url
+ * @changelog Added a command for jumping to any frame
  */
 
 // plugins/DLDTAS/src/styles.scss
@@ -400,9 +400,29 @@ var values = { frames, currentFrame: 0 };
 function createUI() {
   let rowOffset = 0;
   initOverlay();
-  const tools = new TASTools(values, () => {
+  function update() {
     scrollTable();
     updateTable();
+  }
+  const tools = new TASTools(values, update);
+  api.commands.addCommand({
+    text: "DLDTAS: Go to frame"
+  }, async (context) => {
+    const frame = await context.number({
+      title: "Frame",
+      decimal: false,
+      min: 0,
+      max: values.frames.findLastIndex(({ up, left, right }) => up || left || right)
+    });
+    if (frame < values.currentFrame) {
+      tools.setFrame(frame);
+    } else {
+      const framesToGo = frame - values.currentFrame;
+      for (let i = 0; i < framesToGo; i++) {
+        tools.advanceFrame();
+      }
+    }
+    update();
   });
   const div = document.createElement("div");
   div.id = "inputTable";
@@ -586,8 +606,7 @@ function createUI() {
       const checkPos = () => {
         if (i + rowOffset < values.currentFrame) {
           tools.setFrame(i + rowOffset);
-          scrollTable();
-          updateTable();
+          update();
         }
       };
       data.addEventListener("mousedown", (e) => {
@@ -649,8 +668,7 @@ function createUI() {
     } else {
       tools.advanceFrame();
     }
-    scrollTable();
-    updateTable();
+    update();
   }
   function onBack(event) {
     if (playing || controlling) return;
@@ -659,8 +677,7 @@ function createUI() {
     } else {
       tools.setFrame(Math.max(0, values.currentFrame - 1));
     }
-    scrollTable();
-    updateTable();
+    update();
   }
   window.addEventListener("wheel", (e) => {
     rowOffset += Math.sign(e.deltaY);
