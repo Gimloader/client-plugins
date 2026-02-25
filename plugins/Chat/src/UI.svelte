@@ -28,17 +28,10 @@
         input.focus();
     });
 
-    interface PlaintextMessage {
-        type: "plaintext";
+    interface Message {
+        type: "plaintext" | "formatted";
         message: string;
     }
-
-    interface FormattedMessage {
-        type: "formatted";
-        message: string;
-    }
-
-    type Message = PlaintextMessage | FormattedMessage;
 
     let messages = $state<Message[]>([]);
     let inputText = $state("");
