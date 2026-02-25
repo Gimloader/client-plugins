@@ -1,6 +1,7 @@
 <script lang="ts">
     import { tick } from "svelte";
     import Chatter from "./chatter";
+    import globals from "./globals.svelte";
 
     // Get the formatter that is used for formatting the activity feed
     type Formatter = (message: { inputText: string }) => string;
@@ -27,33 +28,71 @@
         input.focus();
     });
 
-    let messages = $state<string[]>([]);
-    let playersTypingText = $state("");
+    interface PlaintextMessage {
+        type: "plaintext";
+        message: string;
+    }
+
+    interface FormattedMessage {
+        type: "formatted";
+        message: string;
+    }
+
+    type Message = PlaintextMessage | FormattedMessage;
+
+    let messages = $state<Message[]>([]);
     let inputText = $state("");
-    let enabled = $state(false);
     let sending = $state(false);
     let wrap: HTMLDivElement;
     let input: HTMLInputElement;
 
     let inputPlaceholder = $derived.by(() => {
-        if(!enabled) return "Chat not available in lobby";
+        if(!globals.enabled) return "Chat not available in lobby";
         if(sending) return "Sending...";
         return "...";
     });
 
-    function addMessage(text: string, forceScroll = false) {
-        if(format) text = format({ inputText: text });
+    function addMessage(text: string, shouldFormat?: boolean, forceScroll = false) {
+        if(format && shouldFormat) text = format({ inputText: text });
         if(messages.length === 100) messages.splice(0, 1);
-        messages.push(text);
+        messages.push({
+            type: shouldFormat ? "formatted" : "plaintext",
+            message: text
+        });
         const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
         if(shouldScroll || forceScroll) wrap.scrollTop = wrap.scrollHeight;
     }
 
-    const chatter = new Chatter(
-        addMessage,
-        (text: string) => playersTypingText = text,
-        (e: boolean) => enabled = e
-    );
+    const chatter = new Chatter(addMessage);
+
+    const onkeydown = (e: KeyboardEvent) => {
+        e.stopPropagation();
+
+        if(e.key.length === 1 && e.key.charCodeAt(0) >= 256) {
+            e.preventDefault();
+            return;
+        }
+
+        if(e.key === "Enter") {
+            e.preventDefault();
+            sending = true;
+            chatter.send(inputText).then(async () => {
+                sending = false;
+                await tick();
+                input.focus();
+            });
+            inputText = "";
+            return;
+        }
+
+        if(e.key === "Escape") {
+            input.blur();
+            chatter.stopTyping();
+            return;
+        }
+
+        chatter.sendTyping();
+    };
 </script>
 
 <div class="gl-chat">
@@ -61,49 +100,28 @@
     <div bind:this={wrap} class="chat-messages-wrap">
         <div class="chat-messages">
             {#each messages as message}
-                <div>{message}</div>
+                <div>
+                    {#if message.type === "formatted"}
+                        {@html message.message}
+                    {:else}
+                        {message.message}
+                    {/if}
+                </div>
             {/each}
         </div>
-        <div class="typing-text">{playersTypingText}</div>
+        <div class="typing-text">{globals.playersTypingText}</div>
     </div>
     <input
         bind:this={input}
         bind:value={inputText}
-        onkeydown={(e) => {
-            e.stopPropagation();
-
-            if(e.key.length === 1 && e.key.charCodeAt(0) >= 256) {
-                e.preventDefault();
-                return;
-            }
-
-            if(e.key === "Enter") {
-                e.preventDefault();
-                sending = true;
-                chatter.send(inputText).then(async () => {
-                    sending = false;
-                    await tick();
-                    input.focus();
-                });
-                inputText = "";
-                return;
-            }
-
-            if(e.key === "Escape") {
-                e.currentTarget.blur();
-                chatter.stopTyping();
-                return;
-            }
-
-            chatter.sendTyping();
-        }}
+        {onkeydown}
         onblur={() => {
             if(sending) return;
             chatter.stopTyping();
         }}
         maxlength={1000}
         placeholder={inputPlaceholder}
-        disabled={sending || !enabled}
+        disabled={sending || !globals.enabled}
     >
 </div>
 

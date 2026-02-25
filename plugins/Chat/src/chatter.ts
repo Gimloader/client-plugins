@@ -1,3 +1,5 @@
+import globals from "./globals.svelte";
+
 const Comms = api.lib("Communication");
 
 const settings = api.settings.create([
@@ -25,22 +27,16 @@ export default class Chatter {
     private timeout: ReturnType<typeof setTimeout> | null = null;
     private playersTyping: any[] = [];
 
-    constructor(
-        private readonly addMessage: (text: string, forceScroll?: boolean) => void,
-        private readonly updatePlayersTypingText: (playersTyping: string) => void,
-        setEnabled: (enabled: boolean) => void
-    ) {
+    constructor(private readonly addMessage: (text: string, format: boolean, forceScroll?: boolean) => void) {
         // redirect the activity feed to the chat
         api.net.on("ACTIVITY_FEED_MESSAGE", (message: any, editFn) => {
-            addMessage(`> ${message.message}`);
+            this.addMessage(`> ${message.message}`, true);
             editFn(null);
         });
 
+        globals.enabled = Comms.enabled;
         if(Comms.enabled) {
             this.comms.send(Op.Greet);
-            setEnabled(true);
-        } else {
-            setEnabled(false);
         }
 
         const joinedPlayers = new Set<string>();
@@ -51,23 +47,23 @@ export default class Chatter {
             };
 
             if(typeof message === "string") {
-                this.addMessage(`${char.name}: ${message}`);
+                this.addMessage(`${char.name}: ${message}`, false);
                 removePlayerTyping();
             } else {
                 switch (message) {
                     case Op.Join:
                         if(joinedPlayers.has(char.id)) return;
-                        this.addMessage(`${char.name} connected to the chat`);
+                        this.addMessage(`${char.name} connected to the chat`, false);
                         joinedPlayers.add(char.id);
                         break;
                     case Op.Leave:
-                        this.addMessage(`${char.name} left the chat`);
+                        this.addMessage(`${char.name} left the chat`, false);
                         joinedPlayers.delete(char.id);
                         removePlayerTyping();
                         this.playersTyping = this.playersTyping.filter(c => c !== char);
                         break;
                     case Op.Greet:
-                        addMessage(`${char.name} connected to the chat`);
+                        addMessage(`${char.name} connected to the chat`, false);
                         // resend that we have joined whenever someone joins the chat mid-game
                         this.comms.send(Op.Join);
                         joinedPlayers.add(char.id);
@@ -91,12 +87,12 @@ export default class Chatter {
         );
 
         this.comms.onEnabledChanged(() => {
-            setEnabled(Comms.enabled);
+            globals.enabled = Comms.enabled;
             if(Comms.enabled) {
-                addMessage("The chat is active!");
+                addMessage("The chat is active!", false);
                 this.comms.send(Op.Join);
             } else {
-                addMessage("The chat is no longer active");
+                addMessage("The chat is no longer active", false);
                 this.playersTyping = [];
                 this.updatePlayersTyping();
                 if(this.typing && this.timeout) {
@@ -117,13 +113,13 @@ export default class Chatter {
         const names = this.playersTyping.map(player => player.name);
 
         if(names.length === 0) {
-            this.updatePlayersTypingText("");
+            globals.playersTypingText = "";
         } else if(names.length > 3) {
-            this.updatePlayersTypingText("Several players are typing...");
+            globals.playersTypingText = "Several players are typing...";
         } else if(names.length === 1) {
-            this.updatePlayersTypingText(`${names[0]} is typing...`);
+            globals.playersTypingText = `${names[0]} is typing...`;
         } else {
-            this.updatePlayersTypingText(`${names.slice(0, -2).join(", ")} and ${names.at(-1)} are typing.`);
+            globals.playersTypingText = `${names.slice(0, -2).join(", ")} and ${names.at(-1)} are typing.`;
         }
     }
 

@@ -21,12 +21,15 @@ var append_styles = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.append_styles
 var bind_this = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.bind_this)();
 var bind_value = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.bind_value)();
 var child = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.child)();
+var comment = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.comment)();
 var delegate = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.delegate)();
 var derived = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.derived)();
 var each = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.each)();
 var event = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.event)();
+var first_child = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.first_child)();
 var from_html = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.from_html)();
 var get = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.get)();
+var html = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.html)();
 var index = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.index)();
 var pop = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.pop)();
 var proxy = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.proxy)();
@@ -39,6 +42,26 @@ var set_text = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.set_text)();
 var sibling = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.sibling)();
 var state = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.state)();
 var template_effect = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.template_effect)();
+var text = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.text)();
+var if_export = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.if)();
+
+// plugins/Chat/src/globals.svelte.ts
+var globals_svelte_default = new class {
+  #playersTypingText = state("");
+  get playersTypingText() {
+    return get(this.#playersTypingText);
+  }
+  set playersTypingText(value) {
+    set(this.#playersTypingText, value, true);
+  }
+  #enabled = state(false);
+  get enabled() {
+    return get(this.#enabled);
+  }
+  set enabled(value) {
+    set(this.#enabled, value, true);
+  }
+}();
 
 // plugins/Chat/src/chatter.ts
 var Comms = api.lib("Communication");
@@ -52,18 +75,15 @@ var settings = api.settings.create([
   }
 ]);
 var Chatter = class {
-  constructor(addMessage, updatePlayersTypingText, setEnabled) {
+  constructor(addMessage) {
     this.addMessage = addMessage;
-    this.updatePlayersTypingText = updatePlayersTypingText;
     api.net.on("ACTIVITY_FEED_MESSAGE", (message, editFn) => {
-      addMessage(`> ${message.message}`);
+      this.addMessage(`> ${message.message}`, true);
       editFn(null);
     });
+    globals_svelte_default.enabled = Comms.enabled;
     if (Comms.enabled) {
       this.comms.send(2 /* Greet */);
-      setEnabled(true);
-    } else {
-      setEnabled(false);
     }
     const joinedPlayers = /* @__PURE__ */ new Set();
     this.comms.onMessage((message, char) => {
@@ -71,23 +91,23 @@ var Chatter = class {
         this.playersTyping = this.playersTyping.filter((c) => c !== char);
       };
       if (typeof message === "string") {
-        this.addMessage(`${char.name}: ${message}`);
+        this.addMessage(`${char.name}: ${message}`, false);
         removePlayerTyping();
       } else {
         switch (message) {
           case 0 /* Join */:
             if (joinedPlayers.has(char.id)) return;
-            this.addMessage(`${char.name} connected to the chat`);
+            this.addMessage(`${char.name} connected to the chat`, false);
             joinedPlayers.add(char.id);
             break;
           case 1 /* Leave */:
-            this.addMessage(`${char.name} left the chat`);
+            this.addMessage(`${char.name} left the chat`, false);
             joinedPlayers.delete(char.id);
             removePlayerTyping();
             this.playersTyping = this.playersTyping.filter((c) => c !== char);
             break;
           case 2 /* Greet */:
-            addMessage(`${char.name} connected to the chat`);
+            addMessage(`${char.name} connected to the chat`, false);
             this.comms.send(0 /* Join */);
             joinedPlayers.add(char.id);
             break;
@@ -108,12 +128,12 @@ var Chatter = class {
       })
     );
     this.comms.onEnabledChanged(() => {
-      setEnabled(Comms.enabled);
+      globals_svelte_default.enabled = Comms.enabled;
       if (Comms.enabled) {
-        addMessage("The chat is active!");
+        addMessage("The chat is active!", false);
         this.comms.send(0 /* Join */);
       } else {
-        addMessage("The chat is no longer active");
+        addMessage("The chat is no longer active", false);
         this.playersTyping = [];
         this.updatePlayersTyping();
         if (this.typing && this.timeout) {
@@ -136,23 +156,23 @@ var Chatter = class {
   updatePlayersTyping() {
     const names = this.playersTyping.map((player) => player.name);
     if (names.length === 0) {
-      this.updatePlayersTypingText("");
+      globals_svelte_default.playersTypingText = "";
     } else if (names.length > 3) {
-      this.updatePlayersTypingText("Several players are typing...");
+      globals_svelte_default.playersTypingText = "Several players are typing...";
     } else if (names.length === 1) {
-      this.updatePlayersTypingText(`${names[0]} is typing...`);
+      globals_svelte_default.playersTypingText = `${names[0]} is typing...`;
     } else {
-      this.updatePlayersTypingText(`${names.slice(0, -2).join(", ")} and ${names.at(-1)} are typing.`);
+      globals_svelte_default.playersTypingText = `${names.slice(0, -2).join(", ")} and ${names.at(-1)} are typing.`;
     }
   }
   sendLeave() {
     if (!Comms.enabled) return;
     this.comms.send(1 /* Leave */);
   }
-  async send(text) {
+  async send(text2) {
     try {
-      await this.comms.send(text);
-      this.addMessage(`${this.me.name}: ${text}`, true);
+      await this.comms.send(text2);
+      this.addMessage(`${this.me.name}: ${text2}`, true);
     } catch {
       this.addMessage("Message failed to send", true);
     }
@@ -176,7 +196,7 @@ var Chatter = class {
 };
 
 // plugins/Chat/src/UI.svelte
-var root_1 = from_html(`<div> </div>`);
+var root_1 = from_html(`<div><!></div>`);
 var root = from_html(`<div class="gl-chat svelte-9jbcin"><div class="chat-spacer svelte-9jbcin"></div> <div class="chat-messages-wrap svelte-9jbcin"><div class="chat-messages svelte-9jbcin"></div> <div class="typing-text svelte-9jbcin"> </div></div> <input class="svelte-9jbcin"/></div>`);
 var $$css = {
   hash: "svelte-9jbcin",
@@ -207,44 +227,27 @@ function UI($$anchor, $$props) {
     }
   );
   let messages = proxy([]);
-  let playersTypingText = state("");
   let inputText = state("");
-  let enabled = state(false);
   let sending = state(false);
   let wrap;
   let input;
   let inputPlaceholder = derived(() => {
-    if (!get(enabled)) return "Chat not available in lobby";
+    if (!globals_svelte_default.enabled) return "Chat not available in lobby";
     if (get(sending)) return "Sending...";
     return "...";
   });
-  function addMessage(text, forceScroll = false) {
-    if (format) text = format({ inputText: text });
+  function addMessage(text2, shouldFormat, forceScroll = false) {
+    if (format && shouldFormat) text2 = format({ inputText: text2 });
     if (messages.length === 100) messages.splice(0, 1);
-    messages.push(text);
+    messages.push({
+      type: shouldFormat ? "formatted" : "plaintext",
+      message: text2
+    });
     const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
     if (shouldScroll || forceScroll) wrap.scrollTop = wrap.scrollHeight;
   }
-  const chatter = new Chatter(addMessage, (text) => set(playersTypingText, text, true), (e) => set(enabled, e, true));
-  var div = root();
-  var div_1 = sibling(child(div), 2);
-  var div_2 = child(div_1);
-  each(div_2, 21, () => messages, index, ($$anchor2, message) => {
-    var div_3 = root_1();
-    var text_1 = child(div_3, true);
-    reset(div_3);
-    template_effect(() => set_text(text_1, get(message)));
-    append($$anchor2, div_3);
-  });
-  reset(div_2);
-  var div_4 = sibling(div_2, 2);
-  var text_2 = child(div_4, true);
-  reset(div_4);
-  reset(div_1);
-  bind_this(div_1, ($$value) => wrap = $$value, () => wrap);
-  var input_1 = sibling(div_1, 2);
-  remove_input_defaults(input_1);
-  input_1.__keydown = (e) => {
+  const chatter = new Chatter(addMessage);
+  const onkeydown = (e) => {
     e.stopPropagation();
     if (e.key.length === 1 && e.key.charCodeAt(0) >= 256) {
       e.preventDefault();
@@ -262,19 +265,54 @@ function UI($$anchor, $$props) {
       return;
     }
     if (e.key === "Escape") {
-      e.currentTarget.blur();
+      input.blur();
       chatter.stopTyping();
       return;
     }
     chatter.sendTyping();
   };
+  var div = root();
+  var div_1 = sibling(child(div), 2);
+  var div_2 = child(div_1);
+  each(div_2, 21, () => messages, index, ($$anchor2, message) => {
+    var div_3 = root_1();
+    var node = child(div_3);
+    {
+      var consequent = ($$anchor3) => {
+        var fragment = comment();
+        var node_1 = first_child(fragment);
+        html(node_1, () => get(message).message);
+        append($$anchor3, fragment);
+      };
+      var alternate = ($$anchor3) => {
+        var text_1 = text();
+        template_effect(() => set_text(text_1, get(message).message));
+        append($$anchor3, text_1);
+      };
+      if_export(node, ($$render) => {
+        if (get(message).type === "formatted") $$render(consequent);
+        else $$render(alternate, false);
+      });
+    }
+    reset(div_3);
+    append($$anchor2, div_3);
+  });
+  reset(div_2);
+  var div_4 = sibling(div_2, 2);
+  var text_2 = child(div_4, true);
+  reset(div_4);
+  reset(div_1);
+  bind_this(div_1, ($$value) => wrap = $$value, () => wrap);
+  var input_1 = sibling(div_1, 2);
+  remove_input_defaults(input_1);
+  input_1.__keydown = onkeydown;
   set_attribute(input_1, "maxlength", 1e3);
   bind_this(input_1, ($$value) => input = $$value, () => input);
   reset(div);
   template_effect(() => {
-    set_text(text_2, get(playersTypingText));
+    set_text(text_2, globals_svelte_default.playersTypingText);
     set_attribute(input_1, "placeholder", get(inputPlaceholder));
-    input_1.disabled = get(sending) || !get(enabled);
+    input_1.disabled = get(sending) || !globals_svelte_default.enabled;
   });
   event("blur", input_1, () => {
     if (get(sending)) return;
