@@ -3,7 +3,7 @@
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
  * @version 0.4.1
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @webpage https://gimloader.github.io/libraries/Communication
  * @gamemode 2d
  * @changelog Updated webpage url

@@ -3,7 +3,7 @@
  * @description Some simple utilities for react injection with MobX
  * @author TheLazySquid
  * @version 0.3.3
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/MobxUtils.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/MobxUtils.js
  * @webpage https://gimloader.github.io/libraries/MobxUtils
  * @changelog Updated webpage url
  * @isLibrary true
