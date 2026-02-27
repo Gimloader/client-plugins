@@ -2,225 +2,336 @@
  * @name Chat
  * @description Adds an in-game chat to 2d gamemodes
  * @author TheLazySquid
- * @version 0.2.8
+ * @version 0.4.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Chat.js
  * @webpage https://gimloader.github.io/plugins/Chat
  * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
  * @gamemode 2d
- * @changelog Updated webpage url
+ * @changelog Added player skins next to messages
  */
 
-// plugins/Chat/src/consts.ts
-var maxLength = 1e3;
+// external-svelte:svelte
+var mount = /* @__PURE__ */ (() => GL.svelte_5_43_0.Index.mount)();
+var tick = /* @__PURE__ */ (() => GL.svelte_5_43_0.Index.tick)();
+var unmount = /* @__PURE__ */ (() => GL.svelte_5_43_0.Index.unmount)();
 
-// plugins/Chat/src/styles.css
-var styles_default = `#gl-chat {
-    position: fixed;
-    background-color: rgba(0, 0, 0, 0.3);
-    transition: background 0.5s;
-    bottom: 15vh;
-    left: 15px;
-    width: 350px;
-    z-index: 50;
-    min-height: 300px;
-    display: flex;
-    flex-direction: column;
-}
+// external-svelte:svelte/internal/client
+var append = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.append)();
+var append_styles = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.append_styles)();
+var bind_this = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.bind_this)();
+var bind_value = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.bind_value)();
+var child = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.child)();
+var comment = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.comment)();
+var delegate = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.delegate)();
+var derived = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.derived)();
+var each = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.each)();
+var event = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.event)();
+var first_child = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.first_child)();
+var from_html = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.from_html)();
+var get = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.get)();
+var html = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.html)();
+var index = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.index)();
+var pop = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.pop)();
+var proxy = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.proxy)();
+var push = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.push)();
+var remove_input_defaults = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.remove_input_defaults)();
+var reset = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.reset)();
+var set = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.set)();
+var set_attribute = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.set_attribute)();
+var set_text = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.set_text)();
+var sibling = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.sibling)();
+var state = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.state)();
+var template_effect = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.template_effect)();
+var if_export = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.if)();
 
-#chat-spacer {
-    flex-grow: 1;
-}
-
-#chat-messages-wrap {
-    max-height: 400px;
-    overflow-y: auto;
-    scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
-}
-
-#chat-messages {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    color: white;
-    padding: 5px;
-}
-
-#gl-chat input {
-    width: 100%;
-    border: none;
-}
-`;
-
-// plugins/Chat/src/ui.ts
-api.UI.addStyles(styles_default);
-api.hotkeys.addConfigurableHotkey({
-  category: "Chat",
-  title: "Open Chat",
-  preventDefault: false,
-  default: {
-    key: "KeyY"
+// plugins/Chat/src/chatter.ts
+var Comms = api.lib("Communication");
+var settings = api.settings.create([
+  {
+    id: "transmitTyping",
+    type: "toggle",
+    title: "Transmit Typing",
+    description: "Show other players when you are typing",
+    default: true
   }
-}, (e) => {
-  if (document.activeElement !== document.body) return;
-  e.preventDefault();
-  e.stopPropagation();
-  e.stopImmediatePropagation();
-  UI.input?.focus();
-});
-var format = null;
-api.rewriter.exposeVar("App", {
-  check: ">%SPACE_HERE",
-  find: /}\);const (\S+)=.=>.{0,175}>%SPACE_HERE%/,
-  callback: (formatter) => format = formatter
-});
-var UI = class _UI {
-  static send;
-  static element;
-  static messageWrapper;
-  static messageContainer;
-  static input;
-  static maxLength = 100;
-  static history = [];
-  static enabled = false;
-  static init(send) {
-    _UI.send = send;
-    _UI.element = document.createElement("div");
-    _UI.element.id = "gl-chat";
-    const spacer = document.createElement("div");
-    spacer.id = "chat-spacer";
-    _UI.element.appendChild(spacer);
-    _UI.messageWrapper = document.createElement("div");
-    _UI.messageWrapper.id = "chat-messages-wrap";
-    _UI.element.appendChild(_UI.messageWrapper);
-    _UI.messageContainer = document.createElement("div");
-    _UI.messageContainer.id = "chat-messages";
-    _UI.messageWrapper.appendChild(_UI.messageContainer);
-    _UI.input = _UI.createInput();
-    _UI.element.appendChild(_UI.input);
-    document.body.appendChild(_UI.element);
-    api.onStop(() => _UI.element.remove());
-    const blurInput = () => _UI.input?.blur();
-    document.addEventListener("click", blurInput);
-    api.onStop(() => document.removeEventListener("click", blurInput));
-  }
-  static createInput() {
-    const input = document.createElement("input");
-    input.maxLength = maxLength;
-    input.disabled = true;
-    input.placeholder = "...";
-    input.addEventListener("click", (e) => e.stopPropagation());
-    input.addEventListener("keydown", async (e) => {
-      e.stopPropagation();
-      if (e.key.length === 1 && e.key.charCodeAt(0) >= 256) e.preventDefault();
-      if (e.key === "Escape") {
-        input.blur();
-        return;
+]);
+function getSkinId(char) {
+  return JSON.parse(char.appearance.skin).id.replace("character_", "");
+}
+var Chatter = class {
+  constructor(addMessage, addPlayerMessage, updatePlayersTypingText, setEnabled) {
+    this.addMessage = addMessage;
+    this.addPlayerMessage = addPlayerMessage;
+    this.updatePlayersTypingText = updatePlayersTypingText;
+    api.net.on("ACTIVITY_FEED_MESSAGE", (message, editFn) => {
+      addMessage(`> ${message.message}`);
+      editFn(null);
+    });
+    if (Comms.enabled) {
+      this.comms.send(2 /* Greet */);
+      setEnabled(true);
+    } else {
+      setEnabled(false);
+    }
+    const joinedPlayers = /* @__PURE__ */ new Set();
+    this.comms.onMessage((message, char) => {
+      const removePlayerTyping = () => {
+        this.playersTyping = this.playersTyping.filter((c) => c !== char);
+      };
+      const skinId = getSkinId(char);
+      if (typeof message === "string") {
+        this.addPlayerMessage(skinId, `${char.name}: ${message}`);
+        removePlayerTyping();
+      } else {
+        switch (message) {
+          case 0 /* Join */:
+            if (joinedPlayers.has(char.id)) return;
+            this.addPlayerMessage(skinId, `${char.name} connected to the chat`);
+            joinedPlayers.add(char.id);
+            break;
+          case 1 /* Leave */:
+            this.addPlayerMessage(skinId, `${char.name} left the chat`);
+            joinedPlayers.delete(char.id);
+            removePlayerTyping();
+            this.playersTyping = this.playersTyping.filter((c) => c !== char);
+            break;
+          case 2 /* Greet */:
+            this.addPlayerMessage(skinId, `${char.name} connected to the chat`);
+            this.comms.send(0 /* Join */);
+            joinedPlayers.add(char.id);
+            break;
+          case 3 /* Typing */:
+            this.playersTyping.push(char);
+            break;
+          case 4 /* NotTyping */:
+            removePlayerTyping();
+            break;
+        }
       }
-      if (e.key === "Enter") {
-        const message = input.value;
-        if (message.length === 0) return;
-        input.value = "";
-        input.placeholder = "Sending...";
-        input.disabled = true;
-        await _UI.send(message);
-        if (!_UI.enabled) return;
-        input.disabled = false;
-        input.placeholder = "...";
-        input.focus();
-        return;
+      this.updatePlayersTyping();
+    });
+    api.onStop(
+      api.net.room.state.characters.onRemove((char) => {
+        joinedPlayers.delete(char.id);
+        this.playersTyping = this.playersTyping.filter((c) => c !== char);
+      })
+    );
+    this.comms.onEnabledChanged(() => {
+      setEnabled(Comms.enabled);
+      if (Comms.enabled) {
+        addMessage("The chat is active!");
+        this.comms.send(0 /* Join */);
+      } else {
+        addMessage("The chat is no longer active");
+        this.playersTyping = [];
+        this.updatePlayersTyping();
+        if (this.typing && this.timeout) {
+          clearTimeout(this.timeout);
+        }
       }
     });
-    return input;
+    window.addEventListener("beforeunload", this.sendLeave);
+    api.onStop(() => {
+      this.sendLeave();
+      this.comms.destroy();
+      window.removeEventListener("beforeunload", this.sendLeave);
+    });
   }
-  static addMessage(message, forceScroll = false) {
-    const element = document.createElement("div");
-    if (format) {
-      element.innerHTML = format({ inputText: message });
+  comms = new Comms("Chat");
+  me = api.net.room.state.characters.get(api.stores.network.authId);
+  typing = false;
+  timeout = null;
+  playersTyping = [];
+  updatePlayersTyping() {
+    const names = this.playersTyping.map((player) => player.name);
+    if (names.length === 0) {
+      this.updatePlayersTypingText("");
+    } else if (names.length > 3) {
+      this.updatePlayersTypingText("Several players are typing...");
+    } else if (names.length === 1) {
+      this.updatePlayersTypingText(`${names[0]} is typing...`);
     } else {
-      element.innerText = message;
+      this.updatePlayersTypingText(`${names.slice(0, -2).join(", ")} and ${names.at(-1)} are typing.`);
     }
-    const wrap = _UI.messageWrapper;
-    const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
-    _UI.history.push(element);
-    _UI.messageContainer.appendChild(element);
-    if (_UI.history.length > _UI.maxLength) {
-      _UI.history.shift()?.remove();
-    }
-    if (shouldScroll || forceScroll) wrap.scrollTop = wrap.scrollHeight;
   }
-  static setEnabled(enabled) {
-    _UI.enabled = enabled;
-    if (enabled) {
-      _UI.input.disabled = false;
-      _UI.input.placeholder = "...";
-    } else {
-      _UI.input.disabled = true;
-      _UI.input.placeholder = "Chat not available in lobby";
+  sendLeave() {
+    if (!Comms.enabled) return;
+    this.comms.send(1 /* Leave */);
+  }
+  async send(text) {
+    try {
+      await this.comms.send(text);
+      this.addPlayerMessage(getSkinId(this.me), `${this.me.name}: ${text}`);
+    } catch {
+      this.addMessage("Message failed to send", true);
     }
+  }
+  sendTyping() {
+    if (!settings.transmitTyping) return;
+    if (this.typing) {
+      if (this.timeout) clearTimeout(this.timeout);
+      this.timeout = null;
+    } else {
+      this.typing = true;
+      this.comms.send(3 /* Typing */);
+    }
+    this.timeout = setTimeout(() => this.stopTyping(), 3e3);
+  }
+  stopTyping() {
+    if (!Comms.enabled || !this.typing) return;
+    this.comms.send(4 /* NotTyping */);
+    this.typing = false;
   }
 };
 
+// plugins/Chat/src/UI.svelte
+var root_3 = from_html(`<img alt="Player"/> <div> </div>`, 1);
+var root_1 = from_html(`<div class="flex svelte-9jbcin"><!></div>`);
+var root = from_html(`<div class="gl-chat svelte-9jbcin"><div class="chat-spacer svelte-9jbcin"></div> <div class="chat-messages-wrap svelte-9jbcin"><div class="chat-messages svelte-9jbcin"></div> <div class="typing-text svelte-9jbcin"> </div></div> <input class="svelte-9jbcin"/></div>`);
+var $$css = {
+  hash: "svelte-9jbcin",
+  code: ".flex.svelte-9jbcin {display:flex;}.gl-chat.svelte-9jbcin {position:fixed;background-color:rgba(0, 0, 0, 0.3);transition:background 0.5s;bottom:15vh;left:15px;width:350px;z-index:50;min-height:300px;display:flex;flex-direction:column;}.chat-spacer.svelte-9jbcin {flex-grow:1;}.chat-messages-wrap.svelte-9jbcin {max-height:400px;overflow-y:auto;scrollbar-color:rgba(255, 255, 255, 0.5) transparent;}.chat-messages.svelte-9jbcin {display:flex;flex-direction:column;justify-content:flex-end;color:white;padding:5px;}.typing-text.svelte-9jbcin {padding-left:5px;height:1.5rem;color:white;font-size:small;}.gl-chat.svelte-9jbcin input:where(.svelte-9jbcin) {width:100%;border:none;}"
+};
+function UI($$anchor, $$props) {
+  push($$props, true);
+  append_styles($$anchor, $$css);
+  let format = null;
+  api.rewriter.exposeVar("App", {
+    check: ">%SPACE_HERE",
+    find: /}\);const (\S+)=.=>.{0,175}>%SPACE_HERE%/,
+    callback: (formatter) => format = formatter
+  });
+  api.hotkeys.addConfigurableHotkey(
+    {
+      category: "Chat",
+      title: "Open Chat",
+      preventDefault: false,
+      default: { key: "KeyY" }
+    },
+    (e) => {
+      if (document.activeElement !== document.body) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      input.focus();
+    }
+  );
+  let messages = proxy([]);
+  let playersTypingText = state("");
+  let inputText = state("");
+  let enabled = state(false);
+  let sending = state(false);
+  let wrap;
+  let input;
+  let inputPlaceholder = derived(() => {
+    if (!get(enabled)) return "Chat not available in lobby";
+    if (get(sending)) return "Sending...";
+    return "...";
+  });
+  const shouldScroll = () => wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
+  const scroll = () => {
+    wrap.scrollTop = wrap.scrollHeight;
+  };
+  function addMessage(text, forceScroll = false) {
+    if (format) text = format({ inputText: text });
+    if (messages.length === 100) messages.splice(0, 1);
+    messages.push(text);
+    if (shouldScroll() || forceScroll) scroll();
+  }
+  function addPlayerMessage(skinId, text) {
+    messages.push({ skinId, text });
+    scroll();
+  }
+  const chatter = new Chatter(addMessage, addPlayerMessage, (text) => set(playersTypingText, text, true), (e) => set(enabled, e, true));
+  var div = root();
+  var div_1 = sibling(child(div), 2);
+  var div_2 = child(div_1);
+  each(div_2, 21, () => messages, index, ($$anchor2, message) => {
+    var div_3 = root_1();
+    var node = child(div_3);
+    {
+      var consequent = ($$anchor3) => {
+        var fragment = comment();
+        var node_1 = first_child(fragment);
+        html(node_1, () => get(message));
+        append($$anchor3, fragment);
+      };
+      var alternate = ($$anchor3) => {
+        var fragment_1 = root_3();
+        var img = first_child(fragment_1);
+        set_attribute(img, "width", 25);
+        set_attribute(img, "height", 25);
+        var div_4 = sibling(img, 2);
+        var text_1 = child(div_4, true);
+        reset(div_4);
+        template_effect(() => {
+          set_attribute(img, "src", `https://www.gimkit.com/assets/map/characters/spine/preview/${get(message).skinId}.png`);
+          set_text(text_1, get(message).text);
+        });
+        append($$anchor3, fragment_1);
+      };
+      if_export(node, ($$render) => {
+        if (typeof get(message) === "string") $$render(consequent);
+        else $$render(alternate, false);
+      });
+    }
+    reset(div_3);
+    append($$anchor2, div_3);
+  });
+  reset(div_2);
+  var div_5 = sibling(div_2, 2);
+  var text_2 = child(div_5, true);
+  reset(div_5);
+  reset(div_1);
+  bind_this(div_1, ($$value) => wrap = $$value, () => wrap);
+  var input_1 = sibling(div_1, 2);
+  remove_input_defaults(input_1);
+  input_1.__keydown = (e) => {
+    e.stopPropagation();
+    if (e.key.length === 1 && e.key.charCodeAt(0) >= 256) {
+      e.preventDefault();
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      set(sending, true);
+      chatter.send(get(inputText)).then(async () => {
+        set(sending, false);
+        await tick();
+        input.focus();
+      });
+      set(inputText, "");
+      return;
+    }
+    if (e.key === "Escape") {
+      e.currentTarget.blur();
+      chatter.stopTyping();
+      return;
+    }
+    chatter.sendTyping();
+  };
+  set_attribute(input_1, "maxlength", 1e3);
+  bind_this(input_1, ($$value) => input = $$value, () => input);
+  reset(div);
+  template_effect(() => {
+    set_text(text_2, get(playersTypingText));
+    set_attribute(input_1, "placeholder", get(inputPlaceholder));
+    input_1.disabled = get(sending) || !get(enabled);
+  });
+  event("blur", input_1, () => {
+    if (get(sending)) return;
+    chatter.stopTyping();
+  });
+  bind_value(input_1, () => get(inputText), ($$value) => set(inputText, $$value));
+  append($$anchor, div);
+  pop();
+}
+delegate(["keydown"]);
+
 // plugins/Chat/src/index.ts
 api.net.onLoad(() => {
-  const myId = api.stores.network.authId;
-  api.net.on("ACTIVITY_FEED_MESSAGE", (message, editFn) => {
-    UI.addMessage(`> ${message.message}`);
-    editFn(null);
-  });
-  const me = api.net.room.state.characters.get(myId);
-  const Comms = api.lib("Communication");
-  const comms = new Comms("Chat");
-  UI.init(async (text) => {
-    try {
-      await comms.send(text);
-      UI.addMessage(`${me.name}: ${text}`, true);
-    } catch {
-      UI.addMessage("Message failed to send", true);
-    }
-  });
-  const joinedPlayers = /* @__PURE__ */ new Set();
-  comms.onMessage((message, char) => {
-    if (typeof message === "string") {
-      UI.addMessage(`${char.name}: ${message}`);
-    } else {
-      if (message === 0 /* Join */) {
-        if (joinedPlayers.has(char.id)) return;
-        UI.addMessage(`${char.name} connected to the chat`);
-        joinedPlayers.add(char.id);
-      } else if (message === 1 /* Leave */) {
-        UI.addMessage(`${char.name} left the chat`);
-      } else if (message === 2 /* Greet */) {
-        UI.addMessage(`${char.name} connected to the chat`);
-        comms.send(0 /* Join */);
-        joinedPlayers.add(char.id);
-      }
-    }
-  });
-  api.onStop(api.net.room.state.characters.onRemove((char) => {
-    joinedPlayers.delete(char.id);
-  }));
-  if (Comms.enabled) {
-    comms.send(2 /* Greet */);
-    UI.setEnabled(true);
-  } else {
-    UI.setEnabled(false);
-  }
-  comms.onEnabledChanged(() => {
-    UI.setEnabled(Comms.enabled);
-    if (Comms.enabled) {
-      UI.addMessage("The chat is active!");
-      comms.send(0 /* Join */);
-    } else {
-      UI.addMessage("The chat is no longer active");
-    }
-  });
-  function sendLeave() {
-    if (!Comms.enabled) return;
-    comms.send(1 /* Leave */);
-  }
-  window.addEventListener("beforeunload", sendLeave);
+  const ui = mount(UI, { target: document.body });
   api.onStop(() => {
-    sendLeave();
-    comms.destroy();
+    unmount(ui);
   });
 });
