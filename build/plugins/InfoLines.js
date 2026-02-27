@@ -36,6 +36,7 @@ var BaseLine = class {
   onStopCallbacks = [];
   onUpdateCallbacks = [];
   settings;
+  gamemode;
   net = {
     on: (...args) => {
       this.onStop(() => {
@@ -54,6 +55,7 @@ var BaseLine = class {
   };
   enable() {
     api.net.onLoad(() => {
+      if (this.gamemode !== void 0 && this.gamemode !== api.net.gamemode) return;
       if (this.onFrame) {
         this.patcher.after(api.stores.phaser.scene.worldManager, "update", () => this.onFrame?.());
       }
@@ -194,6 +196,48 @@ var Ping = class extends BaseLine {
   }
 };
 
+// plugins/InfoLines/src/lines/fishValue.ts
+var fishValues = {
+  "gray": 1,
+  "green": 2,
+  "red": 5,
+  "blue": 10,
+  "purple": 20,
+  "beach": 40,
+  "star": 65,
+  "galaxy": 100,
+  "berry": 150,
+  "gim": 5e3
+};
+var FishValue = class extends BaseLine {
+  name = "Fishtopia Fish Value";
+  gamemode = "fishtopia";
+  enabledDefault = false;
+  async init() {
+    const autorunFn = await new Promise((res) => {
+      api.rewriter.exposeVar(true, {
+        find: /isMobxAction===!0}function (\S+)\(/,
+        callback: res
+      });
+    });
+    this.onStop(
+      autorunFn(() => {
+        let total = 0;
+        for (const [id, { amount }] of api.stores.me.inventory.slots) {
+          if (!id.endsWith("-fish")) continue;
+          const fishName = id.split("-")[0];
+          total += fishValues[fishName] * amount;
+        }
+        const multiplyerDevice = api.stores.phaser.scene.worldManager.devices.allDevices.find((d) => d.options.guiMessage === "Purchase Cash In ($70)");
+        if (multiplyerDevice && !multiplyerDevice.state.active) {
+          total = Math.round(total * 1.3);
+        }
+        this.update(`fish value: $${total}`);
+      })
+    );
+  }
+};
+
 // plugins/InfoLines/src/index.ts
 api.UI.addStyles(styles_default);
 var InfoLines = class {
@@ -202,7 +246,8 @@ var InfoLines = class {
     new Velocity(),
     new PhysicsCoordinates(),
     new FPS(),
-    new Ping()
+    new Ping(),
+    new FishValue()
   ];
   element;
   constructor() {
