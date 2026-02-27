@@ -5,8 +5,8 @@ export default officialScriptConfig({
     name: "InfoLines",
     description: "Displays a configurable list of info on the screen",
     author: "TheLazySquid",
-    version: "1.0.1",
-    changelog: ["Updated webpage url"],
+    version: "1.1.0",
+    changelog: ["Added fish value line"],
     hasSettings: true,
     gamemodes: ["2d"]
 });
