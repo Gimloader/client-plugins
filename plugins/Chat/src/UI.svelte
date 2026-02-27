@@ -13,20 +13,13 @@
         callback: (formatter) => format = formatter
     });
 
-    api.hotkeys.addConfigurableHotkey({
-        category: "Chat",
-        title: "Open Chat",
-        preventDefault: false,
-        default: {
-            key: "KeyY"
-        }
-    }, (e) => {
+    export function open(e: KeyboardEvent) {
         if(document.activeElement !== document.body) return;
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
         input.focus();
-    });
+    }
 
     interface Message {
         type: "plaintext" | "formatted";
