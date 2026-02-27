@@ -20,6 +20,8 @@ export default class FishValue extends BaseLine {
     enabledDefault = false;
 
     async init() {
+        const allDevices = api.stores.phaser.scene.worldManager.devices.allDevices;
+
         const autorunFn = await new Promise<typeof autorun>(res => {
             api.rewriter.exposeVar(true, {
                 find: /isMobxAction===!0}function (\S+)\(/,
@@ -37,8 +39,8 @@ export default class FishValue extends BaseLine {
                     total += fishValues[fishName as keyof typeof fishValues] * amount;
                 }
 
-                const multiplyerDevice = api.stores.phaser.scene.worldManager.devices.allDevices.find(d => d.options.guiMessage === "Purchase Cash In ($70)");
-                if(multiplyerDevice && !multiplyerDevice.state.active) {
+                const multiplierDevice = allDevices.find(d => d.options.guiMessage === "Purchase Cash In ($70)");
+                if(multiplierDevice && !multiplierDevice.state.active) {
                     total = Math.round(total * 1.3);
                 }
 
