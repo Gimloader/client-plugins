@@ -45,17 +45,6 @@ var template_effect = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.template_ef
 var text = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.text)();
 var if_export = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.if)();
 
-// plugins/Chat/src/globals.svelte.ts
-var globals_svelte_default = new class {
-  #enabled = state(false);
-  get enabled() {
-    return get(this.#enabled);
-  }
-  set enabled(value) {
-    set(this.#enabled, value, true);
-  }
-}();
-
 // plugins/Chat/src/chatter.svelte.ts
 var Comms = api.lib("Communication");
 var settings = api.settings.create([
@@ -82,7 +71,6 @@ var Chatter = class {
       this.addMessage(`> ${message.message}`, true);
       editFn(null);
     });
-    globals_svelte_default.enabled = Comms.enabled;
     if (Comms.enabled) {
       this.comms.send(
         2
@@ -131,7 +119,7 @@ var Chatter = class {
       this.playersTyping = this.playersTyping.filter((c) => c !== char);
     }));
     this.comms.onEnabledChanged(() => {
-      globals_svelte_default.enabled = Comms.enabled;
+      this.enabled = Comms.enabled;
       if (Comms.enabled) {
         addMessage("The chat is active!", false);
         this.comms.send(
@@ -163,6 +151,13 @@ var Chatter = class {
   }
   set playersTyping(value) {
     set(this.#playersTyping, value, true);
+  }
+  #enabled = state(proxy(Comms.enabled));
+  get enabled() {
+    return get(this.#enabled);
+  }
+  set enabled(value) {
+    set(this.#enabled, value, true);
   }
   sendLeave() {
     if (!Comms.enabled) return;
@@ -231,11 +226,6 @@ function UI($$anchor, $$props) {
   let sending = state(false);
   let wrap;
   let input;
-  let inputPlaceholder = derived(() => {
-    if (!globals_svelte_default.enabled) return "Chat not available in lobby";
-    if (get(sending)) return "Sending...";
-    return "...";
-  });
   function addMessage(text2, shouldFormat, forceScroll = false) {
     if (format && shouldFormat) text2 = format({ inputText: text2 });
     if (messages.length === 100) messages.splice(0, 1);
@@ -247,6 +237,11 @@ function UI($$anchor, $$props) {
     if (shouldScroll || forceScroll) wrap.scrollTop = wrap.scrollHeight;
   }
   const chatter = new Chatter(addMessage);
+  let inputPlaceholder = derived(() => {
+    if (!chatter.enabled) return "Chat not available in lobby";
+    if (get(sending)) return "Sending...";
+    return "...";
+  });
   let playersTypingText = derived(() => {
     const names = chatter.playersTyping.map((player) => player.name);
     if (names.length === 0) {
@@ -325,7 +320,7 @@ function UI($$anchor, $$props) {
   template_effect(() => {
     set_text(text_2, get(playersTypingText));
     set_attribute(input_1, "placeholder", get(inputPlaceholder));
-    input_1.disabled = get(sending) || !globals_svelte_default.enabled;
+    input_1.disabled = get(sending) || !chatter.enabled;
   });
   event("blur", input_1, () => {
     if (get(sending)) return;

@@ -1,5 +1,3 @@
-import globals from "./globals.svelte";
-
 const Comms = api.lib("Communication");
 
 const settings = api.settings.create([
@@ -26,6 +24,7 @@ export default class Chatter {
     private typing = false;
     private timeout: ReturnType<typeof setTimeout> | null = null;
     playersTyping = $state<any[]>([]);
+    enabled = $state(Comms.enabled);
 
     constructor(private readonly addMessage: (text: string, format: boolean, forceScroll?: boolean) => void) {
         // redirect the activity feed to the chat
@@ -34,7 +33,6 @@ export default class Chatter {
             editFn(null);
         });
 
-        globals.enabled = Comms.enabled;
         if(Comms.enabled) {
             this.comms.send(Op.Greet);
         }
@@ -85,7 +83,7 @@ export default class Chatter {
         );
 
         this.comms.onEnabledChanged(() => {
-            globals.enabled = Comms.enabled;
+            this.enabled = Comms.enabled;
             if(Comms.enabled) {
                 addMessage("The chat is active!", false);
                 this.comms.send(Op.Join);

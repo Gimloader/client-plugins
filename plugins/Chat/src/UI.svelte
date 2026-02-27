@@ -1,7 +1,6 @@
 <script lang="ts">
     import { tick } from "svelte";
     import Chatter from "./chatter.svelte";
-    import globals from "./globals.svelte";
 
     // Get the formatter that is used for formatting the activity feed
     type Formatter = (message: { inputText: string }) => string;
@@ -32,12 +31,6 @@
     let wrap: HTMLDivElement;
     let input: HTMLInputElement;
 
-    let inputPlaceholder = $derived.by(() => {
-        if(!globals.enabled) return "Chat not available in lobby";
-        if(sending) return "Sending...";
-        return "...";
-    });
-
     function addMessage(text: string, shouldFormat?: boolean, forceScroll = false) {
         if(format && shouldFormat) text = format({ inputText: text });
         if(messages.length === 100) messages.splice(0, 1);
@@ -50,6 +43,12 @@
     }
 
     const chatter = new Chatter(addMessage);
+
+    let inputPlaceholder = $derived.by(() => {
+        if(!chatter.enabled) return "Chat not available in lobby";
+        if(sending) return "Sending...";
+        return "...";
+    });
 
     let playersTypingText = $derived.by(() => {
         const names = chatter.playersTyping.map(player => player.name);
@@ -121,7 +120,7 @@
         }}
         maxlength={1000}
         placeholder={inputPlaceholder}
-        disabled={sending || !globals.enabled}
+        disabled={sending || !chatter.enabled}
     >
 </div>
 
