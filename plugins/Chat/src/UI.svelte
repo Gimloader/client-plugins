@@ -1,6 +1,6 @@
 <script lang="ts">
     import { tick } from "svelte";
-    import Chatter from "./chatter";
+    import Chatter from "./chatter.svelte";
     import globals from "./globals.svelte";
 
     // Get the formatter that is used for formatting the activity feed
@@ -51,6 +51,20 @@
 
     const chatter = new Chatter(addMessage);
 
+    let playersTypingText = $derived.by(() => {
+        const names = chatter.playersTyping.map(player => player.name);
+
+        if(names.length === 0) {
+            return "";
+        } else if(names.length > 3) {
+            return "Several players are typing...";
+        } else if(names.length === 1) {
+            return `${names[0]} is typing...`;
+        } else {
+            return `${names.slice(0, -2).join(", ")} and ${names.at(-1)} are typing.`;
+        }
+    });
+
     const onkeydown = (e: KeyboardEvent) => {
         e.stopPropagation();
 
@@ -95,7 +109,7 @@
                 </div>
             {/each}
         </div>
-        <div class="typing-text">{globals.playersTypingText}</div>
+        <div class="typing-text">{playersTypingText}</div>
     </div>
     <input
         bind:this={input}

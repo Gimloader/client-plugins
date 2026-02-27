@@ -25,7 +25,7 @@ export default class Chatter {
     private readonly me = api.net.room.state.characters.get(api.stores.network.authId);
     private typing = false;
     private timeout: ReturnType<typeof setTimeout> | null = null;
-    private playersTyping: any[] = [];
+    playersTyping = $state<any[]>([]);
 
     constructor(private readonly addMessage: (text: string, format: boolean, forceScroll?: boolean) => void) {
         // redirect the activity feed to the chat
@@ -60,7 +60,6 @@ export default class Chatter {
                         this.addMessage(`${char.name} left the chat`, false);
                         joinedPlayers.delete(char.id);
                         removePlayerTyping();
-                        this.playersTyping = this.playersTyping.filter(c => c !== char);
                         break;
                     case Op.Greet:
                         addMessage(`${char.name} connected to the chat`, false);
@@ -76,7 +75,6 @@ export default class Chatter {
                         break;
                 }
             }
-            this.updatePlayersTyping();
         });
 
         api.onStop(
@@ -94,7 +92,6 @@ export default class Chatter {
             } else {
                 addMessage("The chat is no longer active", false);
                 this.playersTyping = [];
-                this.updatePlayersTyping();
                 if(this.typing && this.timeout) {
                     clearTimeout(this.timeout);
                 }
@@ -107,20 +104,6 @@ export default class Chatter {
             this.comms.destroy();
             window.removeEventListener("beforeunload", this.sendLeave);
         });
-    }
-
-    private updatePlayersTyping() {
-        const names = this.playersTyping.map(player => player.name);
-
-        if(names.length === 0) {
-            globals.playersTypingText = "";
-        } else if(names.length > 3) {
-            globals.playersTypingText = "Several players are typing...";
-        } else if(names.length === 1) {
-            globals.playersTypingText = `${names[0]} is typing...`;
-        } else {
-            globals.playersTypingText = `${names.slice(0, -2).join(", ")} and ${names.at(-1)} are typing.`;
-        }
     }
 
     private sendLeave() {

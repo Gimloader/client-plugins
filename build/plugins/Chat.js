@@ -47,13 +47,6 @@ var if_export = /* @__PURE__ */ (() => GL.svelte_5_43_0.Client.if)();
 
 // plugins/Chat/src/globals.svelte.ts
 var globals_svelte_default = new class {
-  #playersTypingText = state("");
-  get playersTypingText() {
-    return get(this.#playersTypingText);
-  }
-  set playersTypingText(value) {
-    set(this.#playersTypingText, value, true);
-  }
   #enabled = state(false);
   get enabled() {
     return get(this.#enabled);
@@ -63,7 +56,7 @@ var globals_svelte_default = new class {
   }
 }();
 
-// plugins/Chat/src/chatter.ts
+// plugins/Chat/src/chatter.svelte.ts
 var Comms = api.lib("Communication");
 var settings = api.settings.create([
   {
@@ -74,6 +67,14 @@ var settings = api.settings.create([
     default: true
   }
 ]);
+var Op = ((Op2) => {
+  Op2[Op2["Join"] = 0] = "Join";
+  Op2[Op2["Leave"] = 1] = "Leave";
+  Op2[Op2["Greet"] = 2] = "Greet";
+  Op2[Op2["Typing"] = 3] = "Typing";
+  Op2[Op2["NotTyping"] = 4] = "NotTyping";
+  return Op2;
+})(Op || {});
 var Chatter = class {
   constructor(addMessage) {
     this.addMessage = addMessage;
@@ -83,7 +84,10 @@ var Chatter = class {
     });
     globals_svelte_default.enabled = Comms.enabled;
     if (Comms.enabled) {
-      this.comms.send(2 /* Greet */);
+      this.comms.send(
+        2
+        /* Greet */
+      );
     }
     const joinedPlayers = /* @__PURE__ */ new Set();
     this.comms.onMessage((message, char) => {
@@ -95,47 +99,48 @@ var Chatter = class {
         removePlayerTyping();
       } else {
         switch (message) {
-          case 0 /* Join */:
+          case 0:
             if (joinedPlayers.has(char.id)) return;
             this.addMessage(`${char.name} connected to the chat`, false);
             joinedPlayers.add(char.id);
             break;
-          case 1 /* Leave */:
+          case 1:
             this.addMessage(`${char.name} left the chat`, false);
             joinedPlayers.delete(char.id);
             removePlayerTyping();
-            this.playersTyping = this.playersTyping.filter((c) => c !== char);
             break;
-          case 2 /* Greet */:
+          case 2:
             addMessage(`${char.name} connected to the chat`, false);
-            this.comms.send(0 /* Join */);
+            this.comms.send(
+              0
+              /* Join */
+            );
             joinedPlayers.add(char.id);
             break;
-          case 3 /* Typing */:
+          case 3:
             this.playersTyping.push(char);
             break;
-          case 4 /* NotTyping */:
+          case 4:
             removePlayerTyping();
             break;
         }
       }
-      this.updatePlayersTyping();
     });
-    api.onStop(
-      api.net.room.state.characters.onRemove((char) => {
-        joinedPlayers.delete(char.id);
-        this.playersTyping = this.playersTyping.filter((c) => c !== char);
-      })
-    );
+    api.onStop(api.net.room.state.characters.onRemove((char) => {
+      joinedPlayers.delete(char.id);
+      this.playersTyping = this.playersTyping.filter((c) => c !== char);
+    }));
     this.comms.onEnabledChanged(() => {
       globals_svelte_default.enabled = Comms.enabled;
       if (Comms.enabled) {
         addMessage("The chat is active!", false);
-        this.comms.send(0 /* Join */);
+        this.comms.send(
+          0
+          /* Join */
+        );
       } else {
         addMessage("The chat is no longer active", false);
         this.playersTyping = [];
-        this.updatePlayersTyping();
         if (this.typing && this.timeout) {
           clearTimeout(this.timeout);
         }
@@ -152,22 +157,19 @@ var Chatter = class {
   me = api.net.room.state.characters.get(api.stores.network.authId);
   typing = false;
   timeout = null;
-  playersTyping = [];
-  updatePlayersTyping() {
-    const names = this.playersTyping.map((player) => player.name);
-    if (names.length === 0) {
-      globals_svelte_default.playersTypingText = "";
-    } else if (names.length > 3) {
-      globals_svelte_default.playersTypingText = "Several players are typing...";
-    } else if (names.length === 1) {
-      globals_svelte_default.playersTypingText = `${names[0]} is typing...`;
-    } else {
-      globals_svelte_default.playersTypingText = `${names.slice(0, -2).join(", ")} and ${names.at(-1)} are typing.`;
-    }
+  #playersTyping = state(proxy([]));
+  get playersTyping() {
+    return get(this.#playersTyping);
+  }
+  set playersTyping(value) {
+    set(this.#playersTyping, value, true);
   }
   sendLeave() {
     if (!Comms.enabled) return;
-    this.comms.send(1 /* Leave */);
+    this.comms.send(
+      1
+      /* Leave */
+    );
   }
   async send(text2) {
     try {
@@ -184,13 +186,19 @@ var Chatter = class {
       this.timeout = null;
     } else {
       this.typing = true;
-      this.comms.send(3 /* Typing */);
+      this.comms.send(
+        3
+        /* Typing */
+      );
     }
     this.timeout = setTimeout(() => this.stopTyping(), 3e3);
   }
   stopTyping() {
     if (!Comms.enabled || !this.typing) return;
-    this.comms.send(4 /* NotTyping */);
+    this.comms.send(
+      4
+      /* NotTyping */
+    );
     this.typing = false;
   }
 };
@@ -211,21 +219,13 @@ function UI($$anchor, $$props) {
     find: /}\);const (\S+)=.=>.{0,175}>%SPACE_HERE%/,
     callback: (formatter) => format = formatter
   });
-  api.hotkeys.addConfigurableHotkey(
-    {
-      category: "Chat",
-      title: "Open Chat",
-      preventDefault: false,
-      default: { key: "KeyY" }
-    },
-    (e) => {
-      if (document.activeElement !== document.body) return;
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      input.focus();
-    }
-  );
+  function open(e) {
+    if (document.activeElement !== document.body) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    input.focus();
+  }
   let messages = proxy([]);
   let inputText = state("");
   let sending = state(false);
@@ -247,6 +247,18 @@ function UI($$anchor, $$props) {
     if (shouldScroll || forceScroll) wrap.scrollTop = wrap.scrollHeight;
   }
   const chatter = new Chatter(addMessage);
+  let playersTypingText = derived(() => {
+    const names = chatter.playersTyping.map((player) => player.name);
+    if (names.length === 0) {
+      return "";
+    } else if (names.length > 3) {
+      return "Several players are typing...";
+    } else if (names.length === 1) {
+      return `${names[0]} is typing...`;
+    } else {
+      return `${names.slice(0, -2).join(", ")} and ${names.at(-1)} are typing.`;
+    }
+  });
   const onkeydown = (e) => {
     e.stopPropagation();
     if (e.key.length === 1 && e.key.charCodeAt(0) >= 256) {
@@ -271,6 +283,7 @@ function UI($$anchor, $$props) {
     }
     chatter.sendTyping();
   };
+  var $$exports = { open };
   var div = root();
   var div_1 = sibling(child(div), 2);
   var div_2 = child(div_1);
@@ -310,7 +323,7 @@ function UI($$anchor, $$props) {
   bind_this(input_1, ($$value) => input = $$value, () => input);
   reset(div);
   template_effect(() => {
-    set_text(text_2, globals_svelte_default.playersTypingText);
+    set_text(text_2, get(playersTypingText));
     set_attribute(input_1, "placeholder", get(inputPlaceholder));
     input_1.disabled = get(sending) || !globals_svelte_default.enabled;
   });
@@ -320,13 +333,24 @@ function UI($$anchor, $$props) {
   });
   bind_value(input_1, () => get(inputText), ($$value) => set(inputText, $$value));
   append($$anchor, div);
-  pop();
+  return pop($$exports);
 }
 delegate(["keydown"]);
 
 // plugins/Chat/src/index.ts
+var openChat = () => {
+};
+api.hotkeys.addConfigurableHotkey({
+  category: "Chat",
+  title: "Open Chat",
+  preventDefault: false,
+  default: {
+    key: "KeyY"
+  }
+}, openChat);
 api.net.onLoad(() => {
   const ui = mount(UI, { target: document.body });
+  openChat = ui.open;
   api.onStop(() => {
     unmount(ui);
   });
