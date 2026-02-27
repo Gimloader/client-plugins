@@ -123,7 +123,6 @@ export default class Chatter {
 
         if(this.typing) {
             if(this.timeout) clearTimeout(this.timeout);
-            this.timeout = null;
         } else {
             this.typing = true;
             this.comms.send(Op.Typing);

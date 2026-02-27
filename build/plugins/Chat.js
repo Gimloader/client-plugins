@@ -178,7 +178,6 @@ var Chatter = class {
     if (!settings.transmitTyping) return;
     if (this.typing) {
       if (this.timeout) clearTimeout(this.timeout);
-      this.timeout = null;
     } else {
       this.typing = true;
       this.comms.send(
