@@ -7,3 +7,4 @@ The following lines are currently available:
 * FPS
 * Ping
 * Fish value in Fishtopia
+* Plant drop rate in One Way Out

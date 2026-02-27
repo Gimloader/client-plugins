@@ -2,12 +2,12 @@
  * @name InfoLines
  * @description Displays a configurable list of info on the screen
  * @author TheLazySquid
- * @version 1.1.0
+ * @version 1.2.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/InfoLines.js
  * @webpage https://gimloader.github.io/plugins/InfoLines
  * @hasSettings true
  * @gamemode 2d
- * @changelog Added fish value line
+ * @changelog Added one way out plant drop rate
  */
 
 // plugins/InfoLines/src/styles.scss
@@ -37,6 +37,7 @@ var BaseLine = class {
   onUpdateCallbacks = [];
   settings;
   gamemode;
+  enabled = false;
   net = {
     on: (...args) => {
       this.onStop(() => {
@@ -56,6 +57,7 @@ var BaseLine = class {
   enable() {
     api.net.onLoad(() => {
       if (this.gamemode !== void 0 && this.gamemode !== api.net.gamemode) return;
+      this.enabled = true;
       if (this.onFrame) {
         this.patcher.after(api.stores.phaser.scene.worldManager, "update", () => this.onFrame?.());
       }
@@ -239,6 +241,85 @@ var FishValue = class extends BaseLine {
   }
 };
 
+// plugins/InfoLines/src/lines/plantDrops.ts
+var PlantDrops = class extends BaseLine {
+  name = "Plant Drops";
+  enabledDefault = false;
+  gamemode = "onewayout";
+  settings = [
+    {
+      id: "plantDropsMode",
+      title: "Plant Drops Mode",
+      type: "dropdown",
+      options: [
+        {
+          label: "Only show fraction",
+          value: "fraction"
+        },
+        {
+          label: "Only show percentage",
+          value: "percentage"
+        },
+        {
+          label: "Show fraction and percentage",
+          value: "both"
+        }
+      ],
+      default: "both",
+      onChange: () => {
+        if (!this.enabled) return;
+        this.updateDrops();
+      }
+    }
+  ];
+  knockouts = 0;
+  drops = 0;
+  init() {
+    this.setBlankDropRate();
+    this.net.on("KNOCKOUT", (e) => {
+      if (e.name !== "Evil Plant") return;
+      this.knockouts++;
+      let dropped = false;
+      const addDrop = (e2) => {
+        if (e2.devices.addedDevices.devices.length === 0) return;
+        dropped = true;
+        this.drops++;
+        this.updateDrops();
+        api.net.off("WORLD_CHANGES", addDrop);
+      };
+      setTimeout(() => {
+        api.net.off("WORLD_CHANGES", addDrop);
+        if (!dropped) this.updateDrops();
+      }, 100);
+      this.net.on("WORLD_CHANGES", addDrop);
+    });
+  }
+  getText(fraction, percent) {
+    if (percent) percent += "%";
+    const mode = api.settings.plantDropsMode;
+    if (mode === "fraction") return fraction;
+    if (mode === "percentage") return percent ?? "N/A";
+    if (percent) return `${fraction} (${percent})`;
+    return fraction;
+  }
+  setBlankDropRate() {
+    this.setDropRate("0/0", null);
+  }
+  setDropRate(fraction, percent) {
+    this.update(`drop rate: ${this.getText(fraction, percent)}`);
+  }
+  updateDrops() {
+    if (this.knockouts === 0) {
+      this.setBlankDropRate();
+    } else {
+      const percent = this.drops / this.knockouts * 100;
+      let percentStr = percent.toFixed(2);
+      if (percent === 0) percentStr = "0";
+      this.setDropRate(`${this.drops}/${this.knockouts}`, percentStr);
+    }
+  }
+};
+
 // plugins/InfoLines/src/index.ts
 api.UI.addStyles(styles_default);
 var InfoLines = class {
@@ -248,7 +329,8 @@ var InfoLines = class {
     new PhysicsCoordinates(),
     new FPS(),
     new Ping(),
-    new FishValue()
+    new FishValue(),
+    new PlantDrops()
   ];
   element;
   constructor() {

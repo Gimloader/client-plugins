@@ -2,14 +2,14 @@
  * @name Autosplitter
  * @description Automatically times speedruns for various gamemodes
  * @author TheLazySquid
- * @version 0.6.1
+ * @version 0.6.2
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Autosplitter.js
  * @webpage https://gimloader.github.io/plugins/Autosplitter
  * @hasSettings true
  * @gamemode dontLookDown
  * @gamemode fishtopia
  * @gamemode oneWayOut
- * @changelog Updated webpage url
+ * @changelog Moved plant drop rate to InfoLines
  */
 
 // external-svelte:svelte/internal/client
@@ -1431,14 +1431,6 @@ var OneWayOutUI = class extends SplitsUI {
   constructor(autosplitter2) {
     super(autosplitter2, oneWayOutSplits);
     this.autosplitter = autosplitter2;
-    this.dropRateDiv = document.createElement("div");
-    this.dropRateDiv.innerText = "0/0";
-    const bar = this.element.querySelector(".bar");
-    bar?.insertBefore(this.dropRateDiv, bar?.firstChild);
-  }
-  dropRateDiv;
-  setDropRate(rate) {
-    this.dropRateDiv.innerText = rate;
   }
 };
 
@@ -1447,8 +1439,6 @@ var OneWayOutAutosplitter = class extends SplitsAutosplitter {
   ui = new OneWayOutUI(this);
   timer = new SplitsTimer(this, this.ui);
   stage = 0;
-  drops = 0;
-  knockouts = 0;
   constructor() {
     super("OneWayOut");
     const gameSession = api.net.room.state.session.gameSession;
@@ -1463,23 +1453,6 @@ var OneWayOutAutosplitter = class extends SplitsAutosplitter {
           }
         }
       }
-    });
-    api.net.on("KNOCKOUT", (e) => {
-      if (e.name !== "Evil Plant") return;
-      this.knockouts++;
-      let dropped = false;
-      const addDrop = (e2) => {
-        if (e2.devices.addedDevices.devices.length === 0) return;
-        dropped = true;
-        this.drops++;
-        this.updateDrops();
-        api.net.off("WORLD_CHANGES", addDrop);
-      };
-      setTimeout(() => {
-        api.net.off("WORLD_CHANGES", addDrop);
-        if (!dropped) this.updateDrops();
-      }, 100);
-      api.net.on("WORLD_CHANGES", addDrop);
     });
     gameSession.listen("phase", (phase) => {
       if (phase === "results") {
@@ -1507,16 +1480,6 @@ var OneWayOutAutosplitter = class extends SplitsAutosplitter {
       }
     });
   }
-  updateDrops() {
-    if (this.knockouts === 0) {
-      this.ui.setDropRate("0/0");
-    } else {
-      const percent = this.drops / this.knockouts * 100;
-      let percentStr = percent.toFixed(2);
-      if (percent === 0) percentStr = "0";
-      this.ui.setDropRate(`${this.drops}/${this.knockouts} (${percentStr}%)`);
-    }
-  }
   getCategoryId() {
     return "OneWayOut";
   }
@@ -1525,8 +1488,6 @@ var OneWayOutAutosplitter = class extends SplitsAutosplitter {
     this.ui = new OneWayOutUI(this);
     this.timer = new SplitsTimer(this, this.ui);
     this.stage = 0;
-    this.drops = 0;
-    this.knockouts = 0;
   }
   destroy() {
     this.ui.remove();
