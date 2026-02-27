@@ -5,8 +5,8 @@ export default officialScriptConfig({
     name: "Chat",
     description: "Adds an in-game chat to 2d gamemodes",
     author: "TheLazySquid",
-    version: "0.2.8",
-    changelog: ["Updated webpage url"],
+    version: "0.3.0",
+    changelog: ["Added typing indicator"],
     needsLibs: ["Communication"],
     gamemodes: ["2d"]
 });
