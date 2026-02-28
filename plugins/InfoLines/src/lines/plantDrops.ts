@@ -67,7 +67,20 @@ export default class PlantDrops extends BaseLine {
         }, false);
     }
 
-    private setDropRate(fraction: string, percent: string | null) {
+    private updateDrops() {
+        let fraction = "";
+        let percent: string | null = null;
+
+        if(this.knockouts === 0) {
+            fraction = "0/0";
+            percent = null;
+        } else {
+            const percentNum = this.drops / this.knockouts * 100;
+            percent = percentNum.toFixed(2);
+            if(percentNum === 0) percent = "0";
+            fraction = `${this.drops}/${this.knockouts}`;
+        }
+
         const text = (() => {
             if(percent) percent += "%";
             const mode = api.settings.plantDropsMode;
@@ -78,16 +91,5 @@ export default class PlantDrops extends BaseLine {
         })();
 
         this.update(`drop rate: ${text}`);
-    }
-
-    private updateDrops() {
-        if(this.knockouts === 0) {
-            this.setDropRate("0/0", null);
-        } else {
-            const percent = this.drops / this.knockouts * 100;
-            let percentStr = percent.toFixed(2);
-            if(percent === 0) percentStr = "0";
-            this.setDropRate(`${this.drops}/${this.knockouts}`, percentStr);
-        }
     }
 }
