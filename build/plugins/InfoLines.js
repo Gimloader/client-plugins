@@ -293,6 +293,11 @@ var PlantDrops = class extends BaseLine {
       }, 100);
       this.net.on("WORLD_CHANGES", addDrop);
     });
+    api.net.room.state.session.listen("phase", () => {
+      this.knockouts = 0;
+      this.drops = 0;
+      this.updateDrops();
+    }, false);
   }
   getText(fraction, percent) {
     if (percent) percent += "%";
