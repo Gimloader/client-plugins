@@ -7,6 +7,7 @@ export default abstract class BaseLine {
     private onUpdateCallbacks: OnUpdateCallback[] = [];
     settings?: Gimloader.PluginSetting[];
     gamemode?: string;
+    protected enabled = false;
 
     protected net = {
         on: (...args: Parameters<Gimloader.NetApi["on"]>) => {
@@ -29,6 +30,8 @@ export default abstract class BaseLine {
     enable() {
         api.net.onLoad(() => {
             if(this.gamemode !== undefined && this.gamemode !== api.net.gamemode) return;
+
+            this.enabled = true;
 
             if(this.onFrame) {
                 this.patcher.after(api.stores.phaser.scene.worldManager, "update", () => this.onFrame?.());
