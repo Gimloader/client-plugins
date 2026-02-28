@@ -35,7 +35,7 @@ export default class PlantDrops extends BaseLine {
     private drops = 0;
 
     init() {
-        this.setBlankDropRate();
+        this.updateDrops();
 
         this.net.on("KNOCKOUT", (e) => {
             if(e.name !== "Evil Plant") return;
@@ -67,26 +67,22 @@ export default class PlantDrops extends BaseLine {
         }, false);
     }
 
-    private getText(fraction: string, percent: string | null) {
-        if(percent) percent += "%";
-        const mode = api.settings.plantDropsMode;
-        if(mode === "fraction") return fraction;
-        if(mode === "percentage") return percent ?? "N/A";
-        if(percent) return `${fraction} (${percent})`;
-        return fraction;
-    }
-
-    private setBlankDropRate() {
-        this.setDropRate("0/0", null);
-    }
-
     private setDropRate(fraction: string, percent: string | null) {
-        this.update(`drop rate: ${this.getText(fraction, percent)}`);
+        const text = (() => {
+            if(percent) percent += "%";
+            const mode = api.settings.plantDropsMode;
+            if(mode === "fraction") return fraction;
+            if(mode === "percentage") return percent ?? "N/A";
+            if(percent) return `${fraction} (${percent})`;
+            return fraction;
+        })();
+
+        this.update(`drop rate: ${text}`);
     }
 
     private updateDrops() {
         if(this.knockouts === 0) {
-            this.setBlankDropRate();
+            this.setDropRate("0/0", null);
         } else {
             const percent = this.drops / this.knockouts * 100;
             let percentStr = percent.toFixed(2);
