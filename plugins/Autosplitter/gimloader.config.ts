@@ -5,8 +5,8 @@ export default officialScriptConfig({
     name: "Autosplitter",
     description: "Automatically times speedruns for various gamemodes",
     author: "TheLazySquid",
-    version: "0.6.1",
+    version: "0.6.2",
     hasSettings: true,
     gamemodes: ["dontLookDown", "fishtopia", "oneWayOut"],
-    changelog: ["Updated webpage url"]
+    changelog: ["Moved plant drop rate to InfoLines"]
 });
