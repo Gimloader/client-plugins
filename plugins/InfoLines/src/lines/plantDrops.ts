@@ -77,7 +77,7 @@ export default class PlantDrops extends BaseLine {
     }
 
     private updateDrops() {
-        let fraction = `${this.drops}/${this.knockouts}`;
+        const fraction = `${this.drops}/${this.knockouts}`;
         let percent: string | null = null;
 
         if(this.knockouts > 0) {

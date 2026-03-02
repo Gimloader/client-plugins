@@ -307,13 +307,13 @@ var PlantDrops = class extends BaseLine {
     return fraction;
   }
   updateDrops() {
-    let fraction = `${this.drops}/${this.knockouts}`;
+    const fraction = `${this.drops}/${this.knockouts}`;
     let percent = null;
     if (this.knockouts > 0) {
       const percentNum = this.drops / this.knockouts * 100;
       percent = percentNum.toFixed(2) + "%";
     }
-    this.update(`drop rate: ${this.formatText(fraction, percent)}`);
+    this.update(`keycard rates: ${this.formatText(fraction, percent)}`);
   }
 };
 
