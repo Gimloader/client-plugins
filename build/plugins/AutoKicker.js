@@ -2,10 +2,10 @@
  * @name AutoKicker
  * @description Automatically kicks players from your lobby with a customizable set of rules
  * @author TheLazySquid
- * @version 0.2.6
+ * @version 0.3.0
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/AutoKicker.js
  * @webpage https://gimloader.github.io/plugins/AutoKicker
- * @changelog Updated webpage url
+ * @changelog Added a setting to disable notifying
  */
 
 // plugins/AutoKicker/src/consts.ts
@@ -88,6 +88,7 @@ var AutoKicker = class {
   kickSkinless = false;
   kickIdle = false;
   kickBlank = false;
+  notify = false;
   blacklist = [];
   idleDelay = 2e4;
   UIVisible = true;
@@ -106,6 +107,7 @@ var AutoKicker = class {
     this.blacklist = settings.blacklist ?? [];
     this.kickBlank = settings.kickBlank ?? false;
     this.kickIdle = settings.kickIdle ?? false;
+    this.notify = settings.notify ?? false;
     this.idleDelay = settings.idleDelay ?? 2e4;
   }
   saveSettings() {
@@ -115,6 +117,7 @@ var AutoKicker = class {
       blacklist: this.blacklist,
       kickBlank: this.kickBlank,
       kickIdle: this.kickIdle,
+      notify: this.notify,
       idleDelay: this.idleDelay
     });
   }
@@ -279,14 +282,14 @@ var AutoKicker = class {
     this.kicked.add(id);
     const char = api.net.room.state.characters.get(id);
     api.net.send("KICK_PLAYER", { characterId: id });
-    api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
+    if (this.notify) api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
   }
   blueboatKick(id, reason) {
     if (this.kicked.has(id)) return;
     this.kicked.add(id);
     const playername = this.lastLeaderboard?.find((e) => e.id === id)?.name;
     api.net.send("KICK_PLAYER", id);
-    api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
+    if (this.notify) api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
   }
 };
 
@@ -379,6 +382,7 @@ function UI({ autoKicker: autoKicker2 }) {
   const [kickSkinless, setKickSkinless] = React.useState(autoKicker2.kickSkinless);
   const [kickBlank, setKickBlank] = React.useState(autoKicker2.kickBlank);
   const [kickIdle, setKickIdle] = React.useState(autoKicker2.kickIdle);
+  const [notify, setNotify] = React.useState(autoKicker2.notify);
   const [kickIdleDelay, setKickIdleDelay] = React.useState(autoKicker2.idleDelay);
   const [blacklist, setBlacklist] = React.useState(autoKicker2.blacklist);
   return /* @__PURE__ */ GL.React.createElement("div", { className: "root" }, /* @__PURE__ */ GL.React.createElement("div", { className: "checkboxes" }, /* @__PURE__ */ GL.React.createElement("label", null, "Kick duplicates"), /* @__PURE__ */ GL.React.createElement(
@@ -429,6 +433,17 @@ function UI({ autoKicker: autoKicker2 }) {
         setKickIdle(e.target.checked);
         autoKicker2.setKickIdle(e.target.checked);
         autoKicker2.saveSettings();
+      },
+      onKeyDown: (e) => e.preventDefault()
+    }
+  ), /* @__PURE__ */ GL.React.createElement("label", null, "Notify when kicking"), /* @__PURE__ */ GL.React.createElement(
+    "input",
+    {
+      type: "checkbox",
+      checked: notify,
+      onChange: (e) => {
+        setNotify(e.target.checked);
+        autoKicker2.notify = e.target.checked;
       },
       onKeyDown: (e) => e.preventDefault()
     }

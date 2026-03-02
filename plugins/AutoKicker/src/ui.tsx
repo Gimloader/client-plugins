@@ -8,6 +8,7 @@ export default function UI({ autoKicker }: { autoKicker: AutoKicker }) {
     const [kickSkinless, setKickSkinless] = React.useState(autoKicker.kickSkinless);
     const [kickBlank, setKickBlank] = React.useState(autoKicker.kickBlank);
     const [kickIdle, setKickIdle] = React.useState(autoKicker.kickIdle);
+    const [notify, setNotify] = React.useState(autoKicker.notify);
     const [kickIdleDelay, setKickIdleDelay] = React.useState(autoKicker.idleDelay);
     const [blacklist, setBlacklist] = React.useState(autoKicker.blacklist);
 
@@ -55,6 +56,15 @@ export default function UI({ autoKicker }: { autoKicker: AutoKicker }) {
                         setKickIdle(e.target.checked);
                         autoKicker.setKickIdle(e.target.checked);
                         autoKicker.saveSettings();
+                    }}
+                    onKeyDown={(e) => e.preventDefault()} />
+                <label>Notify when kicking</label>
+                <input
+                    type="checkbox"
+                    checked={notify}
+                    onChange={(e) => {
+                        setNotify(e.target.checked);
+                        autoKicker.notify = e.target.checked;
                     }}
                     onKeyDown={(e) => e.preventDefault()} />
             </div>
