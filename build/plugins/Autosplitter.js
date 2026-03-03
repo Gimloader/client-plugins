@@ -2,14 +2,14 @@
  * @name Autosplitter
  * @description Automatically times speedruns for various gamemodes
  * @author TheLazySquid
- * @version 0.6.2
+ * @version 0.6.3
  * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Autosplitter.js
  * @webpage https://gimloader.github.io/plugins/Autosplitter
  * @hasSettings true
  * @gamemode dontLookDown
  * @gamemode fishtopia
  * @gamemode oneWayOut
- * @changelog Moved plant drop rate to InfoLines
+ * @changelog Maybe fixed Fishtopia splits resetting
  */
 
 // external-svelte:svelte/internal/client
@@ -139,7 +139,7 @@ var DLDDefaults = {
 };
 function getDLDData() {
   const data = api.storage.getValue("DLDData", {});
-  return Object.assign(DLDDefaults, data);
+  return Object.assign({}, DLDDefaults, data);
 }
 var splitsDefaults = {
   attempts: {},
@@ -154,11 +154,11 @@ var splitsDefaults = {
 };
 function getFishtopiaData() {
   const data = api.storage.getValue("FishtopiaData", {});
-  return Object.assign(splitsDefaults, data);
+  return Object.assign({}, splitsDefaults, data);
 }
 function getOneWayOutData() {
   const data = api.storage.getValue("OneWayOutData", {});
-  return Object.assign(splitsDefaults, data);
+  return Object.assign({}, splitsDefaults, data);
 }
 function downloadFile(data, filename) {
   const blob = new Blob([data], { type: "application/json" });
@@ -685,7 +685,6 @@ function Settings($$anchor, $$props) {
   }
   let data = proxy(dataObj);
   function save() {
-    console.log(snapshot(data));
     for (let gamemode of gamemodes) {
       api.storage.setValue(`${gamemode}Data`, snapshot(data[gamemode]));
     }

@@ -15,7 +15,6 @@
     let data: GamemodesData = $state(dataObj);
 
     export function save() {
-        console.log($state.snapshot(data));
         for(let gamemode of gamemodes) {
             api.storage.setValue(`${gamemode}Data`, $state.snapshot(data[gamemode]));
         }
