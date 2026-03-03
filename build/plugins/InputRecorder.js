@@ -3,10 +3,10 @@
  * @description Records your inputs in Don't Look Down
  * @author TheLazySquid
  * @version 0.4.1
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/InputRecorder.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/builds/main/plugins/InputRecorder.js
  * @webpage https://gimloader.github.io/plugins/InputRecorder
  * @reloadRequired ingame
- * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Desynchronize.js
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/builds/main/plugins/Desynchronize.js
  * @gamemode dontLookDown
  * @changelog Updated webpage url
  */

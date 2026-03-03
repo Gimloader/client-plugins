@@ -3,9 +3,9 @@
  * @description Allows you to create TASes for Dont Look Down
  * @author TheLazySquid
  * @version 0.6.0
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/DLDTAS.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/builds/main/plugins/DLDTAS.js
  * @webpage https://gimloader.github.io/plugins/DLDTAS
- * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Desynchronize.js
+ * @needsPlugin Desynchronize | https://raw.githubusercontent.com/Gimloader/builds/main/plugins/Desynchronize.js
  * @gamemode dontLookDown
  * @changelog Added a command for jumping to any frame
  */

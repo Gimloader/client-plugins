@@ -3,9 +3,9 @@
  * @description Disables the client being snapped back by the server, others cannot see you move. Breaks most gamemodes.
  * @author TheLazySquid
  * @version 0.2.2
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Desynchronize.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/builds/main/plugins/Desynchronize.js
  * @webpage https://gimloader.github.io/plugins/Desynchronize
- * @optionalLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
+ * @optionalLib Communication | https://raw.githubusercontent.com/Gimloader/builds/main/libraries/Communication.js
  * @gamemode 2d
  * @changelog Updated webpage url
  */

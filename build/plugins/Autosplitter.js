@@ -3,7 +3,7 @@
  * @description Automatically times speedruns for various gamemodes
  * @author TheLazySquid
  * @version 0.6.3
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Autosplitter.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/builds/main/plugins/Autosplitter.js
  * @webpage https://gimloader.github.io/plugins/Autosplitter
  * @hasSettings true
  * @gamemode dontLookDown
