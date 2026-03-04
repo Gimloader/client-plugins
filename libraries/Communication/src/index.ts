@@ -40,7 +40,7 @@ export default class Communication<T extends Message = Message> {
         const unsub: () => void = api.net.room.state.session.listen("phase", (phase: string) => {
             callback(phase === "game");
         }, false);
-        
+
         this.#onDisabledCallbacks.push(unsub);
         return unsub;
     }
