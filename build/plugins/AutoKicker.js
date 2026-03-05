@@ -82,13 +82,20 @@ var characters = [
 var invisRegex = new RegExp(`[${characters.join("")}\\s]`, "g");
 
 // plugins/AutoKicker/src/autokicker.ts
+var settings = api.settings.create([
+  {
+    id: "notify",
+    type: "toggle",
+    title: "Notify when kicking",
+    default: true
+  }
+]);
 var AutoKicker = class {
   lastLeaderboard = null;
   kickDuplicateNames = false;
   kickSkinless = false;
   kickIdle = false;
   kickBlank = false;
-  notify = false;
   blacklist = [];
   idleDelay = 2e4;
   UIVisible = true;
@@ -101,14 +108,13 @@ var AutoKicker = class {
     return api.stores.phaser.mainCharacter.id;
   }
   loadSettings() {
-    const settings = api.storage.getValue("Settings", {});
-    this.kickDuplicateNames = settings.kickDuplicateNames ?? false;
-    this.kickSkinless = settings.kickSkinless ?? false;
-    this.blacklist = settings.blacklist ?? [];
-    this.kickBlank = settings.kickBlank ?? false;
-    this.kickIdle = settings.kickIdle ?? false;
-    this.notify = settings.notify ?? false;
-    this.idleDelay = settings.idleDelay ?? 2e4;
+    const settings2 = api.storage.getValue("Settings", {});
+    this.kickDuplicateNames = settings2.kickDuplicateNames ?? false;
+    this.kickSkinless = settings2.kickSkinless ?? false;
+    this.blacklist = settings2.blacklist ?? [];
+    this.kickBlank = settings2.kickBlank ?? false;
+    this.kickIdle = settings2.kickIdle ?? false;
+    this.idleDelay = settings2.idleDelay ?? 2e4;
   }
   saveSettings() {
     api.storage.setValue("Settings", {
@@ -117,7 +123,6 @@ var AutoKicker = class {
       blacklist: this.blacklist,
       kickBlank: this.kickBlank,
       kickIdle: this.kickIdle,
-      notify: this.notify,
       idleDelay: this.idleDelay
     });
   }
@@ -282,14 +287,14 @@ var AutoKicker = class {
     this.kicked.add(id);
     const char = api.net.room.state.characters.get(id);
     api.net.send("KICK_PLAYER", { characterId: id });
-    if (this.notify) api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
+    if (settings.notify) api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
   }
   blueboatKick(id, reason) {
     if (this.kicked.has(id)) return;
     this.kicked.add(id);
     const playername = this.lastLeaderboard?.find((e) => e.id === id)?.name;
     api.net.send("KICK_PLAYER", id);
-    if (this.notify) api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
+    if (settings.notify) api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
   }
 };
 
@@ -382,7 +387,6 @@ function UI({ autoKicker: autoKicker2 }) {
   const [kickSkinless, setKickSkinless] = React.useState(autoKicker2.kickSkinless);
   const [kickBlank, setKickBlank] = React.useState(autoKicker2.kickBlank);
   const [kickIdle, setKickIdle] = React.useState(autoKicker2.kickIdle);
-  const [notify, setNotify] = React.useState(autoKicker2.notify);
   const [kickIdleDelay, setKickIdleDelay] = React.useState(autoKicker2.idleDelay);
   const [blacklist, setBlacklist] = React.useState(autoKicker2.blacklist);
   return /* @__PURE__ */ GL.React.createElement("div", { className: "root" }, /* @__PURE__ */ GL.React.createElement("div", { className: "checkboxes" }, /* @__PURE__ */ GL.React.createElement("label", null, "Kick duplicates"), /* @__PURE__ */ GL.React.createElement(
@@ -433,17 +437,6 @@ function UI({ autoKicker: autoKicker2 }) {
         setKickIdle(e.target.checked);
         autoKicker2.setKickIdle(e.target.checked);
         autoKicker2.saveSettings();
-      },
-      onKeyDown: (e) => e.preventDefault()
-    }
-  ), /* @__PURE__ */ GL.React.createElement("label", null, "Notify when kicking"), /* @__PURE__ */ GL.React.createElement(
-    "input",
-    {
-      type: "checkbox",
-      checked: notify,
-      onChange: (e) => {
-        setNotify(e.target.checked);
-        autoKicker2.notify = e.target.checked;
       },
       onKeyDown: (e) => e.preventDefault()
     }

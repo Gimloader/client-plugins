@@ -1,6 +1,15 @@
 import { invisRegex } from "./consts";
 import type { IBlacklistedName } from "./types";
 
+const settings = api.settings.create([
+    {
+        id: "notify",
+        type: "toggle",
+        title: "Notify when kicking",
+        default: true
+    }
+])
+
 export default class AutoKicker {
     lastLeaderboard: any[] | null = null;
 
@@ -8,7 +17,6 @@ export default class AutoKicker {
     kickSkinless = false;
     kickIdle = false;
     kickBlank = false;
-    notify = false;
     blacklist: IBlacklistedName[] = [];
     idleDelay = 20000;
     UIVisible = true;
@@ -32,7 +40,6 @@ export default class AutoKicker {
         this.blacklist = settings.blacklist ?? [];
         this.kickBlank = settings.kickBlank ?? false;
         this.kickIdle = settings.kickIdle ?? false;
-        this.notify = settings.notify ?? false;
         this.idleDelay = settings.idleDelay ?? 20000;
     }
 
@@ -43,7 +50,6 @@ export default class AutoKicker {
             blacklist: this.blacklist,
             kickBlank: this.kickBlank,
             kickIdle: this.kickIdle,
-            notify: this.notify,
             idleDelay: this.idleDelay
         });
     }
@@ -259,7 +265,7 @@ export default class AutoKicker {
         const char = api.net.room.state.characters.get(id)!;
 
         api.net.send("KICK_PLAYER", { characterId: id });
-        if(this.notify) api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
+        if(settings.notify) api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
     }
 
     blueboatKick(id: string, reason: string) {
@@ -269,6 +275,6 @@ export default class AutoKicker {
         const playername = this.lastLeaderboard?.find((e) => e.id === id)?.name;
 
         api.net.send("KICK_PLAYER", id);
-        if(this.notify) api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
+        if(settings.notify) api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
     }
 }
