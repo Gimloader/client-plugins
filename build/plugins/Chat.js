@@ -341,7 +341,9 @@ api.hotkeys.addConfigurableHotkey({
   default: {
     key: "KeyY"
   }
-}, openChat);
+}, (e) => {
+  openChat(e);
+});
 api.net.onLoad(() => {
   const ui = mount(UI, { target: document.body });
   openChat = ui.open;
