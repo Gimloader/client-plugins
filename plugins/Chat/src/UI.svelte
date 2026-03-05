@@ -2,16 +2,6 @@
     import { tick } from "svelte";
     import Chatter from "./chatter.svelte";
 
-    // Get the formatter that is used for formatting the activity feed
-    type Formatter = (message: { inputText: string }) => string;
-    let format: Formatter | null = null;
-
-    api.rewriter.exposeVar("App", {
-        check: ">%SPACE_HERE",
-        find: /}\);const (\S+)=.=>.{0,175}>%SPACE_HERE%/,
-        callback: (formatter) => format = formatter
-    });
-
     export function open(e: KeyboardEvent) {
         if(document.activeElement !== document.body) return;
         e.preventDefault();
@@ -20,33 +10,20 @@
         input.focus();
     }
 
-    interface Message {
-        type: "plaintext" | "formatted";
-        message: string;
-    }
-
-    let messages = $state<Message[]>([]);
     let inputText = $state("");
-    let sending = $state(false);
     let wrap: HTMLDivElement;
     let input: HTMLInputElement;
 
-    function addMessage(text: string, shouldFormat?: boolean, forceScroll = false) {
-        if(format && shouldFormat) text = format({ inputText: text });
-        if(messages.length === 100) messages.splice(0, 1);
-        messages.push({
-            type: shouldFormat ? "formatted" : "plaintext",
-            message: text
-        });
+    function scroll(force: boolean) {
         const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
-        if(shouldScroll || forceScroll) wrap.scrollTop = wrap.scrollHeight;
+        if(shouldScroll || force) wrap.scrollTop = wrap.scrollHeight;
     }
 
-    const chatter = new Chatter(addMessage);
+    const chatter = new Chatter(scroll);
 
     let inputPlaceholder = $derived.by(() => {
         if(!chatter.enabled) return "Chat not available in lobby";
-        if(sending) return "Sending...";
+        if(chatter.sending) return "Sending...";
         return "...";
     });
 
@@ -73,10 +50,11 @@
         }
 
         if(e.key === "Enter") {
+            if(inputText.length === 0) return;
             e.preventDefault();
-            sending = true;
+            chatter.sending = true;
             chatter.send(inputText).then(async () => {
-                sending = false;
+                chatter.sending = false;
                 await tick();
                 input.focus();
             });
@@ -98,7 +76,7 @@
     <div class="chat-spacer"></div>
     <div bind:this={wrap} class="chat-messages-wrap">
         <div class="chat-messages">
-            {#each messages as message}
+            {#each chatter.messages as message}
                 <div>
                     {#if message.type === "formatted"}
                         {@html message.message}
@@ -115,12 +93,12 @@
         bind:value={inputText}
         {onkeydown}
         onblur={() => {
-            if(sending) return;
+            if(chatter.sending) return;
             chatter.stopTyping();
         }}
         maxlength={1000}
         placeholder={inputPlaceholder}
-        disabled={sending || !chatter.enabled}
+        disabled={chatter.sending || !chatter.enabled}
     >
 </div>
 

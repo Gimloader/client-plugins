@@ -64,9 +64,15 @@ var Op = ((Op2) => {
   Op2[Op2["NotTyping"] = 4] = "NotTyping";
   return Op2;
 })(Op || {});
+var format = null;
+api.rewriter.exposeVar("App", {
+  check: ">%SPACE_HERE",
+  find: /}\);const (\S+)=.=>.{0,175}>%SPACE_HERE%/,
+  callback: (formatter) => format = formatter
+});
 var Chatter = class {
-  constructor(addMessage) {
-    this.addMessage = addMessage;
+  constructor(scroll) {
+    this.scroll = scroll;
     api.net.on("ACTIVITY_FEED_MESSAGE", (message, editFn) => {
       this.addMessage(`> ${message.message}`, true);
       editFn(null);
@@ -98,7 +104,7 @@ var Chatter = class {
             removePlayerTyping();
             break;
           case 2:
-            addMessage(`${char.name} connected to the chat`, false);
+            this.addMessage(`${char.name} connected to the chat`, false);
             this.comms.send(
               0
               /* Join */
@@ -121,13 +127,13 @@ var Chatter = class {
     this.comms.onEnabledChanged(() => {
       this.enabled = Comms.enabled;
       if (Comms.enabled) {
-        addMessage("The chat is active!", false);
+        this.addMessage("The chat is active!", false);
         this.comms.send(
           0
           /* Join */
         );
       } else {
-        addMessage("The chat is no longer active", false);
+        this.addMessage("The chat is no longer active", false);
         this.playersTyping = [];
         if (this.typing && this.timeout) {
           clearTimeout(this.timeout);
@@ -158,6 +164,29 @@ var Chatter = class {
   }
   set enabled(value) {
     set(this.#enabled, value, true);
+  }
+  #messages = state(proxy([]));
+  get messages() {
+    return get(this.#messages);
+  }
+  set messages(value) {
+    set(this.#messages, value, true);
+  }
+  #sending = state(false);
+  get sending() {
+    return get(this.#sending);
+  }
+  set sending(value) {
+    set(this.#sending, value, true);
+  }
+  addMessage(text2, shouldFormat, forceScroll = false) {
+    if (format && shouldFormat) text2 = format({ inputText: text2 });
+    if (this.messages.length === 100) this.messages.splice(0, 1);
+    this.messages.push({
+      type: shouldFormat ? "formatted" : "plaintext",
+      message: text2
+    });
+    this.scroll(forceScroll);
   }
   sendLeave() {
     if (!Comms.enabled) return;
@@ -207,12 +236,6 @@ var $$css = {
 function UI($$anchor, $$props) {
   push($$props, true);
   append_styles($$anchor, $$css);
-  let format = null;
-  api.rewriter.exposeVar("App", {
-    check: ">%SPACE_HERE",
-    find: /}\);const (\S+)=.=>.{0,175}>%SPACE_HERE%/,
-    callback: (formatter) => format = formatter
-  });
   function open(e) {
     if (document.activeElement !== document.body) return;
     e.preventDefault();
@@ -220,25 +243,17 @@ function UI($$anchor, $$props) {
     e.stopImmediatePropagation();
     input.focus();
   }
-  let messages = proxy([]);
   let inputText = state("");
-  let sending = state(false);
   let wrap;
   let input;
-  function addMessage(text2, shouldFormat, forceScroll = false) {
-    if (format && shouldFormat) text2 = format({ inputText: text2 });
-    if (messages.length === 100) messages.splice(0, 1);
-    messages.push({
-      type: shouldFormat ? "formatted" : "plaintext",
-      message: text2
-    });
+  function scroll(force) {
     const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
-    if (shouldScroll || forceScroll) wrap.scrollTop = wrap.scrollHeight;
+    if (shouldScroll || force) wrap.scrollTop = wrap.scrollHeight;
   }
-  const chatter = new Chatter(addMessage);
+  const chatter = new Chatter(scroll);
   let inputPlaceholder = derived(() => {
     if (!chatter.enabled) return "Chat not available in lobby";
-    if (get(sending)) return "Sending...";
+    if (chatter.sending) return "Sending...";
     return "...";
   });
   let playersTypingText = derived(() => {
@@ -260,10 +275,11 @@ function UI($$anchor, $$props) {
       return;
     }
     if (e.key === "Enter") {
+      if (get(inputText).length === 0) return;
       e.preventDefault();
-      set(sending, true);
+      chatter.sending = true;
       chatter.send(get(inputText)).then(async () => {
-        set(sending, false);
+        chatter.sending = false;
         await tick();
         input.focus();
       });
@@ -281,7 +297,7 @@ function UI($$anchor, $$props) {
   var div = root();
   var div_1 = sibling(child(div), 2);
   var div_2 = child(div_1);
-  each(div_2, 21, () => messages, index, ($$anchor2, message) => {
+  each(div_2, 21, () => chatter.messages, index, ($$anchor2, message) => {
     var div_3 = root_1();
     var node = child(div_3);
     {
@@ -292,9 +308,9 @@ function UI($$anchor, $$props) {
         append($$anchor3, fragment);
       };
       var alternate = ($$anchor3) => {
-        var text_1 = text();
-        template_effect(() => set_text(text_1, get(message).message));
-        append($$anchor3, text_1);
+        var text2 = text();
+        template_effect(() => set_text(text2, get(message).message));
+        append($$anchor3, text2);
       };
       if_export(node, ($$render) => {
         if (get(message).type === "formatted") $$render(consequent);
@@ -306,7 +322,7 @@ function UI($$anchor, $$props) {
   });
   reset(div_2);
   var div_4 = sibling(div_2, 2);
-  var text_2 = child(div_4, true);
+  var text_1 = child(div_4, true);
   reset(div_4);
   reset(div_1);
   bind_this(div_1, ($$value) => wrap = $$value, () => wrap);
@@ -317,12 +333,12 @@ function UI($$anchor, $$props) {
   bind_this(input_1, ($$value) => input = $$value, () => input);
   reset(div);
   template_effect(() => {
-    set_text(text_2, get(playersTypingText));
+    set_text(text_1, get(playersTypingText));
     set_attribute(input_1, "placeholder", get(inputPlaceholder));
-    input_1.disabled = get(sending) || !chatter.enabled;
+    input_1.disabled = chatter.sending || !chatter.enabled;
   });
   event("blur", input_1, () => {
-    if (get(sending)) return;
+    if (chatter.sending) return;
     chatter.stopTyping();
   });
   bind_value(input_1, () => get(inputText), ($$value) => set(inputText, $$value));

@@ -18,6 +18,22 @@ const enum Op {
     NotTyping
 }
 
+interface Message {
+    type: "plaintext" | "formatted";
+    message: string;
+}
+
+// Get the formatter that is used for formatting the activity feed
+type Formatter = (message: { inputText: string }) => string;
+
+let format: Formatter | null = null;
+
+api.rewriter.exposeVar("App", {
+    check: ">%SPACE_HERE",
+    find: /}\);const (\S+)=.=>.{0,175}>%SPACE_HERE%/,
+    callback: (formatter) => format = formatter
+});
+
 export default class Chatter {
     private readonly comms = new Comms<string | Op>("Chat");
     private readonly me = api.net.room.state.characters.get(api.stores.network.authId);
@@ -25,8 +41,20 @@ export default class Chatter {
     private timeout: ReturnType<typeof setTimeout> | null = null;
     playersTyping = $state<any[]>([]);
     enabled = $state(Comms.enabled);
+    messages = $state<Message[]>([]);
+    sending = $state(false);
 
-    constructor(private readonly addMessage: (text: string, format: boolean, forceScroll?: boolean) => void) {
+    private addMessage(text: string, shouldFormat?: boolean, forceScroll = false) {
+        if(format && shouldFormat) text = format({ inputText: text });
+        if(this.messages.length === 100) this.messages.splice(0, 1);
+        this.messages.push({
+            type: shouldFormat ? "formatted" : "plaintext",
+            message: text
+        });
+        this.scroll(forceScroll);
+    }
+
+    constructor(private readonly scroll: (force: boolean) => void) {
         // redirect the activity feed to the chat
         api.net.on("ACTIVITY_FEED_MESSAGE", (message: any, editFn) => {
             this.addMessage(`> ${message.message}`, true);
@@ -60,7 +88,7 @@ export default class Chatter {
                         removePlayerTyping();
                         break;
                     case Op.Greet:
-                        addMessage(`${char.name} connected to the chat`, false);
+                        this.addMessage(`${char.name} connected to the chat`, false);
                         // resend that we have joined whenever someone joins the chat mid-game
                         this.comms.send(Op.Join);
                         joinedPlayers.add(char.id);
@@ -85,10 +113,10 @@ export default class Chatter {
         this.comms.onEnabledChanged(() => {
             this.enabled = Comms.enabled;
             if(Comms.enabled) {
-                addMessage("The chat is active!", false);
+                this.addMessage("The chat is active!", false);
                 this.comms.send(Op.Join);
             } else {
-                addMessage("The chat is no longer active", false);
+                this.addMessage("The chat is no longer active", false);
                 this.playersTyping = [];
                 if(this.typing && this.timeout) {
                     clearTimeout(this.timeout);
