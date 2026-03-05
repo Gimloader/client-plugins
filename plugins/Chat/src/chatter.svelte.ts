@@ -10,7 +10,7 @@ const settings = api.settings.create([
     }
 ]);
 
-enum Op {
+const enum Op {
     Join,
     Leave,
     Greet,
