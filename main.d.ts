@@ -7,7 +7,7 @@ declare namespace Gimloader {
     }
     
     interface Libraries {
-        Communication: typeof import("libraries/Communication/src").default
+        Communication: typeof import("libraries/Communication/src").default;
     }
 }
 

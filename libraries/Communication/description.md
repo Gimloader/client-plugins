@@ -16,7 +16,7 @@ Everything else is sent as multiple angles, and the time it takes to send depend
 
 ```js
 /**
- * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
+ * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/builds/main/libraries/Communication.js
  */
 
 const Communication = api.lib("Communication");

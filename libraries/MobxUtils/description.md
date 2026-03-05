@@ -4,7 +4,7 @@ This library is mostly unnecessary after the introduction of the [rewriter](/api
 
 ```js
 /**
- * @needsLib MobxUtils | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/MobxUtils.js
+ * @needsLib MobxUtils | https://raw.githubusercontent.com/Gimloader/builds/main/libraries/MobxUtils.js
  */
 
 const MobxUtils = api.lib("MobxUtils");

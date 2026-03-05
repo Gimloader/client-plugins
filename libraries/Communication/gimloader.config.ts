@@ -5,8 +5,8 @@ export default officialScriptConfig({
     name: "Communication",
     description: "Communication between different clients in 2D gamemodes",
     author: "retrozy",
-    version: "0.4.1",
-    changelog: ["Updated webpage url"],
+    version: "0.4.2",
+    changelog: ["Enabled state is now passed to onEnabledChange callback"],
     gamemodes: ["2d"],
     isLibrary: true
 });

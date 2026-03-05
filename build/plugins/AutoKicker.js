@@ -3,7 +3,7 @@
  * @description Automatically kicks players from your lobby with a customizable set of rules
  * @author TheLazySquid
  * @version 0.3.0
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/AutoKicker.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/builds/main/plugins/AutoKicker.js
  * @webpage https://gimloader.github.io/plugins/AutoKicker
  * @changelog Added a setting to disable notifying
  */
