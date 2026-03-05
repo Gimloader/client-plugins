@@ -12,6 +12,7 @@
         "dprint": "^0.50.2",
         "esbuild-sass-plugin": "^3.3.1",
         "esbuild-svelte": "^0.9.4",
+        "mobx": "^6.15.0",
         "svelte": "5.43.0",
         "svelte-check": "^4.3.5",
         "svelte-toggle": "^4.0.1",

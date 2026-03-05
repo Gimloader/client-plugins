@@ -4,7 +4,7 @@ type DistributiveOmit<T, K extends keyof T> = T extends any ? Omit<T, K> : never
 type ConfigInfo = DistributiveOmit<SingleConfig, "downloadUrl" | "webpage">;
 type Category = "libraries" | "plugins";
 
-const baseDownloadUrl = "https://raw.githubusercontent.com/Gimloader/client-plugins/main/build";
+const baseDownloadUrl = "https://raw.githubusercontent.com/Gimloader/builds/main";
 const baseWebpageUrl = "https://gimloader.github.io";
 
 function mapDependency(category: Category) {

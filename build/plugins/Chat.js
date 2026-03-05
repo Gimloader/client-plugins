@@ -3,9 +3,9 @@
  * @description Adds an in-game chat to 2d gamemodes
  * @author TheLazySquid
  * @version 0.3.0
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/plugins/Chat.js
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/builds/main/plugins/Chat.js
  * @webpage https://gimloader.github.io/plugins/Chat
- * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/client-plugins/main/build/libraries/Communication.js
+ * @needsLib Communication | https://raw.githubusercontent.com/Gimloader/builds/main/libraries/Communication.js
  * @gamemode 2d
  * @changelog Added typing indicator
  */

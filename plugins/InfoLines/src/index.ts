@@ -5,6 +5,8 @@ import FPS from "./lines/fps";
 import PhysicsCoordinates from "./lines/physicsCoordinates";
 import Velocity from "./lines/velocity";
 import Ping from "./lines/ping";
+import FishValue from "./lines/fishValue";
+import PlantDrops from "./lines/plantDrops";
 
 api.UI.addStyles(styles);
 
@@ -14,7 +16,9 @@ export class InfoLines {
         new Velocity(),
         new PhysicsCoordinates(),
         new FPS(),
-        new Ping()
+        new Ping(),
+        new FishValue(),
+        new PlantDrops()
     ];
     element?: HTMLElement;
 

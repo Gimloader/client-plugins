@@ -34,7 +34,7 @@ const DLDDefaults: DLDData = {
 
 export function getDLDData(): DLDData {
     const data = api.storage.getValue("DLDData", {});
-    return Object.assign(DLDDefaults, data);
+    return Object.assign({}, DLDDefaults, data);
 }
 
 const splitsDefaults: SplitsData = {
@@ -51,12 +51,12 @@ const splitsDefaults: SplitsData = {
 
 export function getFishtopiaData(): SplitsData {
     const data = api.storage.getValue("FishtopiaData", {});
-    return Object.assign(splitsDefaults, data);
+    return Object.assign({}, splitsDefaults, data);
 }
 
 export function getOneWayOutData(): SplitsData {
     const data = api.storage.getValue("OneWayOutData", {});
-    return Object.assign(splitsDefaults, data);
+    return Object.assign({}, splitsDefaults, data);
 }
 
 export function downloadFile(data: string, filename: string) {

@@ -2,11 +2,11 @@
  * @name Communication
  * @description Communication between different clients in 2D gamemodes
  * @author retrozy
- * @version 0.4.1
- * @downloadUrl https://raw.githubusercontent.com/Gimloader/client-plugins/refs/heads/main/build/libraries/Communication.js
+ * @version 0.4.2
+ * @downloadUrl https://raw.githubusercontent.com/Gimloader/builds/main/libraries/Communication.js
  * @webpage https://gimloader.github.io/libraries/Communication
  * @gamemode 2d
- * @changelog Updated webpage url
+ * @changelog Enabled state is now passed to onEnabledChange callback
  * @isLibrary true
  */
 
@@ -303,7 +303,9 @@ var Communication = class _Communication {
     return api.net.room?.state.session.phase === "game";
   }
   onEnabledChanged(callback) {
-    const unsub = api.net.room.state.session.listen("phase", () => callback(), false);
+    const unsub = api.net.room.state.session.listen("phase", (phase) => {
+      callback(phase === "game");
+    }, false);
     this.#onDisabledCallbacks.push(unsub);
     return unsub;
   }

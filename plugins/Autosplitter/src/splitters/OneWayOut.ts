@@ -8,8 +8,6 @@ export default class OneWayOutAutosplitter extends SplitsAutosplitter {
     ui = new OneWayOutUI(this);
     timer = new SplitsTimer(this, this.ui);
     stage = 0;
-    drops = 0;
-    knockouts = 0;
 
     constructor() {
         super("OneWayOut");
@@ -27,29 +25,6 @@ export default class OneWayOutAutosplitter extends SplitsAutosplitter {
                     }
                 }
             }
-        });
-
-        api.net.on("KNOCKOUT", (e) => {
-            if(e.name !== "Evil Plant") return;
-            this.knockouts++;
-
-            let dropped = false;
-            // wait 100ms to count the drop
-            const addDrop = (e: any) => {
-                if(e.devices.addedDevices.devices.length === 0) return;
-
-                dropped = true;
-                this.drops++;
-                this.updateDrops();
-                api.net.off("WORLD_CHANGES", addDrop);
-            };
-
-            setTimeout(() => {
-                api.net.off("WORLD_CHANGES", addDrop);
-                if(!dropped) this.updateDrops();
-            }, 100);
-
-            api.net.on("WORLD_CHANGES", addDrop);
         });
 
         // start the timer when the game starts
@@ -84,17 +59,6 @@ export default class OneWayOutAutosplitter extends SplitsAutosplitter {
         });
     }
 
-    updateDrops() {
-        if(this.knockouts === 0) {
-            this.ui.setDropRate("0/0");
-        } else {
-            const percent = this.drops / this.knockouts * 100;
-            let percentStr = percent.toFixed(2);
-            if(percent === 0) percentStr = "0";
-            this.ui.setDropRate(`${this.drops}/${this.knockouts} (${percentStr}%)`);
-        }
-    }
-
     getCategoryId() {
         return "OneWayOut";
     }
@@ -104,8 +68,6 @@ export default class OneWayOutAutosplitter extends SplitsAutosplitter {
         this.ui = new OneWayOutUI(this);
         this.timer = new SplitsTimer(this, this.ui);
         this.stage = 0;
-        this.drops = 0;
-        this.knockouts = 0;
     }
 
     destroy() {
