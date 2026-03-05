@@ -8,7 +8,7 @@ const settings = api.settings.create([
         title: "Notify when kicking",
         default: true
     }
-])
+]);
 
 export default class AutoKicker {
     lastLeaderboard: any[] | null = null;
