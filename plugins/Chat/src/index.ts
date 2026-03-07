@@ -10,7 +10,7 @@ api.net.onLoad(() => {
         editFn(null);
     });
 
-    const me = api.net.room.state.characters.get(myId);
+    const me = api.net.state.characters.get(myId)!;
     const Comms = api.lib("Communication");
     const comms = new Comms<string | Ops>("Chat");
 
@@ -44,7 +44,7 @@ api.net.onLoad(() => {
         }
     });
 
-    api.onStop(api.net.room.state.characters.onRemove((char: any) => {
+    api.onStop(api.net.state.characters.onRemove((char: any) => {
         joinedPlayers.delete(char.id);
     }));
 

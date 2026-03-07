@@ -83,7 +83,7 @@ api.net.onLoad(() => {
     } else {
         const { session } = api.stores;
 
-        api.net.room.state.session.listen("phase", (phase: string) => {
+        api.net.state.session.listen("phase", (phase: string) => {
             if(phase !== "game") session.amIGameOwner = false;
         });
 

@@ -60,7 +60,7 @@ export default class PlantDrops extends BaseLine {
             this.net.on("WORLD_CHANGES", addDrop);
         });
 
-        api.net.room.state.session.listen("phase", () => {
+        api.net.state.session.listen("phase", () => {
             this.knockouts = 0;
             this.drops = 0;
             this.updateDrops();

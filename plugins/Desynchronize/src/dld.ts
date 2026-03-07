@@ -7,7 +7,7 @@ let lastCheckpointReached = 0;
 let canRespawn = false;
 
 api.net.onLoad(() => {
-    api.net.room.state.session.gameSession.listen("phase", (phase: string) => {
+    api.net.state.session.gameSession.listen("phase", (phase: string) => {
         if(phase !== "results") return;
 
         canRespawn = false;
@@ -43,7 +43,7 @@ const enable = () => {
     let startImmunityActive = false;
 
     api.patcher.after(physics, "physicsStep", () => {
-        if(api.net.room.state.session.gameSession.phase === "results") return;
+        if(api.net.state.session.gameSession.phase === "results") return;
         if(startImmunityActive) return;
 
         const devicesInView = api.stores.phaser.scene.worldManager.devices.devicesInView;

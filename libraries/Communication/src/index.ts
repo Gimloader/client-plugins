@@ -5,7 +5,7 @@ import type { Message, OnMessageCallback } from "./types";
 api.net.onLoad(() => {
     Messenger.init();
 
-    api.onStop(api.net.room.state.characters.onAdd((char: any) => {
+    api.onStop(api.net.state.characters.onAdd((char: any) => {
         api.onStop(
             char.projectiles.listen("aimAngle", (angle: number) => {
                 Messenger.handleAngle(char, angle);
@@ -37,7 +37,7 @@ export default class Communication<T extends Message = Message> {
     }
 
     onEnabledChanged(callback: (enabled: boolean) => void) {
-        const unsub: () => void = api.net.room.state.session.listen("phase", (phase: string) => {
+        const unsub: () => void = api.net.state.session.listen("phase", (phase: string) => {
             callback(phase === "game");
         }, false);
 
@@ -51,7 +51,7 @@ export default class Communication<T extends Message = Message> {
         }
 
         // Don't send messages if nobody else is in the server
-        const players = [...api.net.room.state.characters.values()].filter(char => char.type === "player");
+        const players = [...api.net.state.characters.values()].filter(char => char.type === "player");
         if(players.length <= 1) return;
 
         switch (typeof message) {

@@ -26,7 +26,7 @@ export default class Messenger {
         });
 
         // Purge the queue once the game ends
-        api.net.room.state.session.listen("phase", (phase: string) => {
+        api.net.state.session.listen("phase", (phase: string) => {
             if(phase === "game") return;
             this.angleQueue.forEach((pending) => pending.reject());
             this.angleQueue.length = 0;

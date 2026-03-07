@@ -185,7 +185,7 @@ export default class AutoKicker {
     }
 
     scanPlayersColyseus() {
-        const characters = api.net.room.state.characters;
+        const characters = api.net.state.characters;
         const nameCount = new Map<string, number>();
 
         // tally name counts
@@ -262,7 +262,7 @@ export default class AutoKicker {
         if(this.kicked.has(id)) return;
         this.kicked.add(id);
 
-        const char = api.net.room.state.characters.get(id)!;
+        const char = api.net.state.characters.get(id)!;
 
         api.net.send("KICK_PLAYER", { characterId: id });
         if(settings.notify) api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
