@@ -18,11 +18,6 @@ const enum Op {
     NotTyping
 }
 
-interface Message {
-    type: "plaintext" | "formatted";
-    message: string;
-}
-
 // Get the formatter that is used for formatting the activity feed
 type Formatter = (message: { inputText: string }) => string;
 
@@ -41,16 +36,13 @@ export default class Chatter {
     private timeout: ReturnType<typeof setTimeout> | null = null;
     playersTyping = $state<any[]>([]);
     enabled = $state(Comms.enabled);
-    messages = $state<Message[]>([]);
+    messages = $state<string[]>([]);
     sending = $state(false);
 
-    private addMessage(text: string, shouldFormat?: boolean, forceScroll = false) {
-        if(format && shouldFormat) text = format({ inputText: text });
+    private addMessage(text: string, forceScroll = false) {
+        if(format) text = format({ inputText: text });
         if(this.messages.length === 100) this.messages.splice(0, 1);
-        this.messages.push({
-            type: shouldFormat ? "formatted" : "plaintext",
-            message: text
-        });
+        this.messages.push(text);
         this.scroll(forceScroll);
     }
 
@@ -73,22 +65,22 @@ export default class Chatter {
             };
 
             if(typeof message === "string") {
-                this.addMessage(`${char.name}: ${message}`, false);
+                this.addMessage(`${char.name}: ${message}`);
                 removePlayerTyping();
             } else {
                 switch (message) {
                     case Op.Join:
                         if(joinedPlayers.has(char.id)) return;
-                        this.addMessage(`${char.name} connected to the chat`, false);
+                        this.addMessage(`${char.name} connected to the chat`);
                         joinedPlayers.add(char.id);
                         break;
                     case Op.Leave:
-                        this.addMessage(`${char.name} left the chat`, false);
+                        this.addMessage(`${char.name} left the chat`);
                         joinedPlayers.delete(char.id);
                         removePlayerTyping();
                         break;
                     case Op.Greet:
-                        this.addMessage(`${char.name} connected to the chat`, false);
+                        this.addMessage(`${char.name} connected to the chat`);
                         // resend that we have joined whenever someone joins the chat mid-game
                         this.comms.send(Op.Join);
                         joinedPlayers.add(char.id);
@@ -144,6 +136,12 @@ export default class Chatter {
         } catch {
             this.addMessage("Message failed to send", true);
         }
+
+        this.typing = false;
+        if(this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
     }
 
     sendTyping() {
@@ -160,6 +158,7 @@ export default class Chatter {
     }
 
     stopTyping() {
+        if(!this.typing) return;
         if(!Comms.enabled || !this.typing) return;
         this.comms.send(Op.NotTyping);
         this.typing = false;

@@ -14,7 +14,9 @@
     let wrap: HTMLDivElement;
     let input: HTMLInputElement;
 
-    function scroll(force: boolean) {
+    async function scroll(force: boolean) {
+        await tick();
+
         const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
         if(shouldScroll || force) wrap.scrollTop = wrap.scrollHeight;
     }
@@ -78,11 +80,7 @@
         <div class="chat-messages">
             {#each chatter.messages as message}
                 <div>
-                    {#if message.type === "formatted"}
-                        {@html message.message}
-                    {:else}
-                        {message.message}
-                    {/if}
+                    {@html message}
                 </div>
             {/each}
         </div>
