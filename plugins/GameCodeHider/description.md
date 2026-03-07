@@ -1,0 +1,1 @@
+GameCodeHider puts a button next to every game code that toggles whether the game code is hidden (showing "######") or shown. The hidden state saves between sessions.
