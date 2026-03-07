@@ -2,7 +2,7 @@ api.net.onLoad(() => {
     const options = JSON.parse(api.stores.world.mapOptionsJSON);
     let visible = options.showHealthAndShield && options.healthMode === "healthAndShield";
 
-    api.onStop(api.net.room.state.listen("mapSettings", (settingsJson: string) => {
+    api.onStop(api.net.state.listen("mapSettings", (settingsJson: string) => {
         const options = JSON.parse(settingsJson);
         visible = options.showHealthAndShield && options.healthMode === "healthAndShield";
     }, false));
@@ -19,7 +19,9 @@ api.net.onLoad(() => {
         const shield = scene.add.rectangle(0, 0, width, 10, blue);
         shield.setStrokeStyle(2, 0xffffff);
 
-        const stateChar = api.net.room.state.characters.get(character.id);
+        const stateChar = api.net.state.characters.get(character.id);
+        if(!stateChar) return;
+
         const hp = stateChar.health;
 
         const stopUpdate = api.patcher.after(character.nametag, "update", () => {

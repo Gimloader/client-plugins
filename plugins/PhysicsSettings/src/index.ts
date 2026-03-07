@@ -65,7 +65,7 @@ api.net.onLoad(() => {
     if(!rewritten && settings.tps !== 12) api.requestReload();
     if(api.stores?.session?.mapStyle !== "platformer") return;
 
-    api.net.room.state.listen("mapSettings", () => {
+    api.net.state.listen("mapSettings", () => {
         applyAll();
     });
 

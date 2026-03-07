@@ -1,5 +1,10 @@
 type OnUpdateCallback = (value: string) => void;
 
+interface PatcherWrapper {
+    before: Gimloader.Api["patcher"]["before"];
+    after: Gimloader.Api["patcher"]["after"];
+}
+
 export default abstract class BaseLine {
     abstract name: string;
     abstract enabledDefault: boolean;
@@ -19,13 +24,13 @@ export default abstract class BaseLine {
     };
 
     protected patcher = {
-        before: (...args: Parameters<Gimloader.Api["patcher"]["before"]>) => {
+        before: (...args) => {
             this.onStop(api.patcher.before(...args));
         },
-        after: (...args: Parameters<Gimloader.Api["patcher"]["after"]>) => {
+        after: (...args) => {
             this.onStop(api.patcher.after(...args));
         }
-    };
+    } as PatcherWrapper;
 
     enable() {
         api.net.onLoad(() => {
