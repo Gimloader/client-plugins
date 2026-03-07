@@ -1,4 +1,5 @@
 const Comms = api.lib("Communication");
+type Character = Gimloader.Schema.ObjectSchema<Gimloader.Schema.CharacterState>;
 
 const settings = api.settings.create([
     {
@@ -31,10 +32,10 @@ api.rewriter.exposeVar("App", {
 
 export default class Chatter {
     private readonly comms = new Comms<string | Op>("Chat");
-    private readonly me = api.net.room.state.characters.get(api.stores.network.authId);
+    private readonly me = api.net.state.characters.get(api.stores.network.authId)!;
     private typing = false;
     private timeout: ReturnType<typeof setTimeout> | null = null;
-    playersTyping = $state<any[]>([]);
+    playersTyping = $state<Character[]>([]);
     enabled = $state(Comms.enabled);
     messages = $state<string[]>([]);
     sending = $state(false);
@@ -48,7 +49,7 @@ export default class Chatter {
 
     constructor(private readonly scroll: (force: boolean) => void) {
         // redirect the activity feed to the chat
-        api.net.on("ACTIVITY_FEED_MESSAGE", (message: any, editFn) => {
+        api.net.on("ACTIVITY_FEED_MESSAGE", (message, editFn) => {
             this.addMessage(`> ${message.message}`, true);
             editFn(null);
         });
@@ -96,7 +97,7 @@ export default class Chatter {
         });
 
         api.onStop(
-            api.net.room.state.characters.onRemove((char: any) => {
+            api.net.state.characters.onRemove((char) => {
                 joinedPlayers.delete(char.id);
                 this.playersTyping = this.playersTyping.filter(c => c !== char);
             })
