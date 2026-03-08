@@ -20,7 +20,7 @@ export function reset() {
         api.net.send("START_GAME", startMessage);
     }, 100);
 
-    const unsub = gameSession.listen("phase", (phase: string) => {
+    const unsub = gameSession.listen("phase", (phase) => {
         if(phase !== "countdown") return;
 
         ignoreNextStart = false;

@@ -2,7 +2,7 @@ api.net.onLoad(() => {
     const options = JSON.parse(api.stores.world.mapOptionsJSON);
     let visible = options.showHealthAndShield && options.healthMode === "healthAndShield";
 
-    api.onStop(api.net.state.listen("mapSettings", (settingsJson: string) => {
+    api.onStop(api.net.state.listen("mapSettings", (settingsJson) => {
         const options = JSON.parse(settingsJson);
         visible = options.showHealthAndShield && options.healthMode === "healthAndShield";
     }, false));

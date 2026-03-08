@@ -15,7 +15,7 @@ export default class FishtopiaAutosplitter extends SplitsAutosplitter {
 
         const gameSession = api.net.state.session.gameSession;
 
-        api.net.state.session.listen("loadingPhase", (val: boolean) => {
+        api.net.state.session.listen("loadingPhase", (val) => {
             if(val) return;
 
             if(gameSession.phase === "game") {
@@ -26,7 +26,7 @@ export default class FishtopiaAutosplitter extends SplitsAutosplitter {
         });
 
         // start the timer when the game starts
-        gameSession.listen("phase", (phase: string) => {
+        gameSession.listen("phase", (phase) => {
             if(phase === "results") {
                 this.reset();
             }
@@ -52,7 +52,7 @@ export default class FishtopiaAutosplitter extends SplitsAutosplitter {
         });
 
         const id = api.stores.phaser.mainCharacter.id;
-        api.net.state.characters.get(id)!.inventory.slots.onChange((_: any, key: string) => {
+        api.net.state.characters.get(id)!.inventory.slots.onChange((_, key) => {
             if(key === "gim-fish") {
                 this.timer.split();
                 this.timer.stop();

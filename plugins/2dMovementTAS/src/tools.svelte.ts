@@ -40,7 +40,7 @@ export default class TASTools {
             slot.$callbacks = {};
         }
 
-        mcState.inventory.slots.onAdd((item: any) => {
+        mcState.inventory.slots.onAdd((item) => {
             setTimeout(() => {
                 item.$callbacks = {};
             });

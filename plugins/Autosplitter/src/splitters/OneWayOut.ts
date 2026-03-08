@@ -28,7 +28,7 @@ export default class OneWayOutAutosplitter extends SplitsAutosplitter {
         });
 
         // start the timer when the game starts
-        gameSession.listen("phase", (phase: string) => {
+        gameSession.listen("phase", (phase) => {
             if(phase === "results") {
                 this.reset();
             }
