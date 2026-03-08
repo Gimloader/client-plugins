@@ -8,5 +8,5 @@ export default officialScriptConfig({
     version: "0.3.3",
     hasSettings: true,
     reloadRequired: "notingame",
-    changelog: ["Give a message when creative map URLs are copied"]
+    changelog: ["Gave a message when creative map URLs are copied"]
 });
