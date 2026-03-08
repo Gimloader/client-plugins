@@ -25,7 +25,7 @@ api.net.onLoad(async () => {
     });
 
     const physics = api.stores.phaser.scene.worldManager.physics;
-    const world = physics.world as unknown as RAPIER.World;
+    const world = physics.world;
     const colliders = new Map<string, RAPIER.Collider>();
     const myId = api.stores.network.authId;
 

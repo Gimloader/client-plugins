@@ -87,7 +87,7 @@ export default class TASTools {
             this.slowdownDelayedFrames = 0;
 
             // Incorrect type
-            const keys = this.inputManager.keyboard.heldKeys as unknown as Set<number>;
+            const keys = this.inputManager.keyboard.heldKeys;
             const { KeyCodes } = Phaser.Input.Keyboard;
 
             // log the inputs and translation/state
