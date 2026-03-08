@@ -8,7 +8,7 @@ To set up your environment, clone this repository and download [Bun](https://bun
 
 ### Structure
 
-Despite the name, this repository hosts both plugins and libraries. The source code for them can be found in the [/plugins](/plugins/) and [/libraries](/libraries/) directories respectively. Things in the build directory are automatically generated and should not be manually edited.
+Despite the name, this repository hosts both plugins and libraries. The source code for them can be found in the [/plugins](/plugins/) and [/libraries](/libraries/) directories respectively. The built scripts are automatically generated on push and put in the [builds](https://github.com/Gimloader/builds) repository.
 
 ### Editing scripts
 
