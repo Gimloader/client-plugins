@@ -42,7 +42,7 @@ api.net.onLoad(async () => {
         colliders.delete(id);
     }
 
-    settings.listen("collidePlayers", (enabled: boolean) => {
+    settings.listen("collidePlayers", (enabled) => {
         for(const [id, char] of api.stores.phaser.scene.characterManager.characters) {
             if(char.type !== "player" || char.id === myId) continue;
             if(enabled) {
@@ -53,7 +53,7 @@ api.net.onLoad(async () => {
         }
     });
 
-    settings.listen("collideSentries", (enabled: boolean) => {
+    settings.listen("collideSentries", (enabled) => {
         for(const [id, { type }] of api.stores.phaser.scene.characterManager.characters) {
             if(type !== "sentry") continue;
             if(enabled) {
@@ -65,7 +65,7 @@ api.net.onLoad(async () => {
     });
 
     api.onStop(
-        api.net.state.characters.onAdd((char: any) => {
+        api.net.state.characters.onAdd((char) => {
             if(char.id === myId) return;
             if(char.type === "player" && !settings.collidePlayers) return;
             if(char.type === "sentry" && !settings.collideSentries) return;
@@ -73,6 +73,7 @@ api.net.onLoad(async () => {
             createCollider(char.id);
 
             api.onStop(
+                // @ts-expect-error
                 char.onRemove(() => removeCollider(char.id))
             );
         })
@@ -80,7 +81,7 @@ api.net.onLoad(async () => {
 
     if(!api.net.isHost) {
         const { gameOwnerId } = api.stores.session;
-        api.net.state.session.listen("phase", (phase: string) => {
+        api.net.state.session.listen("phase", (phase) => {
             if(
                 api.net.state.characters.get(gameOwnerId)?.teamId === "__SPECTATORS_TEAM"
                 && phase === "game"

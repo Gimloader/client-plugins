@@ -5,7 +5,7 @@ api.net.onLoad(() => {
     const myId = api.stores.network.authId;
 
     // redirect the activity feed to the chat
-    api.net.on("ACTIVITY_FEED_MESSAGE", (message: any, editFn) => {
+    api.net.on("ACTIVITY_FEED_MESSAGE", (message, editFn) => {
         UI.addMessage(`> ${message.message}`);
         editFn(null);
     });
@@ -44,7 +44,7 @@ api.net.onLoad(() => {
         }
     });
 
-    api.onStop(api.net.state.characters.onRemove((char: any) => {
+    api.onStop(api.net.state.characters.onRemove((char) => {
         joinedPlayers.delete(char.id);
     }));
 

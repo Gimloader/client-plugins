@@ -7,7 +7,7 @@ let lastCheckpointReached = 0;
 let canRespawn = false;
 
 api.net.onLoad(() => {
-    api.net.state.session.gameSession.listen("phase", (phase: string) => {
+    api.net.state.session.gameSession.listen("phase", (phase) => {
         if(phase !== "results") return;
 
         canRespawn = false;

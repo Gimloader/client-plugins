@@ -1,12 +1,12 @@
 import { Type } from "./consts";
 import { bytesToFloat, encodeCharacters, floatToBytes, joinUint24, splitUint24 } from "./encoding";
-import type { Message, MessageState, OnMessageCallback, PendingAngle } from "./types";
+import type { Character, Message, MessageState, OnMessageCallback, PendingAngle } from "./types";
 
 export default class Messenger {
     private static pendingAngle = 0;
     private static angleChangeRes: (() => void) | null = null;
     private static angleChangeRej: (() => void) | null = null;
-    private static readonly messageStates = new Map<string, MessageState>();
+    private static readonly messageStates = new Map<Character, MessageState>();
     private static readonly angleQueue: PendingAngle[] = [];
     static readonly callbacks = new Map<string, OnMessageCallback[]>();
     private static alternate = false;
@@ -26,7 +26,7 @@ export default class Messenger {
         });
 
         // Purge the queue once the game ends
-        api.net.state.session.listen("phase", (phase: string) => {
+        api.net.state.session.listen("phase", (phase) => {
             if(phase === "game") return;
             this.angleQueue.forEach((pending) => pending.reject());
             this.angleQueue.length = 0;
@@ -184,7 +184,7 @@ export default class Messenger {
         });
     }
 
-    static handleAngle(char: any, angle: number) {
+    static handleAngle(char: Character, angle: number) {
         if(!angle) return;
 
         if(char.id === api.stores.network.authId) return this.angleChangeRes?.();
