@@ -4,10 +4,16 @@ import makeGame from "./makeGame";
 type Hooks = Record<string, string | number>;
 
 const copyUrlWrapper = api.rewriter.createShared("CopyURLWrapper", async (id: string) => {
-    await navigator.clipboard.writeText(`${location.origin}/gamemode/${id}`);
-    api.UI.message.success({
-        content: "Map link copied"
-    });
+    try {
+        await navigator.clipboard.writeText(`${location.origin}/gamemode/${id}`);
+        api.UI.message.success({
+            content: "Map link copied"
+        });
+    } catch {
+        api.UI.message.error({
+            content: "Failed to copy map link"
+        });
+    }
 });
 
 api.rewriter.addParseHook("App", code => {
