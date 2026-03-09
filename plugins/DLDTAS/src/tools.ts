@@ -86,7 +86,6 @@ export default class TASTools {
             if(this.slowdownDelayedFrames < this.slowdownAmount) return;
             this.slowdownDelayedFrames = 0;
 
-            // Incorrect type
             const keys = this.inputManager.keyboard.heldKeys;
             const { KeyCodes } = Phaser.Input.Keyboard;
 
