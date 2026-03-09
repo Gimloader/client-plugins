@@ -5,10 +5,9 @@ export default officialScriptConfig({
     name: "BringBackBoosts",
     description: "Restores boosts in Don't Look Down. Will cause you to desync, so others cannot see you move.",
     author: "TheLazySquid",
-    version: "0.6.2",
+    version: "0.6.3",
     hasSettings: true,
-    reloadRequired: "ingame",
     needsPlugins: ["Desynchronize"],
     gamemodes: ["dontLookDown"],
-    changelog: ["Updated webpage url"]
+    changelog: ["Allowed enabling mid-game"]
 });
