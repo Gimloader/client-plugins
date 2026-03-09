@@ -5,8 +5,8 @@ export default officialScriptConfig({
     name: "GamemodeLinks",
     description: "Creates game rooms from links, particularly useful in bookmarks.",
     author: "retrozy",
-    version: "0.3.2",
+    version: "0.3.3",
     hasSettings: true,
     reloadRequired: "notingame",
-    changelog: ["Updated webpage url"]
+    changelog: ["Gave a message when creative map URLs are copied"]
 });
