@@ -22,7 +22,7 @@ const enum Op {
 // Get the formatter that is used for formatting the activity feed
 type Formatter = (message: { inputText: string }) => string;
 
-let format: Formatter | null = null;
+let format: Formatter;
 
 api.rewriter.exposeVar("App", {
     check: ">%SPACE_HERE",
@@ -41,7 +41,8 @@ export default class Chatter {
     sending = $state(false);
 
     private addMessage(text: string, forceScroll = false) {
-        if(format) text = format({ inputText: text });
+        text = format({ inputText: text });
+
         if(this.messages.length === 100) this.messages.splice(0, 1);
         this.messages.push(text);
         this.scroll(forceScroll);
