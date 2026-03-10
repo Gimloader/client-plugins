@@ -7,13 +7,13 @@ const setHiddenState = api.rewriter.createShared("SetHiddenState", (hidden: bool
 
 const react = "window.GL.React";
 const codeHiddenText = '"######"';
-const declareHiddenState = `const [codeHidden, setCodeHidden] = ${react}.useState(${getHiddenState}?.() ?? false)`;
+const declareHiddenState = `const [codeHidden, setCodeHidden] = ${react}.useState(${getHiddenState}?.() ?? false);`;
 const eyeToggle = (style?: string, updateCode = `setCodeHidden(prev => { ${setHiddenState}?.(!prev); return !prev });`) =>
     `${react}.createElement("i", { onClick: (e) => { e.stopPropagation(); ${updateCode} }, className: \`select-none far \${codeHidden ? "fa-eye-slash" : "fa-eye"}\`${style ? `, style: ${style}` : ""} })`;
 
 // The pre-game host code in both 1d and 2d
 api.rewriter.addParseHook("SixteenByNineScaler", code => {
-    code = insert(code, '.success("Game link copied")};@return', `${declareHiddenState};`);
+    code = insert(code, '.success("Game link copied")};@return', declareHiddenState);
 
     const childMatch = 'Copy Join Link"}#onClick#children:@}';
     const child = getSection(code, childMatch);
@@ -29,7 +29,7 @@ api.rewriter.addParseHook("SixteenByNineScaler", code => {
 api.rewriter.addParseHook("App", code => {
     if(!code.includes("=Phaser.Utils.Objects.GetValue;class ")) return code;
 
-    code = insert(code, ",{matchmaker:#;@#", `${declareHiddenState};`);
+    code = insert(code, ",{matchmaker:#;@#", declareHiddenState);
 
     // Enlarged code. Not worth it to put the button here, there's a ton of styling conflicts
     const gameCodeMatch = "Game Code (Click to enlarge)#text:@,";
