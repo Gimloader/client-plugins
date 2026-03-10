@@ -15,9 +15,7 @@ const eyeToggle = (style?: string, updateCode = `setCodeHidden(prev => { ${setHi
 api.rewriter.addParseHook("SixteenByNineScaler", code => {
     code = insert(code, '.success("Game link copied")};@return', declareHiddenState);
 
-    const childMatch = 'Copy Join Link"}#onClick#children:@}';
-    const child = getSection(code, childMatch);
-    code = replaceSection(code, childMatch, `[codeHidden ? ${codeHiddenText} : ${child}, ${eyeToggle()}]`);
+    code = replaceSection(code, 'Copy Join Link"}#onClick#children:@}', (child) => `[codeHidden ? ${codeHiddenText} : ${child}, ${eyeToggle()}]`);
 
     // Hide the QR code if hidden
     code = insert(code, ",{styles:{body:{padding:20}},content:@#", "codeHidden ? [] : ");
@@ -32,12 +30,10 @@ api.rewriter.addParseHook("App", code => {
     code = insert(code, ",{matchmaker:#;@#", declareHiddenState);
 
     // Enlarged code. Not worth it to put the button here, there's a ton of styling conflicts
-    const gameCodeMatch = "Game Code (Click to enlarge)#text:@,";
-    const gameCode = getSection(code, gameCodeMatch);
-    code = replaceSection(code, gameCodeMatch, `codeHidden ? ${codeHiddenText} : ${gameCode}`);
+    code = replaceSection(code, "Game Code (Click to enlarge)#text:@,", (gameCode) => `codeHidden ? ${codeHiddenText} : ${gameCode}`);
 
     // Small code
-    code = replaceSection(code, "Game Code (Click to enlarge)#onClick#children:@}", `[codeHidden ? ${codeHiddenText} : ${gameCode}, ${eyeToggle('{ "margin-left": "5px" }')}]`);
+    code = replaceSection(code, "Game Code (Click to enlarge)#onClick#children:@}", (gameCode) => `[codeHidden ? ${codeHiddenText} : ${gameCode}, ${eyeToggle('{ "margin-left": "5px" }')}]`);
 
     return code;
 });
