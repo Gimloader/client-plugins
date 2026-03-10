@@ -7,7 +7,9 @@ export type Message =
     | { [key: string]: Message }
     | Message[];
 
-export type OnMessageCallback<T extends Message = Message> = (message: T, player: any) => void;
+export type Character = Gimloader.Schema.ObjectSchema<Gimloader.Schema.CharacterState>;
+
+export type OnMessageCallback<T extends Message = Message> = (message: T, player: Character) => void;
 
 export interface MessageState {
     type: Type;

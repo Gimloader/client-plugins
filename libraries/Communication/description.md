@@ -6,11 +6,14 @@ The following are sent into a single angle:
 - A positive or negative int24 number (-16,777,216 to 16,777,216)
 - A string that is 3 characters or less
 - A boolean
+- An array with a length of 3 or less of numbers that are all integers between 0 and 255
 
 Everything else is sent as multiple angles, and the time it takes to send depends on how much data you send:
 - Any other number (always takes 2 angles)
 - An object/array (stringified)
 - A string over 3 characters (takes roughly length/7 angles)
+
+An array with a length over 3 of numbers that are all integers between 0 and 255 are sent optimally and are not stringified like other arrays.
 
 ## Usage
 

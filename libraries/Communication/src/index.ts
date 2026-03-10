@@ -5,9 +5,9 @@ import type { Message, OnMessageCallback } from "./types";
 api.net.onLoad(() => {
     Messenger.init();
 
-    api.onStop(api.net.state.characters.onAdd((char: any) => {
+    api.onStop(api.net.state.characters.onAdd((char) => {
         api.onStop(
-            char.projectiles.listen("aimAngle", (angle: number) => {
+            char.projectiles.listen("aimAngle", (angle) => {
                 Messenger.handleAngle(char, angle);
             })
         );
@@ -33,11 +33,11 @@ export default class Communication<T extends Message = Message> {
     }
 
     static get enabled() {
-        return api.net.room?.state.session.phase === "game";
+        return api.net.state?.session.phase === "game";
     }
 
     onEnabledChanged(callback: (enabled: boolean) => void) {
-        const unsub: () => void = api.net.state.session.listen("phase", (phase: string) => {
+        const unsub = api.net.state.session.listen("phase", (phase) => {
             callback(phase === "game");
         }, false);
 
