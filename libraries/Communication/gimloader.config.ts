@@ -5,8 +5,8 @@ export default officialScriptConfig({
     name: "Communication",
     description: "Communication between different clients in 2D gamemodes",
     author: "retrozy",
-    version: "0.4.2",
-    changelog: ["Enabled state is now passed to onEnabledChange callback"],
+    version: "0.5.0",
+    changelog: ["Added support for streaming strings and byte arrays"],
     gamemodes: ["2d"],
     isLibrary: true
 });

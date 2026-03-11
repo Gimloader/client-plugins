@@ -1,6 +1,6 @@
+import type { ByteStreamCallback, Message, OnMessageCallback, StringStreamCallback } from "./types";
 import Messenger from "./messenger";
 import { getIdentifier, isUint24, isUint8 } from "./encoding";
-import type { Message, OnMessageCallback } from "./types";
 
 api.net.onLoad(() => {
     Messenger.init();
@@ -25,9 +25,13 @@ export default class Communication<T extends Message = Message> {
         this.#messenger = new Messenger(identifier);
     }
 
-    get #onMessageCallbacks() {
+    get #callbacks() {
         if(!Messenger.callbacks.has(this.#identifierString)) {
-            Messenger.callbacks.set(this.#identifierString, []);
+            Messenger.callbacks.set(this.#identifierString, {
+                message: [],
+                stringStream: [],
+                byteStream: []
+            });
         }
         return Messenger.callbacks.get(this.#identifierString)!;
     }
@@ -102,11 +106,29 @@ export default class Communication<T extends Message = Message> {
 
     onMessage(callback: OnMessageCallback<T>) {
         const cb = callback as OnMessageCallback<Message>;
-        this.#onMessageCallbacks.push(cb);
+        this.#callbacks.message.push(cb);
 
         return () => {
-            const index = this.#onMessageCallbacks.indexOf(cb);
-            if(index !== -1) this.#onMessageCallbacks.slice(index, 1);
+            const index = this.#callbacks.message.indexOf(cb);
+            if(index !== -1) this.#callbacks.message.slice(index, 1);
+        };
+    }
+
+    onStringStream(callback: StringStreamCallback) {
+        this.#callbacks.stringStream.push(callback);
+
+        return () => {
+            const index = this.#callbacks.stringStream.indexOf(callback);
+            if(index !== -1) this.#callbacks.stringStream.slice(index, 1);
+        };
+    }
+
+    onByteStream(callback: ByteStreamCallback) {
+        this.#callbacks.byteStream.push(callback);
+
+        return () => {
+            const index = this.#callbacks.byteStream.indexOf(callback);
+            if(index !== -1) this.#callbacks.byteStream.slice(index, 1);
         };
     }
 

@@ -1,14 +1,13 @@
+import type { Callbacks, Character, Message, OnStreamCallback, PendingAngle, StateUpdate } from "./types";
 import { Type } from "./consts";
 import { bytesToFloat, encodeCharacters, floatToBytes, joinUint24, splitUint24 } from "./encoding";
-import type { Character, Message, MessageState, OnMessageCallback, PendingAngle } from "./types";
 
 export default class Messenger {
     private static pendingAngle = 0;
     private static angleChangeRes: (() => void) | null = null;
     private static angleChangeRej: (() => void) | null = null;
-    private static readonly messageStates = new Map<Character, MessageState>();
     private static readonly angleQueue: PendingAngle[] = [];
-    static readonly callbacks = new Map<string, OnMessageCallback[]>();
+    static readonly callbacks = new Map<string, Callbacks>();
     private static alternate = false;
     private static ignoreNextAngle = false;
 
@@ -31,7 +30,8 @@ export default class Messenger {
             this.angleQueue.forEach((pending) => pending.reject());
             this.angleQueue.length = 0;
             this.angleChangeRej?.();
-            this.messageStates.clear();
+            this.updatePromises.clear();
+            this.updateResolvers.clear();
         }, false);
     }
 
@@ -184,94 +184,181 @@ export default class Messenger {
         });
     }
 
-    static handleAngle(char: Character, angle: number) {
-        if(!angle) return;
+    static updatePromises = new Map<Character, Promise<StateUpdate>>();
+    static updateResolvers = new Map<Character, (data: StateUpdate) => void>();
 
+    static async *restOfBytes(char: Character) {
+        while(true) {
+            const update = await Messenger.nextBytes(char);
+            yield update.data;
+            if(update.done) break;
+        }
+    }
+
+    static async getMessageBytes(char: Character, initial: number[]) {
+        const array = [...initial];
+
+        // dprint-ignore-start
+        for await (const chunk of Messenger.restOfBytes(char)) {
+            array.push(...chunk);
+        }
+        // dprint-ignore-end
+
+        return array;
+    }
+
+    static nextBytes(char: Character) {
+        const existing = this.updatePromises.get(char);
+        if(existing) return existing;
+
+        const { promise, resolve } = Promise.withResolvers<StateUpdate>();
+        this.updatePromises.set(char, promise);
+        this.updateResolvers.set(char, resolve);
+
+        return promise;
+    }
+
+    static async handleAngle(char: Character, angle: number) {
+        if(!angle) return;
         if(char.id === api.stores.network.authId) return this.angleChangeRes?.();
 
         const bytes = floatToBytes(angle);
-        const state = this.messageStates.get(char);
 
-        if(state) {
-            const callbacksForState = this.callbacks.get(state.identifierString);
-            if(!callbacksForState) return;
-
+        const resolve = this.updateResolvers.get(char);
+        if(resolve) {
             const payload = bytes.slice(0, 7);
             const flag = bytes[7];
 
-            const gotValue = (value: Message) => {
-                this.messageStates.delete(char);
+            // The flag will usually alternate between 0 and 1 to prevent repetition
+            // But if it is the last message the flag will be set to the index of the last byte + 2
+            // so we can determine how many bytes to read
+            const done = flag >= 2;
 
-                callbacksForState.forEach(callback => {
-                    callback(value, char);
-                });
-            };
+            if(done) resolve({ done, data: payload.slice(0, flag - 1) });
+            else resolve({ done, data: payload });
 
-            if(flag < 2) {
-                state.recieved.push(...payload);
+            this.updatePromises.delete(char);
+            this.updateResolvers.delete(char);
+            return;
+        }
+
+        const identifierBytes = bytes.slice(0, 4);
+        const payload = bytes.slice(4, 7) as [number, number, number];
+        const type = bytes[7] & 0x7F;
+
+        const identifierString = identifierBytes.join(",");
+        const callbacks = this.callbacks.get(identifierString);
+        if(!callbacks) return;
+
+        const gotValue = (value: Message) => {
+            callbacks.message.forEach(callback => {
+                callback(value, char);
+            });
+        };
+
+        switch (type) {
+            case Type.Boolean:
+                gotValue(payload[0] === 1);
+                return;
+
+            case Type.PositiveInt24:
+                gotValue(joinUint24(...payload));
+                return;
+
+            case Type.NegativeInt24:
+                gotValue(-joinUint24(...payload));
+                return;
+
+            case Type.Byte: {
+                const bytes = [payload[0]];
+                this.startCompletedStream(callbacks.byteStream, char, bytes);
+                gotValue(bytes);
                 return;
             }
 
-            state.recieved.push(...payload.slice(0, flag - 1));
-
-            if(state.type === Type.Float) {
-                return gotValue(bytesToFloat(state.recieved));
-            } else if(state.type === Type.SeveralBytes) {
-                return gotValue(state.recieved);
+            case Type.TwoBytes: {
+                const bytes = payload.slice(0, 2);
+                this.startCompletedStream(callbacks.byteStream, char, bytes);
+                gotValue(bytes);
+                return;
             }
 
-            const string = String.fromCharCode(...state.recieved);
-
-            if(state.type === Type.String) {
-                gotValue(string);
-            } else if(state.type === Type.Object) {
-                try {
-                    const obj = JSON.parse(string);
-                    gotValue(obj);
-                } catch {
-                    this.messageStates.delete(char);
-                }
-            }
-        } else {
-            const identifierBytes = bytes.slice(0, 4);
-            const payload = bytes.slice(4, 7) as [number, number, number];
-            const type = bytes[7] & 0x7F;
-
-            const identifierString = identifierBytes.join(",");
-            const callbacksForIdentifier = this.callbacks.get(identifierString);
-            if(!callbacksForIdentifier) return;
-
-            const gotValue = (value: Message) => {
-                callbacksForIdentifier.forEach(callback => {
-                    callback(value, char);
-                });
-            };
-
-            if(type === Type.Boolean) {
-                gotValue(payload[0] === 1);
-            } else if(type === Type.PositiveInt24) {
-                gotValue(joinUint24(...payload));
-            } else if(type === Type.NegativeInt24) {
-                gotValue(-joinUint24(...payload));
-            } else if(type === Type.Byte) {
-                gotValue([payload[0]]);
-            } else if(type === Type.TwoBytes) {
-                gotValue(payload.slice(0, 2));
-            } else if(type === Type.ThreeBytes) {
+            case Type.ThreeBytes: {
+                this.startCompletedStream(callbacks.byteStream, char, payload);
                 gotValue(payload);
-            } else if(type === Type.ThreeCharacters) {
+                return;
+            }
+
+            case Type.ThreeCharacters: {
                 const codes = payload.filter(b => b !== 0);
-                gotValue(String.fromCharCode(...codes));
-            } else if(type === Type.SmallObject) {
+                const string = String.fromCharCode(...codes);
+                this.startCompletedStream(callbacks.stringStream, char, string);
+                gotValue(string);
+                return;
+            }
+
+            case Type.SmallObject: {
                 const codes = payload.filter(b => b !== 0);
                 gotValue(JSON.parse(String.fromCharCode(...codes)));
-            } else if(type === Type.String || type === Type.Object || type === Type.SeveralBytes || type === Type.Float) {
-                this.messageStates.set(char, {
-                    type,
-                    identifierString,
-                    recieved: payload
-                });
+                return;
             }
+
+            case Type.Float: {
+                const bytes = await this.getMessageBytes(char, payload);
+                gotValue(bytesToFloat(bytes));
+                return;
+            }
+
+            case Type.SeveralBytes: {
+                this.startStream(callbacks.byteStream, char, payload);
+                const bytes = await this.getMessageBytes(char, payload);
+                gotValue(bytes);
+                return;
+            }
+
+            case Type.String: {
+                this.startStream(callbacks.stringStream, char, payload, String.fromCharCode);
+                const bytes = await this.getMessageBytes(char, payload);
+                gotValue(String.fromCharCode(...bytes));
+                return;
+            }
+
+            case Type.Object: {
+                const bytes = await this.getMessageBytes(char, payload);
+                const string = String.fromCharCode(...bytes);
+                try {
+                    gotValue(JSON.parse(string));
+                } catch (e) {
+                    console.error("Failed to parse object message:", e);
+                }
+                return;
+            }
+        }
+    }
+
+    static startCompletedStream<T>(callbacks: OnStreamCallback<T>[], char: Character, initial: T) {
+        const generator = async function*() {
+            yield initial;
+        };
+
+        for(const cb of callbacks) {
+            cb(generator(), char);
+        }
+    }
+
+    static startStream<T>(callbacks: OnStreamCallback<T>[], char: Character, initial: number[], map?: (...bytes: number[]) => T) {
+        const generator = async function*() {
+            yield map ? map(...initial) : initial;
+
+            // dprint-ignore-start
+            for await (const chunk of Messenger.restOfBytes(char)) {
+                yield map ? map(...chunk) : chunk;
+            }
+            // dprint-ignore-end
+        };
+
+        for(const cb of callbacks) {
+            cb(generator(), char);
         }
     }
 }
