@@ -129,14 +129,15 @@
         flex-direction: column;
         justify-content: flex-end;
         color: white;
-        padding: 5px;
+        padding: 0 5px;
     }
 
     .typing-text {
         padding-left: 5px;
-        height: 1.5rem;
+        height: 18px;
         color: white;
-        font-size: small;
+        font-size: 12px;
+        margin-top: -6px;
     }
 
     .gl-chat input {
