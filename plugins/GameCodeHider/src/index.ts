@@ -1,4 +1,4 @@
-import { getSection, insert, replaceSection } from "$shared/rewritingUtils";
+import { insert, replaceSection } from "$shared/rewritingUtils";
 
 const getHiddenState = api.rewriter.createShared("GetHiddenState", () => api.storage.getValue("hidden"));
 const setHiddenState = api.rewriter.createShared("SetHiddenState", (hidden: boolean) => {
@@ -9,7 +9,7 @@ const react = "window.GL.React";
 const codeHiddenText = '"######"';
 const declareHiddenState = `const [codeHidden, setCodeHidden] = ${react}.useState(${getHiddenState}?.() ?? false);`;
 const eyeToggle = (style?: string, updateCode = `setCodeHidden(prev => { ${setHiddenState}?.(!prev); return !prev });`) =>
-    `${react}.createElement("i", { onClick: (e) => { e.stopPropagation(); ${updateCode} }, className: \`select-none far \${codeHidden ? "fa-eye-slash" : "fa-eye"}\`${style ? `, style: ${style}` : ""} })`;
+    `${react}.createElement("i", { onClick: (e) => { e.stopPropagation(); ${updateCode} }, className: \`select-none far fa-xs \${codeHidden ? "fa-eye-slash" : "fa-eye"}\`${style ? `, style: ${style}` : ""} })`;
 
 // The pre-game host code in both 1d and 2d
 api.rewriter.addParseHook("SixteenByNineScaler", code => {
