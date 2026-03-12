@@ -15,9 +15,9 @@
     let input: HTMLInputElement;
 
     async function scroll(force: boolean) {
+        const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
         await tick();
 
-        const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
         if(shouldScroll || force) wrap.scrollTop = wrap.scrollHeight;
     }
 
@@ -54,9 +54,7 @@
         if(e.key === "Enter") {
             if(inputText.length === 0) return;
             e.preventDefault();
-            chatter.sending = true;
             chatter.send(inputText).then(async () => {
-                chatter.sending = false;
                 await tick();
                 input.focus();
             });

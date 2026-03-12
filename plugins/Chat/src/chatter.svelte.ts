@@ -18,7 +18,7 @@ const settings = api.settings.create([
     }
 ]);
 
-const enum Op {
+enum Op {
     Join,
     Leave,
     Greet,
@@ -55,9 +55,9 @@ export default class Chatter {
     private addMessage(text: string, forceScroll = false) {
         text = format({ inputText: text });
 
+        this.scroll(forceScroll);
         if(this.messages.length === 500) this.messages.splice(0, 1);
         this.messages.push({ text, formatted: true });
-        this.scroll(forceScroll);
     }
 
     constructor(private readonly scroll: (force: boolean) => void) {
@@ -80,12 +80,14 @@ export default class Chatter {
             this.playersTyping = this.playersTyping.filter(c => c !== char);
 
             // Get the reactive message object and append to it
+            this.scroll(false);
             this.messages.push({ text: `${char.name}: `, formatted: false });
             const message = this.messages[this.messages.length - 1];
 
             // dprint-ignore-start
             for await (const chunk of chunks) {
             // dprint-ignore-end
+                this.scroll(false);
                 message.text += chunk;
             }
 
@@ -167,12 +169,16 @@ export default class Chatter {
     }
 
     async send(text: string) {
+        this.sending = true;
+
         try {
             await this.comms.send(text);
             this.addMessage(`${this.me.name}: ${text}`, true);
         } catch {
             this.addMessage("Message failed to send", true);
         }
+
+        this.sending = false;
 
         this.typing = false;
         if(this.timeout) {
