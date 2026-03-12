@@ -1,17 +1,17 @@
 import BaseLine from "../baseLine";
 import type { autorun } from "mobx";
 
-const fishValues = {
-    "gray": 1,
-    "green": 2,
-    "red": 5,
-    "blue": 10,
-    "purple": 20,
-    "beach": 40,
-    "star": 65,
-    "galaxy": 100,
-    "berry": 150,
-    "gim": 5000
+const fishValues: Record<string, number> = {
+    gray: 1,
+    green: 2,
+    red: 5,
+    blue: 10,
+    purple: 20,
+    beach: 40,
+    star: 65,
+    galaxy: 100,
+    berry: 150,
+    gim: 5000
 };
 
 export default class FishValue extends BaseLine {
@@ -34,8 +34,11 @@ export default class FishValue extends BaseLine {
 
         for(const [id, { amount }] of api.stores.me.inventory.slots) {
             if(!id.endsWith("-fish")) continue;
+
             const fishName = id.split("-")[0];
-            total += fishValues[fishName as keyof typeof fishValues] * amount;
+            if(!fishValues[fishName]) continue;
+
+            total += fishValues[fishName] * amount;
         }
 
         const multiplierDevice = this.allDevices.find(d => d.options.guiMessage === "Purchase Cash In ($70)");
