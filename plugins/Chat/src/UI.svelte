@@ -80,7 +80,11 @@
         <div class="chat-messages">
             {#each chatter.messages as message}
                 <div>
-                    {@html message}
+                    {#if message.formatted}
+                        {@html message.text}
+                    {:else}
+                        {message.text}
+                    {/if}
                 </div>
             {/each}
         </div>

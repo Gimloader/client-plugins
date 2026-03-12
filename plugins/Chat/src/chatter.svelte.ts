@@ -8,6 +8,13 @@ const settings = api.settings.create([
         title: "Transmit Typing",
         description: "Show other players when you are typing",
         default: true
+    },
+    {
+        id: "streamMessages",
+        type: "toggle",
+        title: "Stream Messages",
+        description: "Show messages being typed out instead of waiting for them to be fully recieved",
+        default: true
     }
 ]);
 
@@ -30,6 +37,11 @@ api.rewriter.exposeVar("App", {
     callback: (formatter) => format = formatter
 });
 
+interface Message {
+    formatted: boolean;
+    text: string;
+}
+
 export default class Chatter {
     private readonly comms = new Comms<string | Op>("Chat");
     private readonly me = api.net.state.characters.get(api.stores.network.authId)!;
@@ -37,14 +49,14 @@ export default class Chatter {
     private timeout: ReturnType<typeof setTimeout> | null = null;
     playersTyping = $state<Character[]>([]);
     enabled = $state(Comms.enabled);
-    messages = $state<string[]>([]);
+    messages = $state<Message[]>([]);
     sending = $state(false);
 
     private addMessage(text: string, forceScroll = false) {
         text = format({ inputText: text });
 
-        if(this.messages.length === 100) this.messages.splice(0, 1);
-        this.messages.push(text);
+        if(this.messages.length === 500) this.messages.splice(0, 1);
+        this.messages.push({ text, formatted: true });
         this.scroll(forceScroll);
     }
 
@@ -61,14 +73,37 @@ export default class Chatter {
 
         const joinedPlayers = new Set<string>();
 
+        this.comms.onStringStream(async (chunks, char) => {
+            if(!settings.streamMessages) return;
+
+            // Mark the player as not typing
+            this.playersTyping = this.playersTyping.filter(c => c !== char);
+
+            // Get the reactive message object and append to it
+            this.messages.push({ text: `${char.name}: `, formatted: false });
+            const message = this.messages[this.messages.length - 1];
+
+            // dprint-ignore-start
+            for await (const chunk of chunks) {
+            // dprint-ignore-end
+                message.text += chunk;
+            }
+
+            // Format the message after it has been fully received
+            message.text = format({ inputText: message.text });
+            message.formatted = true;
+        });
+
         this.comms.onMessage((message, char) => {
             const removePlayerTyping = () => {
                 this.playersTyping = this.playersTyping.filter(c => c !== char);
             };
 
             if(typeof message === "string") {
-                this.addMessage(`${char.name}: ${message}`);
-                removePlayerTyping();
+                if(!settings.streamMessages) {
+                    this.addMessage(`${char.name}: ${message}`);
+                    removePlayerTyping();
+                }
             } else {
                 switch (message) {
                     case Op.Join:

@@ -200,9 +200,9 @@ export default class Messenger {
 
         // dprint-ignore-start
         for await (const chunk of Messenger.restOfBytes(char)) {
+        // dprint-ignore-end
             array.push(...chunk);
         }
-        // dprint-ignore-end
 
         return array;
     }
@@ -352,9 +352,9 @@ export default class Messenger {
 
             // dprint-ignore-start
             for await (const chunk of Messenger.restOfBytes(char)) {
+            // dprint-ignore-start
                 yield map ? map(...chunk) : chunk;
             }
-            // dprint-ignore-end
         };
 
         for(const cb of callbacks) {
