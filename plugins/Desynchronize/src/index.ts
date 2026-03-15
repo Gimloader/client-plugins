@@ -1,3 +1,4 @@
+import { baseDownloadUrl } from "$shared/config";
 import Sync from "./sync";
 export * as DLD from "./dld";
 
@@ -58,25 +59,20 @@ function stopSync() {
 }
 
 settings.listen("pluginSync", (enabled) => {
-    if(enabled) {
-        if(api.libs.isEnabled("Communication")) {
+    if(!enabled) {
+        stopSync();
+        return;
+    }
+
+    api.libs.require("Communication", `${baseDownloadUrl}/libraries/Communication.js`)
+        .then(() => {
             api.net.onLoad(() => {
                 sync ??= new Sync();
             });
-        } else {
+        }).catch(() => {
             settings.pluginSync = false;
-            api.UI.showModal(
-                document.createElement("div"),
-                {
-                    title: "The Communication library is required for plugin sync.",
-                    closeOnBackgroundClick: true,
-                    style: "color: red"
-                }
-            );
-        }
-    } else {
-        stopSync();
-    }
+            api.UI.message.error({ content: "Cannot enable sync setting without Communication library" });
+        });
 }, true);
 
 api.onStop(stopSync);
