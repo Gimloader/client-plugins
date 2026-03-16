@@ -120,7 +120,8 @@ api.rewriter.runInScope("App", (code, run) => {
     if(!code.includes(".physics.state.jump.xVelocityAtJumpStart),")) return;
 
     const name = getSection(code, ".overrideYTravelUntilMaxGravity?#coyoteJumpLimitMS#,@=");
-    calcGravity = run(name) as unknown as CalcGravity;
+    // @ts-expect-error
+    calcGravity = run(name);
 
     let padMovementVelocityCode = getMovementVelocityCode(code);
     padMovementVelocityCode = replaceSection(padMovementVelocityCode, "()?@(", calcMovementVelocity);
@@ -131,7 +132,8 @@ api.rewriter.runInScope("App", (code, run) => {
     let preUpdateCode = getSection(code, "this.preUpdate=@,this.postUpdate");
     preUpdateCode = replaceSection(preUpdateCode, "+=1,@(", `(${applyPhysicsInputCode})`);
     preUpdateCode = preUpdateCode.replace("()=>", "function()");
-    const preUpdate = run(`(${preUpdateCode})`) as unknown as () => void;
+    // @ts-expect-error
+    const preUpdate = run(`(${preUpdateCode})`) as () => void;
 
     api.net.onLoad(() => {
         const physics = api.stores.phaser.mainCharacter.physics;
