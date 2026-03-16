@@ -32,7 +32,7 @@ export interface DLDData extends IlData {
 export type GamemodeData = BasicData | SplitsData;
 
 export interface GamemodesData {
-    "DLD": DLDData;
-    "Fishtopia": SplitsData;
-    "OneWayOut": SplitsData;
+    "DLD"?: DLDData;
+    "Fishtopia"?: SplitsData;
+    "OneWayOut"?: SplitsData;
 }

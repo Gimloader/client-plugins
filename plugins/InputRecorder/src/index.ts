@@ -1,3 +1,6 @@
+import { uploadJson } from "$shared/jsonTransfer";
+import { createAssert } from "typia";
+import type { IRecording } from "../types";
 import Recorder from "./recorder";
 
 let recorder: Recorder;
@@ -29,22 +32,12 @@ function playBackRecording() {
         recorder.stopPlayback();
         api.UI.notification.open({ message: "Playback canceled" });
     } else {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".json";
-        input.onchange = async () => {
-            api.hotkeys.releaseAll();
-            const file = input.files?.[0];
-            if(!file) return;
-
-            const json = await file.text();
-            const data = JSON.parse(json);
-            api.UI.notification.open({ message: "Starting Playback" });
-
-            recorder.playback(data);
-        };
-
-        input.click();
+        uploadJson(createAssert<IRecording>())
+            .then(([data]) => {
+                api.UI.notification.open({ message: "Starting Playback" });
+                recorder.playback(data);
+            })
+            .catch(() => {});
     }
 }
 

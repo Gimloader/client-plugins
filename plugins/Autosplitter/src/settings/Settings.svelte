@@ -1,10 +1,11 @@
 <script lang="ts">
-    import type { GamemodesData } from "../types";
+    import type { GamemodesData, SplitsData } from "../types";
     import { gamemodes } from "../constants";
-    import { downloadFile, getGamemodeData, readFile } from "../util";
+    import { dldDataAssert, gamemodesDataAssert, getGamemodeData, splitsDataAssert } from "../util";
     import Dld from "./DLD.svelte";
     import Fishtopia from "./Fishtopia.svelte";
     import OneWayOut from "./OneWayOut.svelte";
+    import { downloadJson, uploadJson } from "$shared/jsonTransfer";
 
     let activeTab = $state(gamemodes[0]);
     let dataObj: any = {};
@@ -28,32 +29,37 @@
             json[gamemode] = data;
         }
 
-        downloadFile(JSON.stringify(json), "splits.json");
+        downloadJson(json, "splits.json");
     }
 
     function importAll() {
-        readFile()
-            .then((newData) => {
-                for(let gamemode of gamemodes) {
-                    if(!newData[gamemode]) continue;
-                    data[gamemode] = newData[gamemode];
+        uploadJson(gamemodesDataAssert)
+            .then(([newData]) => {
+                data = {
+                    ...data,
+                    ...newData
+                };
 
+                for(let gamemode of gamemodes) {
                     api.storage.setValue(`${gamemode}Data`, newData[gamemode]);
                 }
-            });
+            })
+            .catch(() => {});
     }
 
     function exportMode() {
         let json = data[activeTab];
-        downloadFile(JSON.stringify(json), `${activeTab}.json`);
+        downloadJson(json, `${activeTab}.json`);
     }
 
     function importMode() {
-        readFile()
-            .then((newData) => {
-                data[activeTab] = newData;
+        const assert = activeTab === "DLD" ? dldDataAssert : splitsDataAssert;
+        uploadJson(assert)
+            .then(([newData]) => {
+                (data[activeTab] as SplitsData) = newData;
                 api.storage.setValue(`${activeTab}Data`, newData);
-            });
+            })
+            .catch(() => {});
     }
 </script>
 
@@ -74,11 +80,11 @@
 
     <div class="settings-content">
         {#if activeTab === "DLD"}
-            <Dld bind:data={data.DLD} />
+            <Dld bind:data={data.DLD!} />
         {:else if activeTab === "Fishtopia"}
-            <Fishtopia bind:data={data.Fishtopia} />
+            <Fishtopia bind:data={data.Fishtopia!} />
         {:else if activeTab === "OneWayOut"}
-            <OneWayOut bind:data={data.OneWayOut} />
+            <OneWayOut bind:data={data.OneWayOut!} />
         {/if}
     </div>
 </div>
