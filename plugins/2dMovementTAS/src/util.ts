@@ -1,7 +1,6 @@
-import type { IFrame, TAS } from "./types";
+import type { IFrame } from "./types";
 import { mount, unmount } from "svelte";
 import AnglePicker from "./ui/AnglePicker.svelte";
-import { createAssert } from "typia";
 
 export const blankFrame: IFrame = {
     angle: 0,
@@ -99,5 +98,3 @@ export function updateDeviceState(device: Gimloader.Stores.Device, key: string, 
     states.get(deviceId)?.properties.set(key, value);
     device.onStateUpdateFromServer(key, value);
 }
-
-export const tasAssert = createAssert<TAS>();

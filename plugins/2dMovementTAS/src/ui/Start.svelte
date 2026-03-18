@@ -1,9 +1,9 @@
 <script lang="ts">
     import type { Vector } from "@dimforge/rapier2d-compat";
-    import type { IFrame } from "../types";
+    import type { IFrame, TAS } from "../types";
     import UI from "./UI.svelte";
-    import { uploadJson } from "$shared/jsonTransfer";
-    import { tasAssert } from "../util";
+
+    const { uploadJson } = api.lib("JSONTransfer");
 
     let begun = $state(false);
     let save = api.storage.getValue("save");
@@ -34,7 +34,7 @@
         }
 
         try {
-            let [data] = await uploadJson(tasAssert);
+            let [data] = await uploadJson<TAS>();
             frames = data.frames;
             startPos = data.startPos;
             begun = true;

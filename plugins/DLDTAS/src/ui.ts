@@ -5,8 +5,8 @@ import { hideHitbox, initOverlay, showHitbox } from "./overlay";
 import TASTools from "./tools";
 import { getLaserOffset, setLaserOffset } from "./updateLasers";
 import { getTickKeys, save } from "./util";
-import { downloadJson, uploadJson } from "$shared/jsonTransfer";
-import { createAssert } from "typia";
+
+const { uploadJson, downloadJson } = api.lib("JSONTransfer");
 
 const frames: IFrameInfo[] = api.storage.getValue("frames", []);
 const values: ISharedValues = { frames, currentFrame: 0 };
@@ -116,7 +116,7 @@ export function createUI() {
         setPlaying(false);
         tools.stopPlaying();
 
-        uploadJson(createAssert<IFrameInfo[] | TAS | IRecording>())
+        uploadJson<IFrameInfo[] | TAS | IRecording>()
             .then(([data]) => {
                 // compatibility with older versions and input recordings
                 if(Array.isArray(data)) {

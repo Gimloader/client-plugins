@@ -7,7 +7,6 @@
         "@gimloader/external-svelte-plugin": "^1.0.1",
         "@types/bun": "^1.3.5",
         "@types/gimloader": "^1.11.2",
-        "@typia/unplugin": "^12.0.1",
         "antd": "^6.2.2",
         "compress-json": "^3.4.0",
         "dprint": "^0.50.2",
@@ -17,8 +16,7 @@
         "svelte": "5.43.0",
         "svelte-check": "^4.3.5",
         "svelte-toggle": "^4.0.1",
-        "typescript": "^5.9.3",
-        "typia": "^12.0.1"
+        "typescript": "^5.9.3"
     },
     "description": "Official client-side plugins for Gimloader",
     "scripts": {

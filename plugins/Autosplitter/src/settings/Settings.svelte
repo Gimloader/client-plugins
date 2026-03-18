@@ -1,11 +1,12 @@
 <script lang="ts">
-    import type { GamemodesData, SplitsData } from "../types";
+    import type { DLDData, GamemodesData, SplitsData } from "../types";
     import { gamemodes } from "../constants";
-    import { dldDataAssert, gamemodesDataAssert, getGamemodeData, splitsDataAssert } from "../util";
+    import { getGamemodeData } from "../util";
     import Dld from "./DLD.svelte";
     import Fishtopia from "./Fishtopia.svelte";
     import OneWayOut from "./OneWayOut.svelte";
-    import { downloadJson, uploadJson } from "$shared/jsonTransfer";
+
+    const { uploadJson, downloadJson } = api.lib("JSONTransfer");
 
     let activeTab = $state(gamemodes[0]);
     let dataObj: any = {};
@@ -29,11 +30,11 @@
             json[gamemode] = data;
         }
 
-        downloadJson(json, "splits.json");
+        downloadJson(json, "splits");
     }
 
     function importAll() {
-        uploadJson(gamemodesDataAssert)
+        uploadJson<GamemodesData>()
             .then(([newData]) => {
                 data = {
                     ...data,
@@ -53,8 +54,7 @@
     }
 
     function importMode() {
-        const assert = activeTab === "DLD" ? dldDataAssert : splitsDataAssert;
-        uploadJson(assert)
+        uploadJson<DLDData | SplitsData>()
             .then(([newData]) => {
                 (data[activeTab] as SplitsData) = newData;
                 api.storage.setValue(`${activeTab}Data`, newData);

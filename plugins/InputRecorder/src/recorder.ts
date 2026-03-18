@@ -1,7 +1,8 @@
 import type { Vector } from "@dimforge/rapier2d-compat";
 import type { IRecording } from "../types";
 import { stopUpdatingLasers, updateLasers } from "./updateLasers";
-import { downloadJson } from "$shared/jsonTransfer";
+
+const { downloadJson } = api.lib("JSONTransfer");
 
 export default class Recorder {
     nativeStep: Gimloader.Stores.PhysicsManager["physicsStep"];

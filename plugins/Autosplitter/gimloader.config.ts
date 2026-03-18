@@ -8,5 +8,6 @@ export default officialScriptConfig({
     version: "0.6.3",
     hasSettings: true,
     gamemodes: ["dontLookDown", "fishtopia", "oneWayOut"],
-    changelog: ["Maybe fixed Fishtopia splits resetting"]
+    changelog: ["Maybe fixed Fishtopia splits resetting"],
+    needsLibs: ["JSONTransfer"]
 });

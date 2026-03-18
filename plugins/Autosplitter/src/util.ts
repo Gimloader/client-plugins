@@ -1,6 +1,5 @@
 import type { Vector } from "@dimforge/rapier2d-compat";
-import type { DLDData, GamemodesData, SplitsData } from "./types";
-import { createAssert } from "typia";
+import type { DLDData, SplitsData } from "./types";
 
 export function getGamemodeData(gamemode: string) {
     switch (gamemode) {
@@ -116,7 +115,3 @@ export function onFrame(callback: () => void) {
         callback();
     });
 }
-
-export const gamemodesDataAssert = createAssert<GamemodesData>();
-export const dldDataAssert = createAssert<DLDData>();
-export const splitsDataAssert = createAssert<SplitsData>();

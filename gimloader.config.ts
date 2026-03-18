@@ -2,7 +2,6 @@ import { sassPlugin } from "esbuild-sass-plugin";
 import svelte from "esbuild-svelte";
 import { workspaceConfig } from "@gimloader/build";
 import { externalSvelte } from "@gimloader/external-svelte-plugin";
-import UnpluginTypia from '@typia/unplugin/esbuild';
 
 export default workspaceConfig({
     type: "workspace",
@@ -12,10 +11,6 @@ export default workspaceConfig({
         "./libraries"
     ],
     plugins: [
-        UnpluginTypia({
-            cache: true,
-            exclude: [/\.svelte$/]
-        }),
         sassPlugin({ type: "css-text" }),
         svelte({
             compilerOptions: {

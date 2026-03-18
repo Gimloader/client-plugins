@@ -1,7 +1,7 @@
-import { uploadJson } from "$shared/jsonTransfer";
-import { createAssert } from "typia";
 import type { IRecording } from "../types";
 import Recorder from "./recorder";
+
+const { uploadJson } = api.lib("JSONTransfer");
 
 let recorder: Recorder;
 
@@ -32,7 +32,7 @@ function playBackRecording() {
         recorder.stopPlayback();
         api.UI.notification.open({ message: "Playback canceled" });
     } else {
-        uploadJson(createAssert<IRecording>())
+        uploadJson<IRecording>()
             .then(([data]) => {
                 api.UI.notification.open({ message: "Starting Playback" });
                 recorder.playback(data);
