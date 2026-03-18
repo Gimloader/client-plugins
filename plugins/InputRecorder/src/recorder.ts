@@ -73,7 +73,7 @@ export default class Recorder {
             startState: this.startState,
             platformerPhysics: this.platformerPhysics,
             frames: this.frames
-        }, fileName ?? `recording-${name}.json`);
+        }, fileName ?? `recording-${name}`);
     }
 
     async playback(data: IRecording) {

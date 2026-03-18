@@ -107,7 +107,7 @@ export function createUI() {
         downloadJson({
             frames: save(values.frames),
             laserOffset: getLaserOffset()
-        }, "tas.json");
+        }, "tas");
     });
 
     // upload a json file

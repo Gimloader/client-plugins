@@ -50,7 +50,7 @@
 
     function exportMode() {
         let json = data[activeTab];
-        downloadJson(json, `${activeTab}.json`);
+        downloadJson(json, `${activeTab}`);
     }
 
     function importMode() {
