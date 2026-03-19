@@ -15,6 +15,13 @@ const settings = api.settings.create([
         title: "Stream Messages",
         description: "Show messages being typed out instead of waiting for them to be fully recieved",
         default: true
+    },
+    {
+        id: "showSkins",
+        type: "toggle",
+        title: "Show Skins",
+        description: "Display player skins next to their messages in chat",
+        default: true
     }
 ]);
 
@@ -29,7 +36,7 @@ enum Op {
 // Get the formatter that is used for formatting the activity feed
 type Formatter = (message: { inputText: string }) => string;
 
-let format: Formatter;
+let format: Formatter | null = null;
 
 api.rewriter.exposeVar("App", {
     check: ">%SPACE_HERE",
@@ -37,9 +44,18 @@ api.rewriter.exposeVar("App", {
     callback: (formatter) => format = formatter
 });
 
+function parseSkin(skin?: string) {
+    if(!skin) return;
+    try {
+        const id = JSON.parse(skin).id;
+        return id.replace("character_", "");
+    } catch {}
+}
+
 interface Message {
     formatted: boolean;
     text: string;
+    senderSkin?: string;
 }
 
 export default class Chatter {
@@ -51,13 +67,19 @@ export default class Chatter {
     enabled = $state(Comms.enabled);
     messages = $state<Message[]>([]);
     sending = $state(false);
+    showSkins = $state(settings.showSkins);
 
-    private addMessage(text: string, forceScroll = false) {
-        text = format({ inputText: text });
+    private addMessage(text: string, forceScroll = false, skin?: string) {
+        if(format) text = format({ inputText: text });
 
         this.scroll(forceScroll);
         if(this.messages.length === 500) this.messages.splice(0, 1);
-        this.messages.push({ text, formatted: true });
+
+        this.messages.push({
+            senderSkin: parseSkin(skin),
+            text,
+            formatted: format ? true : false
+        });
     }
 
     constructor(private readonly scroll: (force: boolean) => void) {
@@ -71,6 +93,8 @@ export default class Chatter {
             this.comms.send(Op.Greet);
         }
 
+        settings.listen("showSkins", (value) => this.showSkins = value);
+
         const joinedPlayers = new Set<string>();
 
         this.comms.onStringStream(async (chunks, char) => {
@@ -81,7 +105,11 @@ export default class Chatter {
 
             // Get the reactive message object and append to it
             this.scroll(false);
-            this.messages.push({ text: `${char.name}: `, formatted: false });
+            this.messages.push({
+                senderSkin: parseSkin(char.appearance.skin),
+                text: `${char.name}: `,
+                formatted: false
+            });
             const message = this.messages[this.messages.length - 1];
 
             // dprint-ignore-start
@@ -92,6 +120,7 @@ export default class Chatter {
             }
 
             // Format the message after it has been fully received
+            if(!format) return;
             message.text = format({ inputText: message.text });
             message.formatted = true;
         });
@@ -103,14 +132,14 @@ export default class Chatter {
 
             if(typeof message === "string") {
                 if(!settings.streamMessages) {
-                    this.addMessage(`${char.name}: ${message}`);
+                    this.addMessage(`${char.name}: ${message}`, false, char.appearance.skin);
                     removePlayerTyping();
                 }
             } else {
                 switch (message) {
                     case Op.Join:
                         if(joinedPlayers.has(char.id)) return;
-                        this.addMessage(`${char.name} connected to the chat`);
+                        this.addMessage(`${char.name} connected to the chat`, false, char.appearance.skin);
                         joinedPlayers.add(char.id);
                         break;
                     case Op.Leave:
@@ -119,7 +148,7 @@ export default class Chatter {
                         removePlayerTyping();
                         break;
                     case Op.Greet:
-                        this.addMessage(`${char.name} connected to the chat`);
+                        this.addMessage(`${char.name} connected to the chat`, false, char.appearance.skin);
                         // resend that we have joined whenever someone joins the chat mid-game
                         this.comms.send(Op.Join);
                         joinedPlayers.add(char.id);
@@ -173,7 +202,7 @@ export default class Chatter {
 
         try {
             await this.comms.send(text);
-            this.addMessage(`${this.me.name}: ${text}`, true);
+            this.addMessage(`${this.me.name}: ${text}`, true, this.me.appearance.skin);
         } catch {
             this.addMessage("Message failed to send", true);
         }

@@ -77,12 +77,17 @@
     <div bind:this={wrap} class="chat-messages-wrap">
         <div class="chat-messages">
             {#each chatter.messages as message}
-                <div>
-                    {#if message.formatted}
-                        {@html message.text}
-                    {:else}
-                        {message.text}
+                <div class="chat-message">
+                    {#if message.senderSkin && chatter.showSkins}
+                        <img src="https://www.gimkit.com/assets/map/characters/spine/preview/{message.senderSkin}.png" alt={message.senderSkin} width={24} height={24} />
                     {/if}
+                    <div>
+                        {#if message.formatted}
+                            {@html message.text}
+                        {:else}
+                            {message.text}
+                        {/if}
+                    </div>
                 </div>
             {/each}
         </div>
@@ -132,6 +137,11 @@
         justify-content: flex-end;
         color: white;
         padding: 0 5px;
+    }
+
+    .chat-message {
+        display: flex;
+        align-items: flex-start;
     }
 
     .typing-text {
