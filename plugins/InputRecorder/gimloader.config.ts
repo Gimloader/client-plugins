@@ -9,5 +9,6 @@ export default officialScriptConfig({
     reloadRequired: "ingame",
     needsPlugins: ["Desynchronize"],
     gamemodes: ["dontLookDown"],
-    changelog: ["Updated webpage url"]
+    changelog: ["Updated webpage url"],
+    needsLibs: ["JSONTransfer"]
 });

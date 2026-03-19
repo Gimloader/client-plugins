@@ -8,6 +8,7 @@ declare namespace Gimloader {
     
     interface Libraries {
         Communication: typeof import("libraries/Communication/src").default;
+        JSONTransfer: typeof import("libraries/JSONTransfer/src");
     }
 }
 
