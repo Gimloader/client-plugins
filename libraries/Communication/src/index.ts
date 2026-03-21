@@ -95,10 +95,11 @@ export default class Communication<T extends Message = Message> {
                         return await this.#messenger.sendSeveralBytes(message);
                     }
                 } else {
-                    if(JSON.stringify(message).length <= 3) {
-                        return await this.#messenger.sendSmallObject(message);
+                    const stringified = JSON.stringify(message);
+                    if(stringified.length <= 3) {
+                        return await this.#messenger.sendSmallObject(stringified);
                     }
-                    return await this.#messenger.sendObject(message);
+                    return await this.#messenger.sendObject(stringified);
                 }
             }
         }
