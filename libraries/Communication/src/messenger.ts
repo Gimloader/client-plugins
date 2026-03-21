@@ -81,13 +81,11 @@ export default class Messenger {
         await this.sendStringOfType(string, Type.String);
     }
 
-    async sendSmallObject(obj: object) {
-        const string = JSON.stringify(obj);
+    async sendSmallObject(string: string) {
         await this.sendHeader(Type.SmallObject, ...encodeCharacters(string));
     }
 
-    async sendObject(obj: object) {
-        const string = JSON.stringify(obj);
+    async sendObject(string: string) {
         await this.sendStringOfType(string, Type.Object);
     }
 
