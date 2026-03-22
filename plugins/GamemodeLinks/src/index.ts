@@ -135,7 +135,7 @@ api.rewriter.addParseHook("App", code => {
         const gameVarName = getSection(code, ".name,description:@.");
 
         // Triggers manual popup closes
-        code = insert(code, ")=>{const[#=()=>{@#", `${closePopupWrapper}?.();`);
+        code = insert(code, ")=>{let[#=()=>{@#", `${closePopupWrapper}?.();`);
         // Updates the selected game
         return insert(code, '"EXPERIENCE_HOOKS"})@}', `;${setMapDataWrapper}?.(${gameVarName}?._id, ${gameVarName}?.name);`);
     }
