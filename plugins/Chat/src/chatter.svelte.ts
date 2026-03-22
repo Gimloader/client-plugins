@@ -78,7 +78,7 @@ export default class Chatter {
         this.messages.push({
             senderSkin: parseSkin(skin),
             text,
-            formatted: format ? true : false
+            formatted: Boolean(format)
         });
     }
 
