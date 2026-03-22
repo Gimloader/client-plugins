@@ -73,7 +73,6 @@ api.net.onLoad(async () => {
             createCollider(char.id);
 
             api.onStop(
-                // @ts-expect-error
                 char.onRemove(() => removeCollider(char.id))
             );
         })
