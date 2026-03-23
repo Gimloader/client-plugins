@@ -3,7 +3,7 @@ import { getSection, insert, replaceSection } from "$shared/rewritingUtils";
 // Fixes placing tiles as soon as switching to the tile in your inventory
 api.rewriter.addParseHook("App", code => {
     if(!code.includes(".previewDepth).removeTileAt(this.previewingTile.x")) return code;
-    code = insert(code, "clearConsumeErrorMessage=()=>{const#.itemId)@.", "?");
+    code = insert(code, "clearConsumeErrorMessage=()=>{let#.itemId)@.", "?");
     return insert(code, ".isHoldingDown;this.wasDown#.itemId);if(#@.", "?");
 });
 
