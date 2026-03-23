@@ -1,13 +1,13 @@
+import type { ByteStreamCallback, Message, OnMessageCallback, StringStreamCallback } from "./types";
 import Messenger from "./messenger";
 import { getIdentifier, isUint24, isUint8 } from "./encoding";
-import type { Message, OnMessageCallback } from "./types";
 
 api.net.onLoad(() => {
     Messenger.init();
 
-    api.onStop(api.net.room.state.characters.onAdd((char: any) => {
+    api.onStop(api.net.state.characters.onAdd((char) => {
         api.onStop(
-            char.projectiles.listen("aimAngle", (angle: number) => {
+            char.projectiles.listen("aimAngle", (angle) => {
                 Messenger.handleAngle(char, angle);
             })
         );
@@ -25,19 +25,23 @@ export default class Communication<T extends Message = Message> {
         this.#messenger = new Messenger(identifier);
     }
 
-    get #onMessageCallbacks() {
+    get #callbacks() {
         if(!Messenger.callbacks.has(this.#identifierString)) {
-            Messenger.callbacks.set(this.#identifierString, []);
+            Messenger.callbacks.set(this.#identifierString, {
+                message: [],
+                stringStream: [],
+                byteStream: []
+            });
         }
         return Messenger.callbacks.get(this.#identifierString)!;
     }
 
     static get enabled() {
-        return api.net.room?.state.session.phase === "game";
+        return api.net.state?.session.phase === "game";
     }
 
     onEnabledChanged(callback: (enabled: boolean) => void) {
-        const unsub: () => void = api.net.room.state.session.listen("phase", (phase: string) => {
+        const unsub = api.net.state.session.listen("phase", (phase) => {
             callback(phase === "game");
         }, false);
 
@@ -51,7 +55,7 @@ export default class Communication<T extends Message = Message> {
         }
 
         // Don't send messages if nobody else is in the server
-        const players = [...api.net.room.state.characters.values()].filter(char => char.type === "player");
+        const players = [...api.net.state.characters.values()].filter(char => char.type === "player");
         if(players.length <= 1) return;
 
         switch (typeof message) {
@@ -91,10 +95,11 @@ export default class Communication<T extends Message = Message> {
                         return await this.#messenger.sendSeveralBytes(message);
                     }
                 } else {
-                    if(JSON.stringify(message).length <= 3) {
-                        return await this.#messenger.sendSmallObject(message);
+                    const stringified = JSON.stringify(message);
+                    if(stringified.length <= 3) {
+                        return await this.#messenger.sendSmallObject(stringified);
                     }
-                    return await this.#messenger.sendObject(message);
+                    return await this.#messenger.sendObject(stringified);
                 }
             }
         }
@@ -102,11 +107,29 @@ export default class Communication<T extends Message = Message> {
 
     onMessage(callback: OnMessageCallback<T>) {
         const cb = callback as OnMessageCallback<Message>;
-        this.#onMessageCallbacks.push(cb);
+        this.#callbacks.message.push(cb);
 
         return () => {
-            const index = this.#onMessageCallbacks.indexOf(cb);
-            if(index !== -1) this.#onMessageCallbacks.slice(index, 1);
+            const index = this.#callbacks.message.indexOf(cb);
+            if(index !== -1) this.#callbacks.message.slice(index, 1);
+        };
+    }
+
+    onStringStream(callback: StringStreamCallback) {
+        this.#callbacks.stringStream.push(callback);
+
+        return () => {
+            const index = this.#callbacks.stringStream.indexOf(callback);
+            if(index !== -1) this.#callbacks.stringStream.slice(index, 1);
+        };
+    }
+
+    onByteStream(callback: ByteStreamCallback) {
+        this.#callbacks.byteStream.push(callback);
+
+        return () => {
+            const index = this.#callbacks.byteStream.indexOf(callback);
+            if(index !== -1) this.#callbacks.byteStream.slice(index, 1);
         };
     }
 

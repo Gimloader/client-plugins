@@ -12,7 +12,7 @@ export function reset() {
     api.net.send("END_GAME");
     api.net.send("RESTORE_MAP_EARLIER");
 
-    const gameSession = api.net.room.state.session.gameSession;
+    const gameSession = api.net.state.session.gameSession;
     if(gameSession.phase === "countdown") return;
 
     ignoreNextStart = true;
@@ -20,7 +20,7 @@ export function reset() {
         api.net.send("START_GAME", startMessage);
     }, 100);
 
-    const unsub = gameSession.listen("phase", (phase: string) => {
+    const unsub = gameSession.listen("phase", (phase) => {
         if(phase !== "countdown") return;
 
         ignoreNextStart = false;

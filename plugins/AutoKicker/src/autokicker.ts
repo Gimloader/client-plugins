@@ -1,6 +1,15 @@
 import { invisRegex } from "./consts";
 import type { IBlacklistedName } from "./types";
 
+const settings = api.settings.create([
+    {
+        id: "notify",
+        type: "toggle",
+        title: "Notify when kicking",
+        default: true
+    }
+]);
+
 export default class AutoKicker {
     lastLeaderboard: any[] | null = null;
 
@@ -47,9 +56,9 @@ export default class AutoKicker {
 
     start() {
         if(api.net.type === "Colyseus") {
-            const chars = api.net.room.serializer.state.characters;
+            const chars = api.net.state.characters;
 
-            api.onStop(chars.onAdd((e: any) => {
+            api.onStop(chars.onAdd((e) => {
                 if(!e || e.id === this.myId) return;
                 if(this.kickIdle) {
                     // set and idle kick timeout
@@ -176,7 +185,7 @@ export default class AutoKicker {
     }
 
     scanPlayersColyseus() {
-        const characters = api.net.room.state.characters;
+        const characters = api.net.state.characters;
         const nameCount = new Map<string, number>();
 
         // tally name counts
@@ -253,10 +262,10 @@ export default class AutoKicker {
         if(this.kicked.has(id)) return;
         this.kicked.add(id);
 
-        const char = api.net.room.state.characters.get(id)!;
+        const char = api.net.state.characters.get(id)!;
 
         api.net.send("KICK_PLAYER", { characterId: id });
-        api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
+        if(settings.notify) api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
     }
 
     blueboatKick(id: string, reason: string) {
@@ -266,6 +275,6 @@ export default class AutoKicker {
         const playername = this.lastLeaderboard?.find((e) => e.id === id)?.name;
 
         api.net.send("KICK_PLAYER", id);
-        api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
+        if(settings.notify) api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
     }
 }

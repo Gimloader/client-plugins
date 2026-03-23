@@ -6,11 +6,14 @@ The following are sent into a single angle:
 - A positive or negative int24 number (-16,777,216 to 16,777,216)
 - A string that is 3 characters or less
 - A boolean
+- An array with a length of 3 or less of numbers that are all integers between 0 and 255
 
 Everything else is sent as multiple angles, and the time it takes to send depends on how much data you send:
 - Any other number (always takes 2 angles)
 - An object/array (stringified)
 - A string over 3 characters (takes roughly length/7 angles)
+
+An array with a length over 3 of numbers that are all integers between 0 and 255 are sent optimally and are not stringified like other arrays.
 
 ## Usage
 
@@ -55,7 +58,7 @@ api.net.onLoad(async () => {
 ## Notes
 
 - You can unfortunately not send messages in the lobby, use `Comms.enabled` to determine if you are in the lobby.
-- Do not do `api.net.room.state.characters.onAdd(() => comms.send("Hello new player!"))` because `onAdd` is not necessarily the moment where the player can listen to messages. Instead, create a message for players to send once they have joined the lobby, and respond based on that message.
+- Do not do `api.net.state.characters.onAdd(() => comms.send("Hello new player!"))` because `onAdd` is not necessarily the moment where the player can listen to messages. Instead, create a message for players to send once they have joined the lobby, and respond based on that message.
 - If multiple plugins send messages at the same time messages will be queued to avoid messages being dropped by the server, and messages may be delayed.
 - When sending strings, characters with codes larger than 255 will be filtered out.
 - You can create multiple instances of Communication with different names if you need multiple "channels".

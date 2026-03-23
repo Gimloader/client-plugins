@@ -33,14 +33,14 @@ export default class TASTools {
     constructor(public frames: IFrame[], public setFrames: (frames: IFrame[]) => void, startPos?: Vector) {
         active = true;
 
-        const mcState = api.net.room.state.characters.get(api.stores.phaser.mainCharacter.id);
+        const mcState = api.net.state.characters.get(api.stores.phaser.mainCharacter.id)!;
         mcState.$callbacks.movementSpeed = [];
 
         for(const slot of mcState.inventory.slots.values()) {
             slot.$callbacks = {};
         }
 
-        mcState.inventory.slots.onAdd((item: any) => {
+        mcState.inventory.slots.onAdd((item) => {
             setTimeout(() => {
                 item.$callbacks = {};
             });
