@@ -26,27 +26,71 @@ function CodeWrapper({ children, small }: { children: any; small: boolean }) {
     );
 }
 
-const codeWrapper = api.rewriter.createShared("CodeWrapper", (small: boolean, element: any) => {
-    return <CodeWrapper small={small}>{element}</CodeWrapper>;
+const createWrapper = api.rewriter.createShared("createWrapper", (small: boolean, Element: any) => {
+    return function(props: any) {
+        return (
+            <CodeWrapper small={small}>
+                <Element {...props} />
+            </CodeWrapper>
+        )
+    }
 });
 
 // Wrap the 1d and 2d lobby screen elements
-api.rewriter.addParseHook("SixteenByNineScaler", (code) => {
-    const startIndex = code.indexOf(`children:"Copy Join Link"`) + 40;
-    const endIndex = code.indexOf("})", startIndex) + 2;
-    if(startIndex === -1 || endIndex === -1) return code;
+api.rewriter.runInScope("SixteenByNineScaler", (code, run, initial) => {
+    const nameStart = code.indexOf("font-size: 32px;") + 19;
+    const nameEnd = code.indexOf("=", nameStart);
+    const component = code.slice(nameStart, nameEnd);
 
-    const wrapped = `${codeWrapper}(false,` + code.slice(startIndex, endIndex) + `)`;
-    return code.slice(0, startIndex) + wrapped + code.slice(endIndex);
+    run(`window._bigWrapper=${component};${component}=${createWrapper}(false,${component})`);
+    if(!initial) api.UI.forceReactUpdate();
+    
+    api.onStop(() => {
+        run(`${component}=window._bigWrapper`);
+        api.UI.forceReactUpdate();
+    });
+
+    return true;
 });
 
 // Wrap the 2d game screen element
-api.rewriter.addParseHook("App", (code) => {
-    const index = code.indexOf("Game Code (Click to enlarge)");
-    if(index === -1) return code;
+api.rewriter.runInScope("App", (code, run, initial) => {
+    if(!code.includes("Game Code (Click to enlarge)")) return;
 
-    const startIndex = code.indexOf("children:", index) + 9;
-    const endIndex = code.indexOf("})", startIndex) + 2;
-    const wrapped = `${codeWrapper}(true,` + code.slice(startIndex, endIndex) + `)`;
-    return code.slice(0, startIndex) + wrapped + code.slice(endIndex);
+    const index = code.indexOf("padding: 8px 10px;");
+    if(index === -1) return;
+
+    const nameEnd = code.lastIndexOf("=", index);
+    const nameStart = code.lastIndexOf(",", nameEnd) + 1;
+    const component = code.slice(nameStart, nameEnd);
+
+    run(`window._smallWrapper=${component};${component}=${createWrapper}(true,${component})`);
+    if(!initial) api.UI.forceReactUpdate();
+    
+    api.onStop(() => {
+        run(`${component}=window._smallWrapper`);
+        api.UI.forceReactUpdate();
+    });
+
+    return true;
+});
+
+// Wrap the 1d game screen element
+api.rewriter.runInScope("index", (code, run, initial) => {
+    const index = code.indexOf(".showLargeCode?");
+    if(index === -1) return;
+
+    const nameStart = code.lastIndexOf(",", code.lastIndexOf(".div`", index)) + 1;
+    const nameEnd = code.indexOf("=", nameStart);
+    const component = code.slice(nameStart, nameEnd);
+
+    run(`window._1dWrapper=${component};${component}=${createWrapper}(true,${component})`);    
+    if(!initial) api.UI.forceReactUpdate();
+
+    api.onStop(() => {
+        run(`${component}=window._1dWrapper`);
+        api.UI.forceReactUpdate();
+    });
+
+    return true;
 });
