@@ -5,6 +5,6 @@ export default officialScriptConfig({
     name: "ShiftConfirm",
     description: "Makes confirm popups resolve instantly when holding shift.",
     author: "retrozy",
-    version: "0.1.1",
-    changelog: ["Updated webpage url"]
+    version: "0.1.2",
+    changelog: ["Fixed plugin crashing"]
 });
