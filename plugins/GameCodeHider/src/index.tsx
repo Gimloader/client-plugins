@@ -32,8 +32,8 @@ const createWrapper = api.rewriter.createShared("createWrapper", (small: boolean
             <CodeWrapper small={small}>
                 <Element {...props} />
             </CodeWrapper>
-        )
-    }
+        );
+    };
 });
 
 // Wrap the 1d and 2d lobby screen elements
@@ -44,7 +44,7 @@ api.rewriter.runInScope("SixteenByNineScaler", (code, run, initial) => {
 
     run(`window._bigWrapper=${component};${component}=${createWrapper}(false,${component})`);
     if(!initial) api.UI.forceReactUpdate();
-    
+
     api.onStop(() => {
         run(`${component}=window._bigWrapper`);
         api.UI.forceReactUpdate();
@@ -66,7 +66,7 @@ api.rewriter.runInScope("App", (code, run, initial) => {
 
     run(`window._smallWrapper=${component};${component}=${createWrapper}(true,${component})`);
     if(!initial) api.UI.forceReactUpdate();
-    
+
     api.onStop(() => {
         run(`${component}=window._smallWrapper`);
         api.UI.forceReactUpdate();
@@ -84,7 +84,7 @@ api.rewriter.runInScope("index", (code, run, initial) => {
     const nameEnd = code.indexOf("=", nameStart);
     const component = code.slice(nameStart, nameEnd);
 
-    run(`window._1dWrapper=${component};${component}=${createWrapper}(true,${component})`);    
+    run(`window._1dWrapper=${component};${component}=${createWrapper}(true,${component})`);
     if(!initial) api.UI.forceReactUpdate();
 
     api.onStop(() => {
