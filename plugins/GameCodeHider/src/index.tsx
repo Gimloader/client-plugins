@@ -5,25 +5,41 @@ function CodeWrapper({ children, small }: { children: any; small: boolean }) {
     const React = GL.React;
     const [hidden, setHidden] = React.useState<boolean>(api.storage.getValue("hidden", false));
 
-    const text = hidden ? "######" : children.props.children;
-    const code = React.cloneElement(children, {
-        ...children.props,
-        children: text
-    });
+    if(children.props?.showLargeCode) return children;
 
-    const toggleHidden = () => {
+    const toggleHidden = (e: React.MouseEvent) => {
+        e.stopPropagation();
         setHidden((prev) => {
             api.storage.setValue("hidden", !prev);
             return !prev;
         });
     };
 
-    return (
-        <div className={small ? "gch-wrap-small" : "gch-wrap"}>
-            {code}
-            <div className={`${small ? "gch-toggle-small" : "gch-toggle"} far ${hidden ? "fa-eye-slash" : "fa-eye"}`} onClick={toggleHidden}></div>
-        </div>
-    );
+    const text = hidden ? "######" : children.props.children;
+    const eye = <div className={`${small ? "gch-toggle-small" : "gch-toggle"} far ${hidden ? "fa-eye-slash" : "fa-eye"}`} onClick={toggleHidden}></div>;
+
+    if(small) {
+        return React.cloneElement(children, {
+            children: (
+                <div className="gch-wrap-small">
+                    {text}
+                    {eye}
+                </div>
+            )
+        });
+    } else {
+        const code = React.cloneElement(children, {
+            ...children.props,
+            children: text
+        });
+
+        return (
+            <div className="gch-wrap">
+                {code}
+                {eye}
+            </div>
+        );
+    }
 }
 
 const createWrapper = api.rewriter.createShared("createWrapper", (small: boolean, Element: any) => {
