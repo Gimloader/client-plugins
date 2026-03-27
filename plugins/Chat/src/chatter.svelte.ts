@@ -230,7 +230,6 @@ export default class Chatter {
     }
 
     stopTyping() {
-        if(!this.typing) return;
         if(!Comms.enabled || !this.typing) return;
         this.comms.send(Op.NotTyping);
         this.typing = false;
