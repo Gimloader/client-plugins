@@ -53,16 +53,17 @@ const createWrapper = api.rewriter.createShared("createWrapper", (small: boolean
 });
 
 // Wrap the 1d and 2d lobby screen elements
+const BigCode = api.rewriter.createShared("BigWrapper", null);
 api.rewriter.runInScope("SixteenByNineScaler", (code, run, initial) => {
     const nameStart = code.indexOf("font-size: 32px;") + 19;
     const nameEnd = code.indexOf("=", nameStart);
     const component = code.slice(nameStart, nameEnd);
 
-    run(`window._bigWrapper=${component};${component}=${createWrapper}(false,${component})`);
+    run(`${BigCode}=${component};${component}=${createWrapper}(false,${component})`);
     if(!initial) api.UI.forceReactUpdate();
 
     api.onStop(() => {
-        run(`${component}=window._bigWrapper`);
+        run(`${component}=${BigCode}`);
         api.UI.forceReactUpdate();
     });
 
@@ -70,21 +71,20 @@ api.rewriter.runInScope("SixteenByNineScaler", (code, run, initial) => {
 });
 
 // Wrap the 2d game screen element
+const TwoDCode = api.rewriter.createShared("TwoDCode", null);
 api.rewriter.runInScope("App", (code, run, initial) => {
     if(!code.includes("Game Code (Click to enlarge)")) return;
 
     const index = code.indexOf("padding: 8px 10px;");
-    if(index === -1) return;
-
     const nameEnd = code.lastIndexOf("=", index);
     const nameStart = code.lastIndexOf(",", nameEnd) + 1;
     const component = code.slice(nameStart, nameEnd);
 
-    run(`window._smallWrapper=${component};${component}=${createWrapper}(true,${component})`);
+    run(`${TwoDCode}=${component};${component}=${createWrapper}(true,${component})`);
     if(!initial) api.UI.forceReactUpdate();
 
     api.onStop(() => {
-        run(`${component}=window._smallWrapper`);
+        run(`${component}=${TwoDCode}`);
         api.UI.forceReactUpdate();
     });
 
@@ -92,6 +92,7 @@ api.rewriter.runInScope("App", (code, run, initial) => {
 });
 
 // Wrap the 1d game screen element
+const OneDCode = api.rewriter.createShared("OneDCode", null);
 api.rewriter.runInScope("index", (code, run, initial) => {
     const index = code.indexOf(".showLargeCode?");
     if(index === -1) return;
@@ -100,11 +101,11 @@ api.rewriter.runInScope("index", (code, run, initial) => {
     const nameEnd = code.indexOf("=", nameStart);
     const component = code.slice(nameStart, nameEnd);
 
-    run(`window._1dWrapper=${component};${component}=${createWrapper}(true,${component})`);
+    run(`${OneDCode}=${component};${component}=${createWrapper}(true,${component})`);
     if(!initial) api.UI.forceReactUpdate();
 
     api.onStop(() => {
-        run(`${component}=window._1dWrapper`);
+        run(`${component}=${OneDCode}`);
         api.UI.forceReactUpdate();
     });
 
