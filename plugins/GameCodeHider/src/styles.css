@@ -1,0 +1,22 @@
+.gch-wrap {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+.gch-wrap-small {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.gch-toggle {
+    cursor: pointer;
+    font-size: 40px;
+    margin-top: 13px;
+}
+
+.gch-toggle-small {
+    cursor: pointer;
+    font-size: 16px;
+}

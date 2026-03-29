@@ -40,11 +40,14 @@ export function getSection(code: string, match: string) {
     return code.slice(startIndex, endIndex);
 }
 
-export function replaceSection(code: string, match: string, replacement: string) {
+export function replaceSection(code: string, match: string, replacement: string | ((section: string) => string)) {
     const { startIndex, endIndex } = getRange(code, match);
 
     const start = code.slice(0, startIndex);
     const end = code.slice(endIndex);
+    if(typeof replacement === "function") {
+        replacement = replacement(code.slice(startIndex, endIndex));
+    }
     return start + replacement + end;
 }
 
