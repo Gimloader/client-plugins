@@ -20,13 +20,9 @@ jobs:
         run: bun run build --all
 
       - name: Sign all scripts
-        run: |
-          {
-            echo << EOF
-            ${{ secrets.SIGN_KEY }}
-            EOF
-          } > signkey.json
-          bun run sign --all
+        env:
+          GIMLOADER_JWK: ${{ secrets.SIGN_KEY }}
+        run: bun run sign --all
 
       - name: Update builds repo
         run: |

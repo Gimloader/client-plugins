@@ -7,7 +7,7 @@
       "devDependencies": {
         "@biomejs/biome": "2.3.1",
         "@dimforge/rapier2d-compat": "~0.17.3",
-        "@gimloader/build": "^1.5.0",
+        "@gimloader/build": "^1.5.1",
         "@gimloader/external-svelte-plugin": "^1.0.1",
         "@types/bun": "^1.3.5",
         "@types/gimloader": "^1.12.0",
@@ -137,7 +137,7 @@
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.25.11", "", { "os": "win32", "cpu": "x64" }, "sha512-D7Hpz6A2L4hzsRpPaCYkQnGOotdUpDzSGRIv9I+1ITdHROSFUWW95ZPZWQmGka1Fg7W3zFJowyn9WGwMJ0+KPA=="],
 
-    "@gimloader/build": ["@gimloader/build@1.5.0", "", { "dependencies": { "chokidar": "^4.0.3", "esbuild": "^0.25.9", "yargs": "^17.7.2", "zod": "^4.1.12" }, "bin": { "gimloader": "dist/cli.js", "gl": "dist/cli.js" } }, "sha512-5APIqTpVKiE9arCGk3iUJiNCxUSBmVtStLhszp+DP0kxgVvzL3gh7UK2wVatTN74FjiYFNYE3VYAuuX28vgo6w=="],
+    "@gimloader/build": ["@gimloader/build@1.5.1", "", { "dependencies": { "chokidar": "^4.0.3", "esbuild": "^0.25.9", "yargs": "^17.7.2", "zod": "^4.1.12" }, "bin": { "gimloader": "dist/cli.js", "gl": "dist/cli.js" } }, "sha512-jGbKcVVF8OHC6YET12jMZbum2avt6KkLbvE9TLHP3Zi9+zpmx7mPJiYKVfYBgiKgVMgup5JihTCaGwn32xVXxw=="],
 
     "@gimloader/external-svelte-plugin": ["@gimloader/external-svelte-plugin@1.0.1", "", { "peerDependencies": { "esbuild": ">=0.17.0", "svelte": "5.43.0", "typescript": "^5" } }, "sha512-nH886Bfvmj74mwBYy6qsSsS2+bDdhBk+/5oOYZMtK0bbqVZZzgBy0cAXgkhwNBzkzioNivgC57uI+1r8cu8f1Q=="],
 
