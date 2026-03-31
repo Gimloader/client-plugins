@@ -21,7 +21,11 @@ jobs:
 
       - name: Sign all scripts
         run: |
-          echo "${{ secrets.SIGN_KEY }}" > signkey.json
+          {
+            echo << EOF
+            ${{ secrets.SIGN_KEY }}
+            EOF
+          } > signkey.json
           bun run sign --all
 
       - name: Update builds repo
