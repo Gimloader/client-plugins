@@ -19,6 +19,11 @@ jobs:
       - name: Build all scripts
         run: bun run build --all
 
+      - name: Sign all scripts
+        run: |
+          echo ${{ secrets.SIGN_KEY }} > signkey.json
+          bun run sign --all
+
       - name: Update builds repo
         run: |
           git config --global user.name "GitHub-Actions"

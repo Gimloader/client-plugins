@@ -3,7 +3,7 @@
     "devDependencies": {
         "@biomejs/biome": "2.3.1",
         "@dimforge/rapier2d-compat": "~0.17.3",
-        "@gimloader/build": "^1.4.0",
+        "@gimloader/build": "../build",
         "@gimloader/external-svelte-plugin": "^1.0.1",
         "@types/bun": "^1.3.5",
         "@types/gimloader": "^1.12.0",
@@ -24,7 +24,8 @@
         "format": "dprint fmt",
         "lint": "biome lint",
         "build": "bunx --bun gimloader build",
-        "serve": "bunx --bun gimloader serve"
+        "serve": "bunx --bun gimloader serve",
+        "sign": "bunx --bun gimloader sign --jwk signkey.json"
     },
     "type": "module"
 }
