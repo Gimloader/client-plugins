@@ -21,7 +21,7 @@ jobs:
 
       - name: Sign all scripts
         run: |
-          printf '%s' "${{ secrets.SIGN_KEY }}" > signkey.json
+          echo "${{ secrets.SIGN_KEY }}" > signkey.json
           bun run sign --all
 
       - name: Update builds repo
