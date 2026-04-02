@@ -6,6 +6,8 @@ import TASTools from "./tools";
 import { getLaserOffset, setLaserOffset } from "./updateLasers";
 import { getTickKeys, save } from "./util";
 
+const { uploadJson, downloadJson } = api.lib("JSONTransfer");
+
 const frames: IFrameInfo[] = api.storage.getValue("frames", []);
 const values: ISharedValues = { frames, currentFrame: 0 };
 
@@ -102,23 +104,10 @@ export function createUI() {
 
     // download the frames as a json file
     div.querySelector("#download")?.addEventListener("click", () => {
-        const data = JSON.stringify(
-            {
-                frames: save(values.frames),
-                laserOffset: getLaserOffset()
-            },
-            null,
-            4
-        );
-
-        const blob = new Blob([data], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "tas.json";
-        a.click();
-        URL.revokeObjectURL(url);
+        downloadJson({
+            frames: save(values.frames),
+            laserOffset: getLaserOffset()
+        }, "tas");
     });
 
     // upload a json file
@@ -127,45 +116,29 @@ export function createUI() {
         setPlaying(false);
         tools.stopPlaying();
 
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".json";
-        input.click();
-
-        input.addEventListener("change", () => {
-            const file = input.files?.[0];
-            if(!file) return;
-
-            const reader = new FileReader();
-            reader.onload = () => {
-                const data = reader.result;
-                if(typeof data !== "string") return;
-
-                const parsed: IFrameInfo[] | TAS | IRecording = JSON.parse(data);
-
+        uploadJson<IFrameInfo[] | TAS | IRecording>()
+            .then(([data]) => {
                 // compatibility with older versions and input recordings
-                if(Array.isArray(parsed)) {
-                    values.frames = parsed;
+                if(Array.isArray(data)) {
+                    values.frames = data;
                 } else {
-                    if("laserOffset" in parsed) {
-                        values.frames = parsed.frames;
-                        setLaserOffset(parsed.laserOffset);
+                    if("laserOffset" in data) {
+                        values.frames = data.frames;
+                        setLaserOffset(data.laserOffset);
                     } else {
-                        values.frames = parsed.frames.map(getTickKeys);
+                        values.frames = data.frames.map(getTickKeys);
                     }
 
-                    if(parsed.startPos) tools.startPos = parsed.startPos;
-                    if(parsed.startState) tools.startState = parsed.startState;
+                    if(data.startPos) tools.startPos = data.startPos;
+                    if(data.startState) tools.startState = data.startState;
                 }
 
                 tools.reset();
                 values.currentFrame = 0;
                 rowOffset = 0;
                 updateTable();
-            };
-
-            reader.readAsText(file);
-        });
+            })
+            .catch(() => {});
     });
 
     div.querySelector("#reset")?.addEventListener("click", () => {

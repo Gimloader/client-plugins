@@ -8,5 +8,6 @@ export default officialScriptConfig({
     version: "0.4.1",
     reloadRequired: "ingame",
     gamemodes: ["ctf", "tag"],
-    changelog: ["Updated webpage url"]
+    changelog: ["Updated webpage url"],
+    needsLibs: ["JSONTransfer"]
 });

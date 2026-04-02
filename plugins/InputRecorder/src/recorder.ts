@@ -2,6 +2,8 @@ import type { Vector } from "@dimforge/rapier2d-compat";
 import type { IRecording } from "../types";
 import { stopUpdatingLasers, updateLasers } from "./updateLasers";
 
+const { downloadJson } = api.lib("JSONTransfer");
+
 export default class Recorder {
     nativeStep: Gimloader.Stores.PhysicsManager["physicsStep"];
     physics = api.stores.phaser.mainCharacter.physics;
@@ -63,23 +65,15 @@ export default class Recorder {
 
         if(!save) return;
 
+        const name = api.stores.phaser.mainCharacter.nametag.name;
+
         // download the file
-        const json: IRecording = {
+        downloadJson({
             startPos: this.startPos,
             startState: this.startState,
             platformerPhysics: this.platformerPhysics,
             frames: this.frames
-        };
-
-        const blob = new Blob([JSON.stringify(json)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-
-        const name = api.stores.phaser.mainCharacter.nametag.name;
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName ?? `recording-${name}.json`;
-        a.click();
+        }, fileName ?? `recording-${name}`);
     }
 
     async playback(data: IRecording) {

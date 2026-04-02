@@ -17,7 +17,7 @@ export default workspaceConfig({
                 css: "injected"
             }
         }),
-        externalSvelte()
+        externalSvelte(),
     ],
     esbuildOptions: {
         loader: {
