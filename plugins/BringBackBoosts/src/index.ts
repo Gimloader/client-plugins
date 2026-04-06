@@ -1,6 +1,6 @@
 // biome-ignore-all lint: This file includes minified code
 
-import { getSection, replaceSection } from "$shared/rewritingUtils";
+import { getSection } from "$shared/rewritingUtils";
 
 const settings = api.settings.create([
     {
@@ -91,59 +91,19 @@ const calcMovementVelocity = api.rewriter.createShared("CalcMovmentVel", (A: any
         };
 });
 
-function getMovementVelocityCode(code: string) {
-    const startIdentifier = ".physics.state.gravity+=";
-    const start = code.indexOf(
-        "=",
-        code.indexOf(startIdentifier) + startIdentifier.length
-    ) + 1;
-
-    const end = code.indexOf(
-        ",",
-        code.indexOf("y:", start) + 2
-    );
-
-    return code.slice(start, end);
-}
-
-function getApplyPhysicsInputCode(code: string) {
-    const startIdentifier = ".me.classDesigner.lastActivatedClassDeviceId)},";
-    const start = code.indexOf(
-        "=",
-        code.indexOf(startIdentifier) + startIdentifier.length
-    ) + 1;
-    const end = code.indexOf("})}},", start) + 4;
-    return code.slice(start, end);
-}
-
 api.rewriter.runInScope("App", (code, run) => {
     if(!code.includes(".physics.state.jump.xVelocityAtJumpStart),")) return;
 
-    const name = getSection(code, ".overrideYTravelUntilMaxGravity?#coyoteJumpLimitMS#,@=");
-    // @ts-expect-error
-    calcGravity = run(name);
+    const calcGravName = getSection(code, ".overrideYTravelUntilMaxGravity?#coyoteJumpLimitMS#,@=");
+    calcGravity = run(calcGravName);
 
-    let padMovementVelocityCode = getMovementVelocityCode(code);
-    padMovementVelocityCode = replaceSection(padMovementVelocityCode, "()?@(", calcMovementVelocity);
-
-    let applyPhysicsInputCode = getApplyPhysicsInputCode(code);
-    applyPhysicsInputCode = replaceSection(applyPhysicsInputCode, "jumpKeyPressed#.jump#=@(", `(${padMovementVelocityCode})`);
-
-    let preUpdateCode = getSection(code, "this.preUpdate=@,this.postUpdate");
-    preUpdateCode = replaceSection(preUpdateCode, "+=1,@(", `(${applyPhysicsInputCode})`);
-    preUpdateCode = preUpdateCode.replace("()=>", "function()");
-    // @ts-expect-error
-    const preUpdate = run(`(${preUpdateCode})`) as () => void;
-
-    api.net.onLoad(() => {
-        const physics = api.stores.phaser.mainCharacter.physics;
-        const originalPreUpdate = physics.preUpdate;
-
-        physics.preUpdate = preUpdate;
-
-        api.onStop(() => {
-            physics.preUpdate = originalPreUpdate;
-        });
+    const name = getSection(code, ".physics.state.gravity+=#{x:0,y:0}#,@=");
+    const originalCalcGrav = api.rewriter.createShared("OriginalCalcGrav", run(name));
+    run(`${name} = ${calcMovementVelocity};`);
+    console.log(originalCalcGrav);
+    api.onStop(() => {
+        run(`console.log(${name})`);
+        run(`${name} = ${originalCalcGrav}`);
     });
 
     return true;
