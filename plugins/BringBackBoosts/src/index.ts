@@ -100,9 +100,7 @@ api.rewriter.runInScope("App", (code, run) => {
     const name = getSection(code, ".physics.state.gravity+=#{x:0,y:0}#,@=");
     const originalCalcGrav = api.rewriter.createShared("OriginalCalcGrav", run(name));
     run(`${name} = ${calcMovementVelocity};`);
-    console.log(originalCalcGrav);
     api.onStop(() => {
-        run(`console.log(${name})`);
         run(`${name} = ${originalCalcGrav}`);
     });
 
