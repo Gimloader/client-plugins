@@ -20,3 +20,8 @@ export interface IPreviousFrame {
     maxEnergy: number;
     undoDeviceChanges?: Function;
 }
+
+export interface TAS {
+    startPos: Vector;
+    frames: IFrame[];
+}

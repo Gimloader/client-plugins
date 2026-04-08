@@ -10,5 +10,6 @@ export default officialScriptConfig({
         "Desynchronize"
     ],
     gamemodes: ["dontLookDown"],
-    changelog: ["Added a command for jumping to any frame"]
+    changelog: ["Added a command for jumping to any frame"],
+    needsLibs: ["JSONTransfer"]
 });

@@ -59,42 +59,6 @@ export function getOneWayOutData(): SplitsData {
     return Object.assign({}, splitsDefaults, data);
 }
 
-export function downloadFile(data: string, filename: string) {
-    const blob = new Blob([data], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-export function readFile() {
-    return new Promise<any>((res, rej) => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".json";
-
-        input.addEventListener("change", () => {
-            const file = input.files?.[0];
-            if(!file) return rej("No file selected");
-
-            const reader = new FileReader();
-            reader.onload = () => {
-                const data = reader.result;
-                if(typeof data !== "string") return rej("Failed to read file");
-
-                const parsed = JSON.parse(data);
-                res(parsed);
-            };
-
-            reader.readAsText(file);
-        });
-
-        input.click();
-    });
-}
-
 export function fmtMs(ms: number) {
     ms = Math.round(ms);
     let seconds = Math.floor(ms / 1000);
