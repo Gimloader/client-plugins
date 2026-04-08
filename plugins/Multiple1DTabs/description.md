@@ -1,0 +1,1 @@
+Normally when you try to play the same 1D game on multiple tabs, the original tab will be disconnected and you are forced to play on different windows or devices. Multiple1DTabs allows having multiple different tabs connected to a single 1D game.
