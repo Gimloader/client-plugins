@@ -14,9 +14,9 @@
         "esbuild-svelte": "^0.9.4",
         "mobx": "^6.15.0",
         "svelte": "5.43.0",
-        "svelte-check": "^4.3.5",
+        "svelte-check": "^4.4.6",
         "svelte-toggle": "^4.0.1",
-        "typescript": "^5.9.3"
+        "typescript": "^6.0.2"
     },
     "description": "Official client-side plugins for Gimloader",
     "scripts": {
