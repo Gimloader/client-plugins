@@ -1,12 +1,12 @@
 declare namespace Gimloader {
-    export interface Plugins {
+    interface Plugins {
         Savestates: typeof import("./plugins/Savestates/src");
         InputRecorder: typeof import("./plugins/InputRecorder/src");
         Desynchronize: typeof import("./plugins/Desynchronize/src");
         DLDTAS: typeof import("./plugins/DLDTAS/src");
     }
     
-    export interface Libraries {
+    interface Libraries {
         Communication: typeof import("./libraries/Communication/src").default;
     }
 }
