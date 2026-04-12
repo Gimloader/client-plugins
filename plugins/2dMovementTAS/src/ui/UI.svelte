@@ -114,7 +114,6 @@
     }
 
     function keepActiveVisible() {
-        console.log("Keep active visilbe?");
         if(tools.currentFrame - 2 < offset) offset = Math.max(0, tools.currentFrame - 2);
         if(tools.currentFrame + 3 > offset + rows) offset = tools.currentFrame - rows + 3;
         addBlankFrames();
