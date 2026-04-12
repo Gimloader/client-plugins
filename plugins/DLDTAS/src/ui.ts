@@ -1,5 +1,5 @@
 import controller from "$assets/controller.svg";
-import type { IRecording } from "plugins/InputRecorder/types";
+import type { IRecording } from "../../../plugins/InputRecorder/types";
 import type { IFrameInfo, ISharedValues, TAS } from "../types";
 import { hideHitbox, initOverlay, showHitbox } from "./overlay";
 import TASTools from "./tools";

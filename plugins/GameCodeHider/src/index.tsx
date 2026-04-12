@@ -43,7 +43,7 @@ function CodeWrapper({ children, small }: { children: any; small: boolean }) {
 }
 
 const createWrapper = api.rewriter.createShared("createWrapper", (small: boolean, Element: any) => {
-    return function(props: any) {
+    return (props: any) => {
         return (
             <CodeWrapper small={small}>
                 <Element {...props} />

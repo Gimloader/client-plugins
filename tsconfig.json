@@ -9,11 +9,11 @@
         "noEmit": true,
         "skipLibCheck": true,
         "moduleDetection": "force",
-        "baseUrl": ".",
         "paths": {
             "$assets/*": ["./assets/*"],
             "$shared/*": ["./shared/*"]
-        }
+        },
+        "types": ["gimloader"]
     },
     "include": [
         "./plugins/**/*.ts",
