@@ -123,7 +123,6 @@ export default new class CosmeticChanger {
 
     patchSkin(skin: any) {
         if(this.skinType === "id") {
-            console.log({ id: this.skinId, editStyles: this.selectedStyles });
             skin.updateSkin({ id: this.skinId, editStyles: this.selectedStyles });
         }
 

@@ -120,7 +120,6 @@ const enable = () => {
             };
 
             if(boundingBoxOverlap(summitStart, summitEnd, topLeft, bottomRight)) {
-                console.log("Reached Checkpoint", i);
                 lastCheckpointReached = i;
                 break;
             }

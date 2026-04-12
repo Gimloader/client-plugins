@@ -38,8 +38,6 @@ api.net.on("DEVICES_STATES_CHANGES", (event) => {
             const value = change[2][i];
             if(key === "GLOBAL_questions") {
                 questions = JSON.parse(value);
-                console.log("Got questions", questions);
-
                 answerDeviceId = id;
             }
 

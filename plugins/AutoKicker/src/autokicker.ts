@@ -242,7 +242,6 @@ export default class AutoKicker {
                     return true;
                 }
             } else {
-                console.log(name, filter.name.toLowerCase(), name.includes(filter.name.toLowerCase()));
                 if(name.includes(filter.name.toLowerCase())) {
                     return true;
                 }
