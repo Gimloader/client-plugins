@@ -1,6 +1,21 @@
 import styles from "./styles.css";
 api.UI.addStyles(styles);
 
+const hiddenStyles = `.ant-popover .ant-qrcode {
+    display: none;
+}`;
+
+let removeStyles: (() => void) | undefined;
+updateHidden(api.storage.getValue("hidden", false));
+
+function updateHidden(value: boolean) {
+    if(value) {
+        removeStyles = api.UI.addStyles(hiddenStyles);
+    } else {
+        removeStyles?.();
+    }
+}
+
 function CodeWrapper({ children, small }: { children: any; small: boolean }) {
     const React = GL.React;
     const [hidden, setHidden] = React.useState<boolean>(api.storage.getValue("hidden", false));
@@ -11,6 +26,7 @@ function CodeWrapper({ children, small }: { children: any; small: boolean }) {
         e.stopPropagation();
         setHidden((prev) => {
             api.storage.setValue("hidden", !prev);
+            updateHidden(!prev);
             return !prev;
         });
     };

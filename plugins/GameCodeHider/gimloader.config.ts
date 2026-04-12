@@ -5,5 +5,8 @@ export default officialScriptConfig({
     name: "GameCodeHider",
     description: "Allows hiding/revealing your game code everywhere",
     author: "retrozy",
-    version: "0.1.0"
+    version: "0.1.1",
+    changelog: [
+        "Fixed QR code not being properly hidden"
+    ]
 });
