@@ -44,7 +44,7 @@ function CodeWrapper({ children, small, prefix = "" }: CodeWrapperProps) {
         children.props.onClick = (e: React.MouseEvent) => {
             if((e.target as HTMLElement).className.includes("gch-toggle")) return;
             onClick(e);
-        }
+        };
     }
 
     if(small) {
