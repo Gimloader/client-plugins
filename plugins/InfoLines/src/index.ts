@@ -1,4 +1,4 @@
-import styles from "./styles.scss";
+import "./styles.css";
 
 import VisualCoordinates from "./lines/visualCoordinates";
 import FPS from "./lines/fps";
@@ -7,8 +7,6 @@ import Velocity from "./lines/velocity";
 import Ping from "./lines/ping";
 import FishValue from "./lines/fishValue";
 import PlantDrops from "./lines/plantDrops";
-
-api.UI.addStyles(styles);
 
 export class InfoLines {
     lines = [

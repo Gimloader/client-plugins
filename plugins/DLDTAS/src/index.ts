@@ -1,7 +1,5 @@
-import styles from "./styles.scss";
+import "./styles.css";
 import { createUI } from "./ui";
-
-api.UI.addStyles(styles);
 
 const startTasBtn = document.createElement("button");
 startTasBtn.id = "startTasBtn";

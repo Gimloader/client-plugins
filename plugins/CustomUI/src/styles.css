@@ -55,12 +55,12 @@
     text-align: center;
     cursor: pointer;
 
-    &>div {
+    & > div {
         display: flex;
         align-items: center;
         justify-content: center;
 
-        &>div {
+        & > div {
             flex-grow: 1;
             height: 30px;
         }
@@ -70,7 +70,7 @@
 .themeCreator {
     display: flex;
     height: 100%;
-    
+
     .pickers {
         width: 300px;
         overflow-y: auto;
@@ -87,10 +87,10 @@
             width: 100%;
         }
 
-        &>div {
+        & > div {
             display: flex;
             padding-right: 3px;
-            &>div {
+            & > div {
                 flex-grow: 1;
             }
         }
@@ -106,7 +106,7 @@
     .question {
         width: 100%;
         height: 30%;
-        font-family: 'Product Sans', sans-serif;
+        font-family: "Product Sans", sans-serif;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -119,11 +119,11 @@
         grid-template-columns: repeat(2, 1fr);
         width: 100%;
 
-        &>div {
+        & > div {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Product Sans', sans-serif;
+            font-family: "Product Sans", sans-serif;
             font-size: 25px;
             border: 6px solid rgba(0, 0, 0, 0.3);
         }
@@ -138,7 +138,7 @@
     margin-top: -79px;
 }
 
-.useCustomTheme .flex.maxWidth.between.vc + div:not(.ant-space-vertical) > div > div, .useCustomTheme [style^='width: 100%'] > [style^='opacity'] > div {
+.useCustomTheme .flex.maxWidth.between.vc + div:not(.ant-space-vertical) > div > div, .useCustomTheme [style^="width: 100%"] > [style^="opacity"] > div {
     &:nth-child(1) {
         background: var(--question-bg) !important;
         color: var(--question-text) !important;
@@ -147,28 +147,28 @@
     &:nth-child(2) > div {
         &:nth-child(1) > div {
             background: var(--answer-bg-1) !important;
-            &>div {
+            & > div {
                 color: var(--answer-text-1) !important;
             }
         }
 
         &:nth-child(2) > div {
             background: var(--answer-bg-2) !important;
-            &>div {
+            & > div {
                 color: var(--answer-text-2) !important;
             }
         }
 
         &:nth-child(3) > div {
             background: var(--answer-bg-3) !important;
-            &>div {
+            & > div {
                 color: var(--answer-text-3) !important;
             }
         }
 
         &:nth-child(4) > div {
             background: var(--answer-bg-4) !important;
-            &>div {
+            & > div {
                 color: var(--answer-text-4) !important;
             }
         }
@@ -186,6 +186,6 @@
     }
 }
 
-.maxAll[style^='pointer-events']:has(.flex.maxWidth.between.vc + div:not(.ant-space-vertical) > div > div) {
+.maxAll[style^="pointer-events"]:has(.flex.maxWidth.between.vc + div:not(.ant-space-vertical) > div > div) {
     opacity: var(--question-opacity);
 }

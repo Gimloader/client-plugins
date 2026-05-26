@@ -1,6 +1,5 @@
-import styles from "./styles.css";
+import "./styles.css";
 import { createWrapper } from "./wrapper";
-api.UI.addStyles(styles);
 
 // Wrap the 1d and 2d lobby screen elements
 const BigCode = api.rewriter.createShared("BigCode", null);

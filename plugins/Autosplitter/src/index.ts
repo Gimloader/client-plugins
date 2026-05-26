@@ -3,10 +3,9 @@ import Settings from "./settings/Settings.svelte";
 import DLDAutosplitter from "./splitters/DLD";
 import FishtopiaAutosplitter from "./splitters/fishtopia";
 import OneWayOutAutosplitter from "./splitters/OneWayOut";
-import styles from "./styles.scss";
+import "./styles.css";
 import { mount } from "svelte";
 
-api.UI.addStyles(styles);
 let autosplitter: Autosplitter;
 
 api.net.onLoad((_, gamemode) => {

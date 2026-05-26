@@ -1,10 +1,8 @@
-import styles from "./styles.scss";
+import "./styles.css";
 import UI from "./ui/ui";
 import UIChanger from "./uiChanger";
 
 const uiChanger = new UIChanger();
-
-api.UI.addStyles(styles);
 
 api.openSettingsMenu(() => {
     let confirmFunc: () => void;

@@ -11,11 +11,6 @@ declare namespace Gimloader {
     }
 }
 
-declare module "*.scss" {
-    const content: string;
-    export default content;
-}
-
 declare module '*.txt' {
     const content: string;
     export default content;

@@ -1,5 +1,5 @@
+import "./styles.css";
 import AutoKicker from "./autokicker";
-import styles from "./styles.scss";
 import UI from "./ui";
 
 const autoKicker = new AutoKicker();
@@ -45,4 +45,3 @@ api.hotkeys.addConfigurableHotkey({
 });
 
 api.net.onLoad(checkStart);
-api.UI.addStyles(styles);
