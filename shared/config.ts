@@ -1,7 +1,7 @@
 import { singleConfig, type SingleConfig } from "@gimloader/build";
 
 type DistributiveOmit<T, K extends keyof T> = T extends any ? Omit<T, K> : never;
-type ConfigInfo = DistributiveOmit<SingleConfig, "downloadUrl" | "webpage">;
+type ConfigInfo = DistributiveOmit<SingleConfig, "downloadUrl" | "webpage" | "author">;
 type Category = "libraries" | "plugins";
 
 export const baseDownloadUrl = "https://raw.githubusercontent.com/Gimloader/builds/main";
@@ -27,6 +27,7 @@ export function officialScriptConfig(info: ConfigInfo) {
 
     return singleConfig({
         ...options,
+        author: "Gimloader Official",
         downloadUrl,
         webpage,
         needsPlugins: formattedNeedsPlugins,

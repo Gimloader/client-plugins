@@ -39,7 +39,8 @@
 				"noArguments": "off",
 				"noBannedTypes": "off",
 				"noStaticOnlyClass": "off",
-				"noThisInStatic": "off"
+				"noThisInStatic": "off",
+				"noImportantStyles": "off"
 			},
 			"suspicious": {
 				"noConfusingVoidType": "off",

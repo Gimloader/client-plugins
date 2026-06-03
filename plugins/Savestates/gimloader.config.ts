@@ -4,7 +4,6 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "Savestates",
     description: "Allows you to save and load states/summits in Don't Look Down. Only client side, nobody else can see you move.",
-    author: "TheLazySquid",
     version: "0.5.1",
     needsPlugins: ["Desynchronize"],
     optionalLibs: [
