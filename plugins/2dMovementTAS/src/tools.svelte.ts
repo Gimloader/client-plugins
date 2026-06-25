@@ -1,6 +1,7 @@
 import type { Vector } from "@dimforge/rapier2d-compat";
 import type { IFrame, IPreviousFrame } from "./types";
-import { defaultState, downloadFile, getFrameState, makeFrameState, updateDeviceState, uploadFile } from "./util";
+import { defaultState, getFrameState, makeFrameState, updateDeviceState } from "./util";
+import { downloadJsonFile, readJsonFile } from "$shared/files";
 
 let active = false;
 
@@ -389,11 +390,11 @@ export default class TASTools {
     }
 
     download() {
-        downloadFile(JSON.stringify(this.save()), "2D TAS.json");
+        downloadJsonFile(this.save(), "2D TAS.json");
     }
 
     load() {
-        uploadFile()
+        readJsonFile()
             .then(file => {
                 const data = JSON.parse(file);
                 this.goBackToFrame(0);

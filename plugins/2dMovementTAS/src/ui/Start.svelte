@@ -1,8 +1,8 @@
 <script lang="ts">
     import type { Vector } from "@dimforge/rapier2d-compat";
     import type { IFrame } from "../types";
-    import { uploadFile } from "../util";
     import UI from "./UI.svelte";
+    import { readJsonFile } from "$shared/files";
 
     let begun = $state(false);
     let save = api.storage.getValue("save");
@@ -33,7 +33,7 @@
         }
 
         try {
-            let data = await uploadFile();
+            let data = await readJsonFile();
             let json = JSON.parse(data);
             frames = json.frames;
             startPos = json.startPos;

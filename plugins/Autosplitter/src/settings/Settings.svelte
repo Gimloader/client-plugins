@@ -1,10 +1,11 @@
 <script lang="ts">
     import type { GamemodesData } from "../types";
     import { gamemodes } from "../constants";
-    import { downloadFile, getGamemodeData, readFile } from "../util";
+    import { getGamemodeData } from "../util";
     import Dld from "./DLD.svelte";
     import Fishtopia from "./Fishtopia.svelte";
     import OneWayOut from "./OneWayOut.svelte";
+    import { downloadJsonFile, readJsonFile } from "$shared/files";
 
     let activeTab = $state(gamemodes[0]);
     let dataObj: any = {};
@@ -28,11 +29,11 @@
             json[gamemode] = data;
         }
 
-        downloadFile(JSON.stringify(json), "splits.json");
+        downloadJsonFile(json, "splits.json");
     }
 
     function importAll() {
-        readFile()
+        readJsonFile()
             .then((newData) => {
                 for(let gamemode of gamemodes) {
                     if(!newData[gamemode]) continue;
@@ -40,20 +41,22 @@
 
                     api.storage.setValue(`${gamemode}Data`, newData[gamemode]);
                 }
-            });
+            })
+            .catch(() => {});
     }
 
     function exportMode() {
         let json = data[activeTab];
-        downloadFile(JSON.stringify(json), `${activeTab}.json`);
+        downloadJsonFile(json, `${activeTab}.json`);
     }
 
     function importMode() {
-        readFile()
+        readJsonFile()
             .then((newData) => {
                 data[activeTab] = newData;
                 api.storage.setValue(`${activeTab}Data`, newData);
-            });
+            })
+            .catch(() => {});
     }
 </script>
 

@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import CosmeticChanger from "./cosmeticChanger";
     import { decompress } from "compress-json";
+    import { readFile } from "$shared/files";
 
     let skinType = $state(CosmeticChanger.skinType);
     let skinId = $state(CosmeticChanger.skinId);
@@ -11,20 +12,13 @@
     let selectedStyles: Record<string, string> = $state(CosmeticChanger.selectedStyles);
 
     function uploadSkin() {
-        let input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".png";
-
-        input.onchange = () => {
-            let file = input.files?.[0];
-            if(!file) {
-                customSkinFile = null;
-            } else {
+        readFile(".png")
+            .then((file) => {
                 customSkinFile = file;
-            }
-        };
-
-        input.click();
+            })
+            .catch(() => {
+                customSkinFile = null;
+            });
     }
 
     let styles: any = $state();

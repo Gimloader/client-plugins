@@ -98,32 +98,3 @@ export function updateDeviceState(device: Gimloader.Stores.Device, key: string, 
     states.get(deviceId)?.properties.set(key, value);
     device.onStateUpdateFromServer(key, value);
 }
-
-export function downloadFile(contents: string, name: string) {
-    const blob = new Blob([contents], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-export function uploadFile() {
-    return new Promise<string>((res, rej) => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".json";
-        input.onchange = () => {
-            if(!input.files || !input.files[0]) return rej();
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = () => {
-                res(reader.result as string);
-            };
-            reader.readAsText(file);
-        };
-        input.click();
-    });
-}
