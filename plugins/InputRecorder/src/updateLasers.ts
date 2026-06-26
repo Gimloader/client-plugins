@@ -26,7 +26,7 @@ export function updateLasers(frame: number) {
     const devices = api.stores.phaser.scene.worldManager.devices;
     const active = frame % 66 < 36;
 
-    // More performative
+    // More performant
     if(lastActive === active) return;
     lastActive = active;
 
