@@ -52,7 +52,6 @@ for(const key of stopKeys) {
 
 let updateFreecam: ((dt: number) => void) | null = null;
 const updateScroll = (dt: number) => {
-    const camera = api.stores.phaser.scene.cameras?.cameras?.[0];
     if(!camera) return;
 
     scrollMomentum *= .97 ** dt;
@@ -78,7 +77,9 @@ api.net.onLoad(() => {
     });
 });
 
-let scene: Gimloader.Stores.Scene, camera: Phaser.Cameras.Scene2D.Camera;
+let scene: Gimloader.Stores.Scene;
+let camera: Phaser.Cameras.Scene2D.Camera;
+let startFollowingObject: (options: any) => void;
 
 const getCanvasZoom = () => {
     const transform = api.stores.phaser.scene.game.canvas.style.transform;
@@ -88,8 +89,7 @@ const getCanvasZoom = () => {
 
 let isPointerDown = false;
 const setPointerDown = (e: MouseEvent) => {
-    if(!(e.target instanceof HTMLElement)) return;
-    if(e.target.nodeName !== "CANVAS") return;
+    if(!isTargetCanvas(e)) return;
     isPointerDown = true;
 };
 const setPointerUp = () => isPointerDown = false;
@@ -110,8 +110,7 @@ function onPointermove(e: PointerEvent) {
 }
 
 function onWheel(e: WheelEvent) {
-    if(!(e.target instanceof HTMLElement)) return;
-    if(e.target.nodeName !== "CANVAS") return;
+    if(!isTargetCanvas(e)) return;
 
     if(!freecamming || !settings.mouseControls) {
         if(settings.shiftToZoom && !api.hotkeys.pressed.has("ShiftLeft")) return;
@@ -143,6 +142,7 @@ function onWheel(e: WheelEvent) {
 api.net.onLoad(() => {
     scene = api.stores?.phaser?.scene;
     camera = scene?.cameras?.cameras?.[0];
+    startFollowingObject = scene?.cameraHelper?.startFollowingObject;
     if(!scene) return;
 
     // disable the camera zoom being reset when changing the screen size
@@ -169,7 +169,7 @@ function stopFreecamming() {
     camera.useBounds = true;
     const charObj = api.stores.phaser.mainCharacter.body;
 
-    scene.cameraHelper.startFollowingObject({ object: charObj });
+    startFollowingObject({ object: charObj });
     updateFreecam = null;
     stopDefaultArrows = false;
 
@@ -199,6 +199,7 @@ api.hotkeys.addConfigurableHotkey({
         freecamPos = { x: camera.midPoint.x, y: camera.midPoint.y };
         stopDefaultArrows = true;
         GL.patcher.instead("CameraControl-helper", scene.cameraHelper, "setCameraSizeParams", () => {});
+        GL.patcher.instead("CameraControl-helper", scene.cameraHelper, "startFollowingObject", () => {});
 
         // move the camera
         updateFreecam = (dt) => {
@@ -226,10 +227,7 @@ if(commandLine) {
     commandLine.addCommand("setzoom", [
         { "amount": "number" }
     ], (zoom: string) => {
-        const scene = api.stores?.phaser?.scene;
-        const camera = scene?.cameras?.cameras?.[0];
-        if(!scene || !camera) return;
-
+        if(!camera) return;
         camera.zoom = parseFloat(zoom);
     });
 }
@@ -237,11 +235,7 @@ if(commandLine) {
 let zoomToggled = false;
 let initialZoom = 1;
 const onDown = () => {
-    if(!settings.toggleZoomFactor) return;
-
-    const scene = api.stores?.phaser?.scene;
-    const camera = scene?.cameras?.cameras?.[0];
-    if(!scene || !camera) return;
+    if(!settings.toggleZoomFactor || !camera) return;
 
     if(zoomToggled) {
         camera.zoom = initialZoom;
@@ -252,6 +246,14 @@ const onDown = () => {
 
     zoomToggled = !zoomToggled;
 };
+
+function isTargetCanvas(e: Event) {
+    if(!(e.target instanceof HTMLElement)) return false;
+    if(e.target.nodeName === "CANVAS") return true;
+    
+    // Allow moving despite the big overlay when spectating
+    return e.target.matches(".sc-fyfgSA, .sc-gdmatS, .sc-djcAKz, .sc-emMPjM");
+}
 
 api.hotkeys.addConfigurableHotkey({
     category: "Camera Control",
