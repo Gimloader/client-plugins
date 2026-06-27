@@ -81,12 +81,6 @@ let scene: Gimloader.Stores.Scene;
 let camera: Phaser.Cameras.Scene2D.Camera;
 let startFollowingObject: (options: any) => void;
 
-const getCanvasZoom = () => {
-    const transform = api.stores.phaser.scene.game.canvas.style.transform;
-    if(!transform) return 1;
-    return parseFloat(transform.split("(")[1].replace(")", ""));
-};
-
 let isPointerDown = false;
 const setPointerDown = (e: MouseEvent) => {
     if(!isTargetCanvas(e)) return;
@@ -98,15 +92,15 @@ window.addEventListener("pointerup", setPointerUp);
 
 let lastX: number, lastY: number;
 function onPointermove(e: PointerEvent) {
-    const canvasZoom = getCanvasZoom();
+    const canvasZoom = api.stores.phaser.scene.resizeManager.usedDpi;
 
     if(isPointerDown && lastX && lastY) {
-        freecamPos.x -= ((e.clientX / canvasZoom) - lastX) / camera.zoom;
-        freecamPos.y -= ((e.clientY / canvasZoom) - lastY) / camera.zoom;
+        freecamPos.x -= ((e.clientX * canvasZoom) - lastX) / camera.zoom;
+        freecamPos.y -= ((e.clientY * canvasZoom) - lastY) / camera.zoom;
     }
 
-    lastX = e.clientX / canvasZoom;
-    lastY = e.clientY / canvasZoom;
+    lastX = e.clientX * canvasZoom;
+    lastY = e.clientY * canvasZoom;
 }
 
 function onWheel(e: WheelEvent) {
@@ -123,9 +117,9 @@ function onWheel(e: WheelEvent) {
     const oldzoom = camera.zoom;
     const newzoom = oldzoom * (e.deltaY < 0 ? 1.1 : 0.9);
 
-    const canvasZoom = getCanvasZoom();
-    const mouse_x = e.clientX / canvasZoom;
-    const mouse_y = e.clientY / canvasZoom;
+    const canvasZoom = api.stores.phaser.scene.resizeManager.usedDpi;
+    const mouse_x = e.clientX * canvasZoom;
+    const mouse_y = e.clientY * canvasZoom;
 
     const pixels_difference_w = (camera.width / oldzoom) - (camera.width / newzoom);
     const side_ratio_x = (mouse_x - (camera.width / 2)) / camera.width;
@@ -250,7 +244,7 @@ const onDown = () => {
 function isTargetCanvas(e: Event) {
     if(!(e.target instanceof HTMLElement)) return false;
     if(e.target.nodeName === "CANVAS") return true;
-    
+
     // Allow moving despite the big overlay when spectating
     return e.target.matches(".sc-fyfgSA, .sc-gdmatS, .sc-djcAKz, .sc-emMPjM");
 }
