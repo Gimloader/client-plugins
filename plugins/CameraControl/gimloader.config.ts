@@ -4,8 +4,8 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "CameraControl",
     description: "Lets you freely move and zoom your camera",
-    version: "0.7.3",
-    changelog: ["Fixed freecam in spectator mode"],
+    version: "1.0.0",
+    changelog: ["Cleaned up code significantly"],
     hasSettings: true,
     optionalLibs: [
         "CommandLine | https://raw.githubusercontent.com/Blackhole927/gimkitmods/main/libraries/CommandLine/CommandLine.js"
