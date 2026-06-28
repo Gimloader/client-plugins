@@ -5,12 +5,11 @@ api.net.onLoad(() => {
     api.net.on("send:QUESTION_ANSWERED", (_, editFn) => {
         const now = Date.now();
         firstAnswerTime ||= now;
-        if(now - firstAnswerTime >= 25000) {
-            if(now - lastAnswerTime <= 750) {
-                editFn(null);
-            } else {
-                lastAnswerTime = now;
-            }
+        if(now - firstAnswerTime < 2500) return;
+        if(now - lastAnswerTime <= 750) {
+            editFn(null);
+        } else {
+            lastAnswerTime = now;
         }
     });
 });
