@@ -25,7 +25,10 @@ export function updateFreecam(dt: number) {
 }
 
 let preFreecamInteractiveSlot = 0;
-function stopFreecam() {
+export function stopFreecam() {
+    if(!isFreecamming) return;
+    isFreecamming = false;
+
     api.stores.me.inventory.activeInteractiveSlot = preFreecamInteractiveSlot;
     GL.patcher.unpatchAll("CameraControl-helper");
 
@@ -36,7 +39,10 @@ function stopFreecam() {
     api.stores.phaser.scene.cameraHelper.startFollowingObject({ object: charObj });
 }
 
-function startFreecam() {
+export function startFreecam() {
+    if(isFreecamming) return;
+    isFreecamming = true;
+
     preFreecamInteractiveSlot = api.stores.me.inventory.activeInteractiveSlot;
     api.stores.me.inventory.activeInteractiveSlot = 0;
 
@@ -55,9 +61,13 @@ function startFreecam() {
 }
 
 export function toggleFreecam() {
-    isFreecamming = !isFreecamming;
-    if(isFreecamming) startFreecam();
-    else stopFreecam();
+    if(isFreecamming) stopFreecam();
+    else startFreecam();
+}
+
+export function moveFreecam(x: number, y: number) {
+    freecamPos.x = x;
+    freecamPos.y = y;
 }
 
 // Prevent the default behavior of the arrow keys when freecamming

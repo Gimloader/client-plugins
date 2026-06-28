@@ -1,6 +1,8 @@
 import { toggleFreecam, updateFreecam } from "./freecam";
 import { setZoom, toggleZoom, updateZoom } from "./zoom";
 
+export { isFreecamming, startFreecam, stopFreecam, toggleFreecam, moveFreecam } from "./freecam";
+
 api.net.onLoad(() => {
     const worldManager = api.stores.phaser.scene.worldManager;
 

@@ -4,6 +4,7 @@ declare namespace Gimloader {
         InputRecorder: typeof import("./plugins/InputRecorder/src");
         Desynchronize: typeof import("./plugins/Desynchronize/src");
         DLDTAS: typeof import("./plugins/DLDTAS/src");
+        CameraControl: typeof import("./plugins/CameraControl/src");
     }
     
     interface Libraries {
