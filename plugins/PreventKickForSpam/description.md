@@ -1,0 +1,1 @@
+In 1D gamemodes, the game automatically kicks players that spam questions too quickly. This plugin slows down your answering rate (after the first ~30 seconds of the game's grace period) to prevent being automatically kicked.
