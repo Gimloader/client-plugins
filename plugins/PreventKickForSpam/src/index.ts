@@ -7,7 +7,7 @@ api.net.onLoad(() => {
         firstAnswerTime ||= now;
 
         if(now - firstAnswerTime < 25000) return;
-        if(now - lastAnswerTime <= 3000) {
+        if(now - lastAnswerTime <= 750) {
             editFn(null);
         } else {
             lastAnswerTime = now;
