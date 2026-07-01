@@ -4,7 +4,7 @@ import { bytesToFloat, encodeCharacters, floatToBytes, joinUint24, splitUint24 }
 
 export default class Messenger {
     private static pendingAngle = 0;
-    private static angleChangeRes: (() => void) | null = null;
+    static angleChangeRes: (() => void) | null = null;
     private static angleChangeRej: (() => void) | null = null;
     private static readonly angleQueue: PendingAngle[] = [];
     static readonly callbacks = new Map<string, Callbacks>();
@@ -216,12 +216,19 @@ export default class Messenger {
         return promise;
     }
 
-    static async handleAngle(char: Character, angle: number) {
-        if(!angle) return;
-        if(char.id === api.stores.network.authId) return this.angleChangeRes?.();
+    static getBytes(char: Character, angle: number): number[] | null {
+        if(!angle) return null;
 
         const bytes = floatToBytes(angle);
 
+        if(this.updateResolvers.has(char) || this.callbacks.has(bytes.slice(0, 4).join(","))) {
+            return bytes;
+        }
+
+        return null;
+    }
+
+    static async handleBytes(char: Character, bytes: number[]) {
         const resolve = this.updateResolvers.get(char);
         if(resolve) {
             const payload = bytes.slice(0, 7);
