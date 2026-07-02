@@ -7,10 +7,10 @@ function listenToCharacter(character: Gimloader.Stores.Character) {
     api.patcher.before(character.aimingAndLookingAround, "setTargetAngle", (_, [angle]) => {
         const netChar = api.net.state.characters.get(character.id)!;
         const bytes = Messenger.getBytes(netChar, angle);
-        if(bytes) {
-            Messenger.handleBytes(netChar, bytes);
-            return true;
-        }
+        if(!bytes) return;
+
+        Messenger.handleBytes(netChar, bytes);
+        return true;
     });
 }
 
