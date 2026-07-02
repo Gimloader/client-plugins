@@ -1,0 +1,1 @@
+Overtime lets hosts of gamemodes that use knockout scoring automatically extend the game to a configurable amount of minutes when the score is tied at the end. The "Sudden Death" setting ends the game as soon as one player is knocked out.
