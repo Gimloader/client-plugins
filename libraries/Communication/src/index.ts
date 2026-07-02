@@ -2,16 +2,35 @@ import type { ByteStreamCallback, Message, OnMessageCallback, StringStreamCallba
 import Messenger from "./messenger";
 import { getIdentifier, isUint24, isUint8 } from "./encoding";
 
+function listenToCharacter(character: Gimloader.Stores.Character) {
+    if(character.id === api.stores.network.authId) return;
+    api.patcher.before(character.aimingAndLookingAround, "setTargetAngle", (_, [angle]) => {
+        const netChar = api.net.state.characters.get(character.id)!;
+        const bytes = Messenger.getBytes(netChar, angle);
+        if(!bytes) return;
+
+        Messenger.handleBytes(netChar, bytes);
+        return true;
+    });
+}
+
 api.net.onLoad(() => {
     Messenger.init();
 
-    api.onStop(api.net.state.characters.onAdd((char) => {
-        api.onStop(
-            char.projectiles.listen("aimAngle", (angle) => {
-                Messenger.handleAngle(char, angle);
-            })
-        );
-    }));
+    const scene = api.stores.phaser.scene;
+
+    api.patcher.after(scene.characterManager, "addCharacter", (_, __, character) => {
+        listenToCharacter(character);
+    });
+
+    for(const character of scene.characterManager.characters.values()) {
+        listenToCharacter(character);
+    }
+
+    api.net.state.characters.get(api.stores.network.authId)!.projectiles.listen("aimAngle", (angle) => {
+        if(!angle) return;
+        Messenger.angleChangeRes?.();
+    }, false);
 });
 
 export default class Communication<T extends Message = Message> {
