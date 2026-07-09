@@ -3,7 +3,7 @@ import { Type } from "./consts";
 import { bytesToFloat, encodeCharacters, floatToBytes, joinUint24, splitUint24 } from "./encoding";
 
 export default class Messenger {
-    private static pendingAngle = 0;
+    private static realAngle = 0;
     static angleChangeRes: (() => void) | null = null;
     private static angleChangeRej: (() => void) | null = null;
     private static readonly angleQueue: PendingAngle[] = [];
@@ -18,7 +18,7 @@ export default class Messenger {
                 return;
             }
 
-            this.pendingAngle = message.angle;
+            this.realAngle = message.angle;
 
             // Cancel it if we still have messages to send
             if(this.angleQueue.length > 0) editFn(null);
@@ -33,6 +33,10 @@ export default class Messenger {
             this.updatePromises.clear();
             this.updateResolvers.clear();
         }, false);
+    }
+
+    static get pendingAngle() {
+        return this.angleQueue[0]?.angle;
     }
 
     constructor(private readonly identifier: number[]) {}
@@ -171,8 +175,8 @@ export default class Messenger {
         }
 
         // Send the real angle afterwards (we don't care about this being dropped)
-        if(!this.pendingAngle) return;
-        api.net.send("AIMING", { angle: this.pendingAngle });
+        if(!this.realAngle) return;
+        api.net.send("AIMING", { angle: this.realAngle });
     }
 
     private static async awaitAngleChange() {

@@ -28,7 +28,7 @@ api.net.onLoad(() => {
     }
 
     api.net.state.characters.get(api.stores.network.authId)!.projectiles.listen("aimAngle", (angle) => {
-        if(!angle) return;
+        if(!angle || angle !== Messenger.pendingAngle) return;
         Messenger.angleChangeRes?.();
     }, false);
 });
