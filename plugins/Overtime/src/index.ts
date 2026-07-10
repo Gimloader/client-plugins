@@ -137,7 +137,7 @@ api.net.onLoad(async () => {
 
     // The map options device isn't properly created until fully loading
     api.onStop(
-        api.net.state.session.listen("loadingPhase", (loading) => {
+        session.listen("loadingPhase", (loading) => {
             if(loading || session.gameSession.phase !== "game") return;
             const mapOptions = getMapOptions();
             if(!mapOptions) return;
