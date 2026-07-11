@@ -1,0 +1,1 @@
+Clicking on owned cosmetics in the Gimkit locker normally opens a popup that displays information about the cosmetic, with a button to select it. This plugin immediately selects the cosmetic upon clicking it, and only opens a popup when it's already selected.
