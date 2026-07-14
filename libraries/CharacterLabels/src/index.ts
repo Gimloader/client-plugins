@@ -23,7 +23,6 @@ interface Label {
 
 api.net.onLoad(() => {
     const handleLabel = (character: Gimloader.Stores.Character, label: Label) => {
-        console.log(label);
         const stateChar = api.net.state.characters.get(character.id);
         const labelInstance = label.setupLabel(character);
         if(!labelInstance) return;
