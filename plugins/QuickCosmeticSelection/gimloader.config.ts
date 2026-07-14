@@ -1,7 +1,7 @@
 import { officialScriptConfig } from "$shared/config";
 
 export default officialScriptConfig({
-    name: "BetterCosmeticSelection",
+    name: "QuickCosmeticSelection",
     description: "Allows you to select your cosmetics by only clicking on them.",
     input: "src/index.ts",
     reloadRequired: true,
