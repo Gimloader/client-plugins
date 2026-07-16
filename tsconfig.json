@@ -13,15 +13,12 @@
             "$assets/*": ["./assets/*"],
             "$shared/*": ["./shared/*"]
         },
-        "types": ["gimloader"]
+        "types": ["@gimloader/types"]
     },
     "include": [
         "./plugins/**/*.ts",
         "./libraries/**/*.ts",
         "./shared/**/*.ts",
-        "./plugins/**/*.tsx",
-        "./libraries/**/*.tsx",
-        "./shared/**/*.tsx",
         "./main.d.ts"
     ]
 }
