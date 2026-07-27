@@ -106,13 +106,13 @@ export default class StickerReceiver {
             const y = history[i];
             const difference = stickerY - y;
             if(difference === -10) {
-                // history.splice(0, i);
+                history.splice(0, i);
                 return "Exact";
             } else if(difference === -60) {
-                // history.splice(0, i);
+                history.splice(0, i);
                 return "Above";
             } else if(difference === 50) {
-                // history.splice(0, i);
+                history.splice(0, i);
                 return "Below";
             }
         }
