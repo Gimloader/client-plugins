@@ -1,21 +1,61 @@
 import type { ByteStreamCallback, Message, OnMessageCallback, StringStreamCallback } from "./types";
-import Messenger from "./messenger";
+import AimingMessenger from "./aiming";
 import { getIdentifier, isUint24, isUint8 } from "./encoding";
+import Streamer from "./streamer";
+import StickerSender from "./stickers/stickerSending";
+import { splicer } from "./util";
 
 function listenToCharacter(character: Gimloader.Stores.Character) {
     if(character.id === api.stores.network.authId) return;
     api.patcher.before(character.aimingAndLookingAround, "setTargetAngle", (_, [angle]) => {
         const netChar = api.net.state.characters.get(character.id)!;
-        const bytes = Messenger.getBytes(netChar, angle);
+        const bytes = AimingMessenger.getBytes(netChar, angle);
         if(!bytes) return;
 
-        Messenger.handleBytes(netChar, bytes);
+        AimingMessenger.handleBytes(netChar, bytes);
         return true;
     });
 }
 
+class EnabledManager {
+    private static readonly onEnabledCallbacks = new Set<OnEnabledCallback>();
+    private static lastEnabled = false;
+    static ownedSticker: string | null = null;
+    static stickerResolved = false;
+
+    static init() {
+        StickerSender.ownedStickerRes.then(() => this.handlePotentialEnabledChange());
+        api.net.state.session.listen("phase", () => this.handlePotentialEnabledChange());
+    }
+
+    static handlePotentialEnabledChange = () => {
+        const enabled = this.enabled;
+        const lastEnabled = this.lastEnabled;
+        if(enabled === lastEnabled) return;
+        this.lastEnabled = enabled;
+
+        for(const cb of this.onEnabledCallbacks) {
+            cb(enabled);
+        }
+    };
+
+    static get enabled() {
+        return api.net.type === "Colyseus" && (api.net.state.session.phase === "game" || Boolean(this.ownedSticker));
+    }
+
+    static onEnabledChanged(callback: OnEnabledCallback) {
+        this.onEnabledCallbacks.add(callback);
+
+        return () => {
+            this.onEnabledCallbacks.delete(callback);
+        };
+    }
+}
+
 api.net.onLoad(() => {
-    Messenger.init();
+    AimingMessenger.init();
+    StickerSender.init();
+    EnabledManager.init();
 
     const scene = api.stores.phaser.scene;
 
@@ -28,74 +68,73 @@ api.net.onLoad(() => {
     }
 
     api.net.state.characters.get(api.stores.network.authId)!.projectiles.listen("aimAngle", (angle) => {
-        if(!angle || angle !== Messenger.pendingAngle) return;
-        Messenger.angleChangeRes?.();
+        if(!angle || angle !== AimingMessenger.pendingAngle) return;
+        AimingMessenger.angleChangeRes?.();
     }, false);
+
+    api.net.on("WORLD_CHANGES", (data, editFn) => {
+        StickerSender.receiver.handleAddedDevices(data.devices.addedDevices, editFn);
+    });
+});
+
+type OnEnabledCallback = (enabled: boolean) => void;
+
+StickerSender.ownedStickerRes.then(sticker => {
+    EnabledManager.ownedSticker = sticker;
+    EnabledManager.stickerResolved = true;
+    EnabledManager.handlePotentialEnabledChange();
 });
 
 export default class Communication<T extends Message = Message> {
     readonly #identifierString: string;
+    readonly #identifier: number[];
     readonly #onDisabledCallbacks: (() => void)[] = [];
-    readonly #messenger: Messenger;
-
-    constructor(name: string) {
-        const identifier = getIdentifier(name);
-        this.#identifierString = identifier.join(",");
-        this.#messenger = new Messenger(identifier);
-    }
-
-    get #callbacks() {
-        if(!Messenger.callbacks.has(this.#identifierString)) {
-            Messenger.callbacks.set(this.#identifierString, {
-                message: [],
-                stringStream: [],
-                byteStream: []
-            });
-        }
-        return Messenger.callbacks.get(this.#identifierString)!;
-    }
+    readonly #aimingMessenger: AimingMessenger;
+    readonly #streamer: Streamer;
 
     static get enabled() {
-        return api.net.state?.session.phase === "game";
+        return EnabledManager.enabled;
     }
 
-    onEnabledChanged(callback: (enabled: boolean) => void) {
-        const unsub = api.net.state.session.listen("phase", (phase) => {
-            callback(phase === "game");
-        }, false);
+    constructor(name: string) {
+        this.#identifier = getIdentifier(name);
+        this.#identifierString = this.#identifier.join(",");
+        this.#aimingMessenger = new AimingMessenger(this.#identifier);
+        this.#streamer = new Streamer(this.#identifierString);
+    }
 
-        this.#onDisabledCallbacks.push(unsub);
-        return unsub;
+    onEnabledChanged(callback: OnEnabledCallback) {
+        return EnabledManager.onEnabledChanged(callback);
     }
 
     async send(message: T) {
-        if(!Communication.enabled) {
-            throw new Error("Communication can only be used after the game is started");
-        }
-
         // Don't send messages if nobody else is in the server
         const players = [...api.net.state.characters.values()].filter(char => char.type === "player");
         if(players.length <= 1) return;
 
+        let messenger: StickerSender | AimingMessenger;
+        if(api.net.state.session.phase === "preGame") {
+            if(!EnabledManager.ownedSticker) throw new Error("Cannot send messages when in lobby without owned stickers");
+            messenger = new StickerSender(EnabledManager.ownedSticker, this.#identifier);
+        } else {
+            messenger = this.#aimingMessenger;
+        }
+
         switch (typeof message) {
             case "number": {
                 if(isUint24(message)) {
-                    return await this.#messenger.sendPositiveInt24(message);
+                    return await messenger.sendPositiveInt24(message);
                 } else if(isUint24(-message)) {
-                    return await this.#messenger.sendNegativeInt24(message);
+                    return await messenger.sendNegativeInt24(message);
                 } else {
-                    return await this.#messenger.sendNumber(message);
+                    return await messenger.sendNumber(message);
                 }
             }
             case "string": {
-                if(message.length <= 3) {
-                    return await this.#messenger.sendThreeCharacters(message);
-                } else {
-                    return await this.#messenger.sendString(message);
-                }
+                return await messenger.sendString(message);
             }
             case "boolean": {
-                return await this.#messenger.sendBoolean(message);
+                return await messenger.sendBoolean(message);
             }
             case "object": {
                 if(
@@ -104,56 +143,28 @@ export default class Communication<T extends Message = Message> {
                     && message.every(isUint8)
                     && message.length > 0
                 ) {
-                    if(message.length === 1) {
-                        return await this.#messenger.sendByte(message[0]);
-                    } else if(message.length === 2) {
-                        return await this.#messenger.sendTwoBytes(message);
-                    } else if(message.length === 3) {
-                        return await this.#messenger.sendThreeBytes(message);
-                    } else if(message.length > 3) {
-                        return await this.#messenger.sendSeveralBytes(message);
-                    }
+                    return await messenger.sendBytes(message);
                 } else {
-                    const stringified = JSON.stringify(message);
-                    if(stringified.length <= 3) {
-                        return await this.#messenger.sendSmallObject(stringified);
-                    }
-                    return await this.#messenger.sendObject(stringified);
+                    return await messenger.sendObject(message);
                 }
             }
         }
     }
 
     onMessage(callback: OnMessageCallback<T>) {
-        const cb = callback as OnMessageCallback<Message>;
-        this.#callbacks.message.push(cb);
-
-        return () => {
-            const index = this.#callbacks.message.indexOf(cb);
-            if(index !== -1) this.#callbacks.message.slice(index, 1);
-        };
+        return splicer(this.#streamer.callbacks.message, callback);
     }
 
     onStringStream(callback: StringStreamCallback) {
-        this.#callbacks.stringStream.push(callback);
-
-        return () => {
-            const index = this.#callbacks.stringStream.indexOf(callback);
-            if(index !== -1) this.#callbacks.stringStream.slice(index, 1);
-        };
+        return splicer(this.#streamer.callbacks.stringStream, callback);
     }
 
     onByteStream(callback: ByteStreamCallback) {
-        this.#callbacks.byteStream.push(callback);
-
-        return () => {
-            const index = this.#callbacks.byteStream.indexOf(callback);
-            if(index !== -1) this.#callbacks.byteStream.slice(index, 1);
-        };
+        return splicer(this.#streamer.callbacks.byteStream, callback);
     }
 
     destroy() {
-        Messenger.callbacks.delete(this.#identifierString);
+        this.#streamer.destroy();
         this.#onDisabledCallbacks.forEach(cb => cb());
     }
 }

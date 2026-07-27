@@ -7,10 +7,9 @@ api.net.on("send:START_GAME", (message) => {
 });
 
 export function reset() {
-    if(api.net.type !== "Colyseus" || !api.net.isHost) return;
+    if(api.net.type !== "Colyseus" || !api.stores.session.amIGameOwner) return;
 
-    api.net.send("END_GAME");
-    api.net.send("RESTORE_MAP_EARLIER");
+    exitToLobby();
 
     const gameSession = api.net.state.session.gameSession;
     if(gameSession.phase === "countdown") return;

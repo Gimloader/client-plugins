@@ -1,13 +1,33 @@
-import type { Callbacks, Character, Message, OnStreamCallback, PendingAngle, StateUpdate } from "./types";
-import { Type } from "./consts";
+import type { Character, Message } from "./types";
 import { bytesToFloat, encodeCharacters, floatToBytes, joinUint24, splitUint24 } from "./encoding";
+import Receiver from "./streamer";
+import { splitArrayByLength } from "./util";
+
+enum AimingMessageType {
+    Boolean,
+    PositiveInt24,
+    NegativeInt24,
+    Float,
+    ThreeCharacters,
+    String,
+    Object,
+    SmallObject,
+    Byte,
+    TwoBytes,
+    ThreeBytes,
+    SeveralBytes
+}
+
+export interface PendingAngle {
+    angle: number;
+    resolvers: PromiseWithResolvers<void>;
+}
 
 export default class Messenger {
     private static realAngle = 0;
     static angleChangeRes: (() => void) | null = null;
     private static angleChangeRej: (() => void) | null = null;
     private static readonly angleQueue: PendingAngle[] = [];
-    static readonly callbacks = new Map<string, Callbacks>();
     private static alternate = false;
     private static ignoreNextAngle = false;
 
@@ -27,11 +47,11 @@ export default class Messenger {
         // Purge the queue once the game ends
         api.net.state.session.listen("phase", (phase) => {
             if(phase === "game") return;
-            this.angleQueue.forEach((pending) => pending.reject());
+            this.angleQueue.forEach((pending) => pending.resolvers.reject());
             this.angleQueue.length = 0;
             this.angleChangeRej?.();
-            this.updatePromises.clear();
-            this.updateResolvers.clear();
+            Receiver.updatePromises.clear();
+            Receiver.updateResolvers.clear();
         }, false);
     }
 
@@ -42,68 +62,71 @@ export default class Messenger {
     constructor(private readonly identifier: number[]) {}
 
     async sendBoolean(value: boolean) {
-        await this.sendHeader(Type.Boolean, value ? 1 : 0);
+        await this.sendHeader(AimingMessageType.Boolean, value ? 1 : 0);
     }
 
     async sendPositiveInt24(value: number) {
         const bytes = splitUint24(value);
-        await this.sendHeader(Type.PositiveInt24, ...bytes);
+        await this.sendHeader(AimingMessageType.PositiveInt24, ...bytes);
     }
 
     async sendNegativeInt24(value: number) {
         const bytes = splitUint24(-value);
-        await this.sendHeader(Type.NegativeInt24, ...bytes);
+        await this.sendHeader(AimingMessageType.NegativeInt24, ...bytes);
     }
 
     async sendNumber(value: number) {
         const bytes = floatToBytes(value);
-        await this.sendSpreadBytes(Type.Float, bytes);
+        await this.sendSpreadBytes(AimingMessageType.Float, bytes);
     }
 
     async sendByte(byte: number) {
-        await this.sendHeader(Type.Byte, byte);
+        await this.sendHeader(AimingMessageType.Byte, byte);
     }
 
-    async sendTwoBytes(bytes: number[]) {
-        await this.sendHeader(Type.TwoBytes, ...bytes);
-    }
-
-    async sendThreeBytes(bytes: number[]) {
-        await this.sendHeader(Type.ThreeBytes, ...bytes);
-    }
-
-    async sendSeveralBytes(bytes: number[]) {
-        await this.sendSpreadBytes(Type.SeveralBytes, bytes);
-    }
-
-    async sendThreeCharacters(string: string) {
-        const codes = encodeCharacters(string);
-        await this.sendHeader(Type.ThreeCharacters, ...codes);
+    async sendBytes(bytes: number[]) {
+        switch (bytes.length) {
+            case 1: {
+                await this.sendHeader(AimingMessageType.Byte, bytes[0]);
+                break;
+            }
+            case 2: {
+                await this.sendHeader(AimingMessageType.TwoBytes, ...bytes);
+                break;
+            }
+            case 3: {
+                await this.sendHeader(AimingMessageType.ThreeBytes, ...bytes);
+                break;
+            }
+            default: {
+                await this.sendSpreadBytes(AimingMessageType.SeveralBytes, bytes);
+                break;
+            }
+        }
     }
 
     async sendString(string: string) {
-        await this.sendStringOfType(string, Type.String);
+        if(string.length <= 3) {
+            return await this.sendHeader(AimingMessageType.ThreeCharacters, ...encodeCharacters(string));
+        }
+        await this.sendStringOfType(string, AimingMessageType.String);
     }
 
-    async sendSmallObject(string: string) {
-        await this.sendHeader(Type.SmallObject, ...encodeCharacters(string));
+    async sendObject(obj: object) {
+        const str = JSON.stringify(obj);
+        if(str.length <= 3) {
+            return await this.sendHeader(AimingMessageType.SmallObject, ...encodeCharacters(str));
+        }
+        await this.sendStringOfType(str, AimingMessageType.Object);
     }
 
-    async sendObject(string: string) {
-        await this.sendStringOfType(string, Type.Object);
-    }
-
-    private async sendStringOfType(string: string, type: Type) {
+    private async sendStringOfType(string: string, type: AimingMessageType) {
         const codes = encodeCharacters(string);
         await this.sendSpreadBytes(type, codes);
     }
 
-    private async sendSpreadBytes(type: Type, bytes: number[]) {
-        const messages: number[][] = [];
-
-        for(let i = 3; i < bytes.length; i += 7) {
-            messages.push(bytes.slice(i, i + 7));
-        }
+    private async sendSpreadBytes(type: AimingMessageType, bytes: number[]) {
+        const messages = splitArrayByLength(bytes, 7);
 
         const lastMessage = messages.at(-1)!;
         // Send the index of the last byte, plus 2 to differentiate from the 0/1 alternation
@@ -117,7 +140,7 @@ export default class Messenger {
     }
 
     // Maxmium of 3 free bytes
-    private async sendHeader(type: Type, ...free: number[]) {
+    private async sendHeader(type: AimingMessageType, ...free: number[]) {
         const header = [...this.identifier, ...free];
 
         // Vary the float to avoid dropping due to repeat angle
@@ -145,16 +168,15 @@ export default class Messenger {
     }
 
     private static async sendAngle(angle: number) {
-        return new Promise<void>((res, rej) => {
-            this.angleQueue.push({
-                angle,
-                resolve: res,
-                reject: rej
-            });
-
-            if(this.angleQueue.length > 1) return;
-            this.processQueue();
+        const resolvers = Promise.withResolvers<void>();
+        this.angleQueue.push({
+            angle,
+            resolvers
         });
+
+        if(this.angleQueue.length > 1) return;
+        this.processQueue();
+        await resolvers.promise;
     }
 
     private static async processQueue() {
@@ -170,7 +192,7 @@ export default class Messenger {
                 break;
             }
 
-            queuedAngle.resolve();
+            queuedAngle.resolvers.resolve();
             this.angleQueue.shift();
         }
 
@@ -186,46 +208,12 @@ export default class Messenger {
         });
     }
 
-    static updatePromises = new Map<Character, Promise<StateUpdate>>();
-    static updateResolvers = new Map<Character, (data: StateUpdate) => void>();
-
-    static async *restOfBytes(char: Character) {
-        while(true) {
-            const update = await Messenger.nextBytes(char);
-            yield update.data;
-            if(update.done) break;
-        }
-    }
-
-    static async getMessageBytes(char: Character, initial: number[]) {
-        const array = [...initial];
-
-        // dprint-ignore-start
-        for await (const chunk of Messenger.restOfBytes(char)) {
-        // dprint-ignore-end
-            array.push(...chunk);
-        }
-
-        return array;
-    }
-
-    static nextBytes(char: Character) {
-        const existing = this.updatePromises.get(char);
-        if(existing) return existing;
-
-        const { promise, resolve } = Promise.withResolvers<StateUpdate>();
-        this.updatePromises.set(char, promise);
-        this.updateResolvers.set(char, resolve);
-
-        return promise;
-    }
-
     static getBytes(char: Character, angle: number): number[] | null {
         if(!angle) return null;
 
         const bytes = floatToBytes(angle);
 
-        if(this.updateResolvers.has(char) || this.callbacks.has(bytes.slice(0, 4).join(","))) {
+        if(Receiver.updateResolvers.has(char) || Receiver.callbacks.has(bytes.slice(0, 4).join(","))) {
             return bytes;
         }
 
@@ -233,7 +221,7 @@ export default class Messenger {
     }
 
     static async handleBytes(char: Character, bytes: number[]) {
-        const resolve = this.updateResolvers.get(char);
+        const resolve = Receiver.updateResolvers.get(char);
         if(resolve) {
             const payload = bytes.slice(0, 7);
             const flag = bytes[7];
@@ -246,8 +234,8 @@ export default class Messenger {
             if(done) resolve({ done, data: payload.slice(0, flag - 1) });
             else resolve({ done, data: payload });
 
-            this.updatePromises.delete(char);
-            this.updateResolvers.delete(char);
+            Receiver.updatePromises.delete(char);
+            Receiver.updateResolvers.delete(char);
             return;
         }
 
@@ -256,7 +244,7 @@ export default class Messenger {
         const type = bytes[7] & 0x7F;
 
         const identifierString = identifierBytes.join(",");
-        const callbacks = this.callbacks.get(identifierString);
+        const callbacks = Receiver.callbacks.get(identifierString);
         if(!callbacks) return;
 
         const gotValue = (value: Message) => {
@@ -266,74 +254,74 @@ export default class Messenger {
         };
 
         switch (type) {
-            case Type.Boolean:
+            case AimingMessageType.Boolean:
                 gotValue(payload[0] === 1);
                 return;
 
-            case Type.PositiveInt24:
+            case AimingMessageType.PositiveInt24:
                 gotValue(joinUint24(...payload));
                 return;
 
-            case Type.NegativeInt24:
+            case AimingMessageType.NegativeInt24:
                 gotValue(-joinUint24(...payload));
                 return;
 
-            case Type.Byte: {
+            case AimingMessageType.Byte: {
                 const bytes = [payload[0]];
-                this.startCompletedStream(callbacks.byteStream, char, bytes);
+                Receiver.startCompletedStream(callbacks.byteStream, char, bytes);
                 gotValue(bytes);
                 return;
             }
 
-            case Type.TwoBytes: {
+            case AimingMessageType.TwoBytes: {
                 const bytes = payload.slice(0, 2);
-                this.startCompletedStream(callbacks.byteStream, char, bytes);
+                Receiver.startCompletedStream(callbacks.byteStream, char, bytes);
                 gotValue(bytes);
                 return;
             }
 
-            case Type.ThreeBytes: {
-                this.startCompletedStream(callbacks.byteStream, char, payload);
+            case AimingMessageType.ThreeBytes: {
+                Receiver.startCompletedStream(callbacks.byteStream, char, payload);
                 gotValue(payload);
                 return;
             }
 
-            case Type.ThreeCharacters: {
+            case AimingMessageType.ThreeCharacters: {
                 const codes = payload.filter(b => b !== 0);
                 const string = String.fromCharCode(...codes);
-                this.startCompletedStream(callbacks.stringStream, char, string);
+                Receiver.startCompletedStream(callbacks.stringStream, char, string);
                 gotValue(string);
                 return;
             }
 
-            case Type.SmallObject: {
+            case AimingMessageType.SmallObject: {
                 const codes = payload.filter(b => b !== 0);
                 gotValue(JSON.parse(String.fromCharCode(...codes)));
                 return;
             }
 
-            case Type.Float: {
-                const bytes = await this.getMessageBytes(char, payload);
+            case AimingMessageType.Float: {
+                const bytes = await Receiver.getMessageBytes(char, payload);
                 gotValue(bytesToFloat(bytes));
                 return;
             }
 
-            case Type.SeveralBytes: {
-                this.startStream(callbacks.byteStream, char, payload);
-                const bytes = await this.getMessageBytes(char, payload);
+            case AimingMessageType.SeveralBytes: {
+                Receiver.startStream(callbacks.byteStream, char, payload);
+                const bytes = await Receiver.getMessageBytes(char, payload);
                 gotValue(bytes);
                 return;
             }
 
-            case Type.String: {
-                this.startStream(callbacks.stringStream, char, payload, String.fromCharCode);
-                const bytes = await this.getMessageBytes(char, payload);
+            case AimingMessageType.String: {
+                Receiver.startStream(callbacks.stringStream, char, payload, String.fromCharCode);
+                const bytes = await Receiver.getMessageBytes(char, payload);
                 gotValue(String.fromCharCode(...bytes));
                 return;
             }
 
-            case Type.Object: {
-                const bytes = await this.getMessageBytes(char, payload);
+            case AimingMessageType.Object: {
+                const bytes = await Receiver.getMessageBytes(char, payload);
                 const string = String.fromCharCode(...bytes);
                 try {
                     gotValue(JSON.parse(string));
@@ -342,32 +330,6 @@ export default class Messenger {
                 }
                 return;
             }
-        }
-    }
-
-    static startCompletedStream<T>(callbacks: OnStreamCallback<T>[], char: Character, initial: T) {
-        const generator = async function*() {
-            yield initial;
-        };
-
-        for(const cb of callbacks) {
-            cb(generator(), char);
-        }
-    }
-
-    static startStream<T>(callbacks: OnStreamCallback<T>[], char: Character, initial: number[], map?: (...bytes: number[]) => T) {
-        const generator = async function*() {
-            yield map ? map(...initial) : initial;
-
-            // dprint-ignore-start
-            for await (const chunk of Messenger.restOfBytes(char)) {
-            // dprint-ignore-start
-                yield map ? map(...chunk) : chunk;
-            }
-        };
-
-        for(const cb of callbacks) {
-            cb(generator(), char);
         }
     }
 }

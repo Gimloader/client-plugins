@@ -19,12 +19,17 @@ const settings = api.settings.create([
 
 api.net.onLoad(() => {
     const Comms = api.lib("Communication");
-    const comms = new Comms<number>("GuestControls");
+    const comms = new Comms<number | number[]>("GuestControls");
 
     const characters = () => [...api.stores.characters.characters.values()];
 
     comms.onMessage((message, char) => {
         if(!settings.notification || message === Op.PluginOff || message === Op.PluginOn) return;
+
+        if(Array.isArray(message)) {
+            api.UI.notification.info({ message: `${char.name} started the game` });
+            return;
+        }
 
         switch (message) {
             case Op.EndGame:
@@ -58,6 +63,26 @@ api.net.onLoad(() => {
         });
 
         comms.onMessage(message => {
+            if(Array.isArray(message)) {
+                const customTeams: Record<string, string> = {};
+                if(message.length > 0) {
+                    for(let i = 0; i < message.length; i += 2) {
+                        const [index, team] = message.slice(i, i + 2);
+                        const id = characters()[index]?.id;
+                        if(!id) return;
+                        customTeams[id] = team.toString();
+                    }
+                }
+
+                api.net.send("START_GAME", {
+                    customTeams,
+                    modeType: api.stores.me.preferences.startGameWithMode,
+                    ownerAsSpectator: api.stores.session.ownerRole === "spectator"
+                });
+
+                return;
+            }
+
             switch (message) {
                 case Op.GuestJoined:
                     if(Comms.enabled) comms.send(Op.PluginOn);
@@ -83,10 +108,6 @@ api.net.onLoad(() => {
     } else {
         const { session } = api.stores;
 
-        api.net.state.session.listen("phase", (phase) => {
-            if(phase !== "game") session.amIGameOwner = false;
-        });
-
         if(Comms.enabled) comms.send(Op.GuestJoined);
 
         comms.onMessage(message => {
@@ -100,6 +121,17 @@ api.net.onLoad(() => {
         api.onStop(() => {
             session.amIGameOwner = false;
             comms.destroy();
+        });
+
+        api.net.on("send:START_GAME", (data, editFn) => {
+            const teams: number[] = [];
+            for(const [playerId, team] of Object.entries<string>(data.customTeams)) {
+                const index = characters().findIndex((char) => char.id === playerId);
+                teams.push(index, Number(team));
+            }
+
+            comms.send(teams);
+            editFn(null);
         });
 
         api.net.on("send:END_GAME", (_, editFn) => {

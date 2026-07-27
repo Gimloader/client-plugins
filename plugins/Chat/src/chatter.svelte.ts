@@ -170,9 +170,9 @@ export default class Chatter {
             })
         );
 
-        this.comms.onEnabledChanged(() => {
-            this.enabled = Comms.enabled;
-            if(Comms.enabled) {
+        this.comms.onEnabledChanged((enabled) => {
+            this.enabled = enabled;
+            if(enabled) {
                 this.addMessage("The chat is active!", false);
                 this.comms.send(Op.Join);
             } else {
@@ -184,11 +184,12 @@ export default class Chatter {
             }
         });
 
-        window.addEventListener("beforeunload", this.sendLeave);
+        const sendLeave = () => this.sendLeave();
+        window.addEventListener("beforeunload", sendLeave);
         api.onStop(() => {
             this.sendLeave();
             this.comms.destroy();
-            window.removeEventListener("beforeunload", this.sendLeave);
+            window.removeEventListener("beforeunload", sendLeave);
         });
     }
 
