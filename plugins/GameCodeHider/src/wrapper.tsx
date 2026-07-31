@@ -20,7 +20,7 @@ interface CodeWrapperProps {
 }
 
 function CodeWrapper({ children, small, prefix = "" }: CodeWrapperProps) {
-    const React = GL.React;
+    const React = api.React;
     const [hidden, setHidden] = React.useState<boolean>(api.storage.getValue("hidden", false));
 
     if(children.props?.showLargeCode) return children;

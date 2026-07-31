@@ -25,12 +25,16 @@ export function updateFreecam(dt: number) {
 }
 
 let preFreecamInteractiveSlot = 0;
+let unpatchCameraSize: () => void;
+let unpatchCameraFollowing: () => void;
+
 export function stopFreecam() {
     if(!isFreecamming) return;
     isFreecamming = false;
 
     api.stores.me.inventory.activeInteractiveSlot = preFreecamInteractiveSlot;
-    GL.patcher.unpatchAll("CameraControl-helper");
+    unpatchCameraSize?.();
+    unpatchCameraFollowing?.();
 
     getCamera().useBounds = true;
 
@@ -54,8 +58,8 @@ export function startFreecam() {
     freecamPos = { x: camera.midPoint.x, y: camera.midPoint.y };
 
     // Ignore the game trying to mess with the camera while freecamming
-    GL.patcher.instead("CameraControl-helper", scene.cameraHelper, "setCameraSizeParams", () => {});
-    GL.patcher.instead("CameraControl-helper", scene.cameraHelper, "startFollowingObject", () => {});
+    unpatchCameraSize = api.patcher.instead(scene.cameraHelper, "setCameraSizeParams", () => {});
+    unpatchCameraFollowing = api.patcher.instead(scene.cameraHelper, "startFollowingObject", () => {});
 
     window.addEventListener("pointermove", onPointermove);
 }
