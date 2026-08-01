@@ -132,12 +132,12 @@ export default class StickerReceiver {
 
         const addPayloadToStream = () => {
             const resolve = Streamer.updateResolvers.get(char);
-            if(resolve) {
-                const newBytes = message.payload.slice(originalBytesAmount - 7);
-                resolve({ data: newBytes, done: message.done });
-                Streamer.updatePromises.delete(char);
-                Streamer.updateResolvers.delete(char);
-            }
+            if(!resolve) return;
+
+            const newBytes = message.payload.slice(originalBytesAmount - 7);
+            resolve({ data: newBytes, done: message.done });
+            Streamer.updatePromises.delete(char);
+            Streamer.updateResolvers.delete(char);
         };
 
         switch (message.type) {
