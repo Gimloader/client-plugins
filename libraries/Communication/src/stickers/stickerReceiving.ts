@@ -93,6 +93,9 @@ export default class StickerReceiver {
                 this.characterYHistory.set(char.id, history);
                 api.onStop(
                     char.listen("y", (y) => {
+                        if(history.length === 10) {
+                            history.splice(0, 1);
+                        }
                         history.push(y);
                     })
                 );
