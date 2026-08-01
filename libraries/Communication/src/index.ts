@@ -28,7 +28,7 @@ class EnabledManager {
         api.net.state.session.listen("phase", () => this.handlePotentialEnabledChange());
     }
 
-    static handlePotentialEnabledChange = () => {
+    static handlePotentialEnabledChange() {
         const enabled = this.enabled;
         const lastEnabled = this.lastEnabled;
         if(enabled === lastEnabled) return;
@@ -37,7 +37,7 @@ class EnabledManager {
         for(const cb of this.onEnabledCallbacks) {
             cb(enabled);
         }
-    };
+    }
 
     static get enabled() {
         return api.net.type === "Colyseus" && (api.net.state.session.phase === "game" || Boolean(this.ownedSticker));
