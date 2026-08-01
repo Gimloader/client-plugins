@@ -2,7 +2,7 @@ import type { ByteStreamCallback, Message, OnMessageCallback, StringStreamCallba
 import AimingMessenger from "./aiming";
 import { getIdentifier, isUint24, isUint8 } from "./encoding";
 import Streamer from "./streamer";
-import StickerSender from "./stickers/stickerSending";
+import StickerMessenger from "./stickers/stickerSending";
 import { splicer } from "./util";
 
 function listenToCharacter(character: Gimloader.Stores.Character) {
@@ -24,7 +24,7 @@ class EnabledManager {
     static stickerResolved = false;
 
     static init() {
-        StickerSender.ownedStickerRes.then(() => this.handlePotentialEnabledChange());
+        StickerMessenger.ownedStickerRes.then(() => this.handlePotentialEnabledChange());
         api.net.state.session.listen("phase", () => this.handlePotentialEnabledChange());
     }
 
@@ -54,7 +54,7 @@ class EnabledManager {
 
 api.net.onLoad(() => {
     AimingMessenger.init();
-    StickerSender.init();
+    StickerMessenger.init();
     EnabledManager.init();
 
     const scene = api.stores.phaser.scene;
@@ -73,13 +73,13 @@ api.net.onLoad(() => {
     }, false);
 
     api.net.on("WORLD_CHANGES", (data, editFn) => {
-        StickerSender.receiver.handleAddedDevices(data.devices.addedDevices, editFn);
+        StickerMessenger.receiver.handleAddedDevices(data.devices.addedDevices, editFn);
     });
 });
 
 type OnEnabledCallback = (enabled: boolean) => void;
 
-StickerSender.ownedStickerRes.then(sticker => {
+StickerMessenger.ownedStickerRes.then(sticker => {
     EnabledManager.ownedSticker = sticker;
     EnabledManager.stickerResolved = true;
     EnabledManager.handlePotentialEnabledChange();
@@ -112,10 +112,10 @@ export default class Communication<T extends Message = Message> {
         const players = [...api.net.state.characters.values()].filter(char => char.type === "player");
         if(players.length <= 1) return;
 
-        let messenger: StickerSender | AimingMessenger;
+        let messenger: StickerMessenger | AimingMessenger;
         if(api.net.state.session.phase === "preGame") {
             if(!EnabledManager.ownedSticker) throw new Error("Cannot send messages when in lobby without owned stickers");
-            messenger = new StickerSender(EnabledManager.ownedSticker, this.#identifier);
+            messenger = new StickerMessenger(EnabledManager.ownedSticker, this.#identifier);
         } else {
             messenger = this.#aimingMessenger;
         }

@@ -41,7 +41,7 @@ async function getOwnedSticker(): Promise<string | null> {
     return sticker.id;
 }
 
-export default class StickerMessaging {
+export default class StickerMessenger {
     private static initialStickerPromise: Promise<void> | null = null;
     private static readonly stickerQueue: PendingMessage[] = [];
     private static lastStickerWait = 0;
@@ -53,7 +53,7 @@ export default class StickerMessaging {
 
     static async create(identifier: number[]) {
         const ownedSticker = await this.ownedStickerRes;
-        return ownedSticker ? new StickerMessaging(ownedSticker, identifier) : null;
+        return ownedSticker ? new StickerMessenger(ownedSticker, identifier) : null;
     }
 
     static init() {
@@ -103,12 +103,12 @@ export default class StickerMessaging {
     }
 
     async sendBytes(bytes: number[]) {
-        await this.sendMessage([StickerMessageType.Bytes, ...StickerMessaging.getLengthHeader(bytes.length), ...bytes]);
+        await this.sendMessage([StickerMessageType.Bytes, ...StickerMessenger.getLengthHeader(bytes.length), ...bytes]);
     }
 
     private async sendStringOfType(value: string, type: StickerMessageType) {
         const encodedCharacters = encodeCharacters(value);
-        await this.sendMessage([type, ...StickerMessaging.getLengthHeader(encodedCharacters.length), ...encodedCharacters]);
+        await this.sendMessage([type, ...StickerMessenger.getLengthHeader(encodedCharacters.length), ...encodedCharacters]);
     }
 
     private static getLengthHeader(bytesLength: number) {
@@ -121,23 +121,23 @@ export default class StickerMessaging {
     private async sendMessage(bytes: number[]) {
         const stickerCodes = encodeBytes([...this.identifier, ...bytes]);
 
-        if(StickerMessaging.initialStickerPromise) {
-            await StickerMessaging.initialStickerPromise;
+        if(StickerMessenger.initialStickerPromise) {
+            await StickerMessenger.initialStickerPromise;
             return await this.sendStickers(stickerCodes);
         }
 
-        await (StickerMessaging.initialStickerPromise = this.sendStickers([stickerCodes[0]]));
+        await (StickerMessenger.initialStickerPromise = this.sendStickers([stickerCodes[0]]));
         await this.sendStickers(stickerCodes.slice(1));
     }
 
     private async sendStickers(stickerCodes: number[]) {
         const resolvers = Promise.withResolvers<void>();
-        StickerMessaging.stickerQueue.push({
+        StickerMessenger.stickerQueue.push({
             resolvers,
             stickerCodes
         });
 
-        if(!StickerMessaging.sending) this.processQueue();
+        if(!StickerMessenger.sending) this.processQueue();
         await resolvers.promise;
     }
 
@@ -162,20 +162,20 @@ export default class StickerMessaging {
     }
 
     private async processQueue() {
-        StickerMessaging.sending = true;
+        StickerMessenger.sending = true;
 
         const now = Date.now();
-        StickerMessaging.lastStickerWait ||= now;
-        if(now - StickerMessaging.lastStickerWait >= stickerWait) {
-            StickerMessaging.stickersSentAfterLastWait = 0;
+        StickerMessenger.lastStickerWait ||= now;
+        if(now - StickerMessenger.lastStickerWait >= stickerWait) {
+            StickerMessenger.stickersSentAfterLastWait = 0;
         }
 
-        while(StickerMessaging.stickerQueue.length > 0) {
+        while(StickerMessenger.stickerQueue.length > 0) {
             if(api.net.state.session.loadingPhase) {
                 await awaitBackToLobby();
             }
 
-            const segments = StickerMessaging.getStickerSegments();
+            const segments = StickerMessenger.getStickerSegments();
 
             for(const { stickerCodes, resolvers } of segments) {
                 for(const stickerCode of stickerCodes) {
@@ -186,22 +186,22 @@ export default class StickerMessaging {
                     });
                 }
 
-                StickerMessaging.receiver.pendingStickers.push({
+                StickerMessenger.receiver.pendingStickers.push({
                     amount: stickerCodes.length,
                     resolvers: resolvers ?? Promise.withResolvers<void>()
                 });
 
-                StickerMessaging.stickersSentAfterLastWait += stickerCodes.length;
+                StickerMessenger.stickersSentAfterLastWait += stickerCodes.length;
             }
 
-            await StickerMessaging.receiver.pendingStickers.at(-1)!.resolvers.promise;
+            await StickerMessenger.receiver.pendingStickers.at(-1)!.resolvers.promise;
             // This additional wait is needed to prevent stickers from being dropped
             await new Promise<void>((res) => setTimeout(() => res(), stickerWait));
 
-            StickerMessaging.lastStickerWait = Date.now();
-            StickerMessaging.stickersSentAfterLastWait = 0;
+            StickerMessenger.lastStickerWait = Date.now();
+            StickerMessenger.stickersSentAfterLastWait = 0;
         }
 
-        StickerMessaging.sending = false;
+        StickerMessenger.sending = false;
     }
 }
