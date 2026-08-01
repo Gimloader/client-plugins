@@ -43,7 +43,7 @@ export default class Recorder {
 
         this.startPos = this.rb.translation();
         this.startState = JSON.stringify(this.physics.state);
-        this.platformerPhysics = JSON.stringify(GL.platformerPhysics);
+        this.platformerPhysics = JSON.stringify(api.platformerPhysics);
         this.frames = [];
 
         api.UI.notification.open({ message: "Started Recording" });
@@ -81,11 +81,11 @@ export default class Recorder {
         desync.DLD.cancelRespawn();
 
         this.playing = true;
-        this.platformerPhysics = JSON.stringify(GL.platformerPhysics);
+        this.platformerPhysics = JSON.stringify(api.platformerPhysics);
 
         this.rb.setTranslation(data.startPos, true);
         this.physics.state = JSON.parse(data.startState);
-        Object.assign(GL.platformerPhysics, JSON.parse(data.platformerPhysics));
+        Object.assign(api.platformerPhysics, JSON.parse(data.platformerPhysics));
 
         this.physicsManager.physicsStep = (dt) => {
             api.stores.phaser.mainCharacter.physics.postUpdate(dt);
@@ -114,7 +114,7 @@ export default class Recorder {
 
     stopPlayback() {
         this.playing = false;
-        Object.assign(GL.platformerPhysics, JSON.parse(this.platformerPhysics));
+        Object.assign(api.platformerPhysics, JSON.parse(this.platformerPhysics));
         stopUpdatingLasers();
 
         this.physicsManager.physicsStep = this.nativeStep;

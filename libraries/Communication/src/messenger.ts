@@ -338,7 +338,7 @@ export default class Messenger {
                 try {
                     gotValue(JSON.parse(string));
                 } catch (e) {
-                    console.error("Failed to parse object message:", e);
+                    api.logger.error("Failed to parse object message:", e);
                 }
                 return;
             }

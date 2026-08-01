@@ -46,7 +46,8 @@
 				"noConfusingVoidType": "off",
 				"useIterableCallbackReturn": "off",
 				"noAssignInExpressions": "off",
-				"noExplicitAny": "off"
+				"noExplicitAny": "off",
+				"noConsole": "error"
 			}
 		}
 	},

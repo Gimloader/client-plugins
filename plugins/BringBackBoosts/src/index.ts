@@ -25,8 +25,8 @@ const originalAirMovement = {
 
 api.net.onLoad(() => {
     settings.listen("useOriginalPhysics", (usingOriginalPhysics) => {
-        if(!GL.platformerPhysics) return;
-        GL.platformerPhysics.movement.air = usingOriginalPhysics ? originalAirMovement : defaultAirMovement;
+        if(!api.platformerPhysics) return;
+        api.platformerPhysics.movement.air = usingOriginalPhysics ? originalAirMovement : defaultAirMovement;
     }, true);
 });
 
@@ -49,9 +49,9 @@ const calcMovementVelocity = api.rewriter.createShared("CalcMovmentVel", (A: any
     const s = null == t ? void 0 : t.angle,
         g = null !== s && (s < 90 || s > 270) ? "right" : null !== s && s > 90 && s < 270 ? "left" : "none",
         C = n.default.me.movementSpeed / a.default.normal;
-    let h = GL.platformerPhysics.platformerGroundSpeed * C;
+    let h = api.platformerPhysics.platformerGroundSpeed * C;
     if(A.physics.state.jump.isJumping) {
-        const t = Math.min(GL.platformerPhysics.jump.airSpeedMinimum.maxSpeed, h * GL.platformerPhysics.jump.airSpeedMinimum.multiplier);
+        const t = Math.min(api.platformerPhysics.jump.airSpeedMinimum.maxSpeed, h * api.platformerPhysics.jump.airSpeedMinimum.multiplier);
         h = Math.max(t, A.physics.state.jump.xVelocityAtJumpStart);
     }
     let l = 0;
@@ -66,10 +66,10 @@ const calcMovementVelocity = api.rewriter.createShared("CalcMovmentVel", (A: any
         let t = 0,
             i = 0;
         A.physics.state.grounded
-            ? B ? (t = GL.platformerPhysics.movement.ground.accelerationSpeed, i = GL.platformerPhysics.movement.ground.maxAccelerationSpeed) : t = GL.platformerPhysics.movement.ground.decelerationSpeed
+            ? B ? (t = api.platformerPhysics.movement.ground.accelerationSpeed, i = api.platformerPhysics.movement.ground.maxAccelerationSpeed) : t = api.platformerPhysics.movement.ground.decelerationSpeed
             : B
-            ? (t = GL.platformerPhysics.movement.air.accelerationSpeed, i = GL.platformerPhysics.movement.air.maxAccelerationSpeed)
-            : t = GL.platformerPhysics.movement.air.decelerationSpeed;
+            ? (t = api.platformerPhysics.movement.air.accelerationSpeed, i = api.platformerPhysics.movement.air.maxAccelerationSpeed)
+            : t = api.platformerPhysics.movement.air.decelerationSpeed;
         const s = 20 / I.PhysicsConstants.tickRate;
         t *= A.physics.state.movement.accelerationTicks * s,
             i && (t = Math.min(i, t)),
@@ -77,7 +77,7 @@ const calcMovementVelocity = api.rewriter.createShared("CalcMovmentVel", (A: any
                 ? Phaser.Math.Clamp(A.physics.state.movement.xVelocity + t, A.physics.state.movement.xVelocity, l)
                 : Phaser.Math.Clamp(A.physics.state.movement.xVelocity - t, l, A.physics.state.movement.xVelocity);
     } else e = l;
-    return A.physics.state.grounded && A.physics.state.velocity.y > GL.platformerPhysics.platformerGroundSpeed * C && Math.sign(e) === Math.sign(A.physics.state.velocity.x) && (e = A.physics.state.velocity.x),
+    return A.physics.state.grounded && A.physics.state.velocity.y > api.platformerPhysics.platformerGroundSpeed * C && Math.sign(e) === Math.sign(A.physics.state.velocity.x) && (e = A.physics.state.velocity.x),
         A.physics.state.movement.xVelocity = e,
         A.physics.state.gravity = calcGravity?.(A.id),
         i += A.physics.state.gravity,
