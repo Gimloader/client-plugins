@@ -10,7 +10,7 @@ export const lo = {
         rightAngle: 11 * PI / 6,
         notWhenWithin: [[4 * PI / 3, 5 * PI / 3], [PI / 3, 2 * PI / 3]]
     }
-}
+};
 
 export const defaultAirMovement = {
     accelerationSpeed: 0.08125,
@@ -90,14 +90,14 @@ export const we = {
         "minHeadCollision": 0.6
     },
     "inputsStorageLimit": 60
-}
+};
 
-export const gi = { tickRate: 12 }
-export const hc = { normal: 310 }
-export const ce = { worldScale: 100 }
+export const gi = { tickRate: 12 };
+export const hc = { normal: 310 };
+export const ce = { worldScale: 100 };
 export const q5 = Math.round(we.jump.cooldownMS / (1e3 / gi.tickRate));
 export const Y5 = Math.round(we.jump.coyoteJumpLimitMS / (1e3 / gi.tickRate));
 export const se = {
     width: 64,
     height: 64
-}
+};

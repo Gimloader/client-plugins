@@ -2,7 +2,8 @@
     "name": "client-plugins",
     "devDependencies": {
         "@biomejs/biome": "2.3.1",
-        "@dimforge/rapier2d-compat": "0.11.2",
+        "@dimforge/rapier2d-compat": "~0.17.3",
+        "@dimforge/rapier2d-compat-old": "npm:@dimforge/rapier2d-compat@0.11.2",
         "@gimloader/build": "^1.6.1",
         "@gimloader/external-svelte-plugin": "^1.1.0",
         "@gimloader/types": "^1.13.0",
