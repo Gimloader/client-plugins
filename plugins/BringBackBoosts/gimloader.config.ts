@@ -4,9 +4,11 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "BringBackBoosts",
     description: "Restores boosts in Don't Look Down. Will cause you to desync, so others cannot see you move.",
-    version: "0.6.3",
+    version: "0.6.4",
     hasSettings: true,
     needsPlugins: ["Desynchronize"],
     gamemodes: ["dontLookDown"],
-    changelog: ["Allowed enabling mid-game"]
+    changelog: ["Allowed enabling mid-game"],
+    deprecated: "Superceded by DownpatchPhysics",
+    successor: "DownpatchPhysics"
 });
