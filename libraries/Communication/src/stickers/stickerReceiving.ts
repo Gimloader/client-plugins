@@ -189,7 +189,7 @@ export default class StickerReceiver {
                 try {
                     gotValue(JSON.parse(String.fromCharCode(...message.payload)));
                 } catch (e) {
-                    console.error("Failed to parse object message:", e);
+                    api.logger.error("Failed to parse object message:", e);
                 }
                 return;
             }
