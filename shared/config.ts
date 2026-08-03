@@ -1,7 +1,9 @@
 import { singleConfig, type SingleConfig } from "@gimloader/build";
 
 type DistributiveOmit<T, K extends keyof T> = T extends any ? Omit<T, K> : never;
-type ConfigInfo = DistributiveOmit<SingleConfig, "downloadUrl" | "webpage" | "author">;
+type ConfigInfo = DistributiveOmit<SingleConfig, "downloadUrl" | "webpage" | "author"> & {
+    successor?: string;
+};
 type Category = "libraries" | "plugins";
 
 export const baseDownloadUrl = "https://raw.githubusercontent.com/Gimloader/builds/main";
@@ -15,10 +17,10 @@ function mapDependency(category: Category) {
 }
 
 export function officialScriptConfig(info: ConfigInfo) {
-    const { needsPlugins, needsLibs, optionalLibs, ...options } = info;
+    const { needsPlugins, needsLibs, optionalLibs, successor, ...options } = info;
 
     const category: Category = info.isLibrary ? "libraries" : "plugins";
-    const downloadUrl = `${baseDownloadUrl}/${category}/${info.name}.js`;
+    const downloadUrl = `${baseDownloadUrl}/${category}/${successor ? successor : info.name}.js`;
     const webpage = `${baseWebpageUrl}/${category}/${info.name}`;
 
     const formattedNeedsPlugins = needsPlugins?.map(mapDependency("plugins"));

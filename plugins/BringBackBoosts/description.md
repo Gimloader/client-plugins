@@ -1,1 +1,0 @@
-BringBackBoosts restores a patched bug which allows players to gain large amounts of speed in platformer modes by hitting corners in a precise way. You can also enable "Use Release Physics" in settings to adjust the physics to be similar to how it was upon the release of platforming.

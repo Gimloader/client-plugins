@@ -13,54 +13,27 @@ api.net.onLoad(() => {
     const red = 0xff0000;
     const gray = 0x555555;
 
-    const addHealthbar = (character: Gimloader.Stores.Character) => {
+    const addLabel = api.lib("CharacterLabels");
+    const destroy = addLabel(character => {
+        const stateChar = api.net.state.characters.get(character.id);
+        if(!stateChar) return;
+
         const bg = scene.add.rectangle(0, 0, width, 10, gray);
         const health = scene.add.rectangle(0, 0, width, 10, red);
         const shield = scene.add.rectangle(0, 0, width, 10, blue);
         shield.setStrokeStyle(2, 0xffffff);
 
-        const stateChar = api.net.state.characters.get(character.id);
-        if(!stateChar) return;
+        return {
+            gameObjects: [bg, health, shield],
+            update() {
+                const hp = stateChar.health;
 
-        const hp = stateChar.health;
-
-        const stopUpdate = api.patcher.after(character.nametag, "update", () => {
-            if(!character.nametag.tag) return;
-            let { x, y, depth } = character.nametag.tag;
-            y += 22;
-
-            bg.visible = health.visible = shield.visible = visible && !stateChar.isRespawning;
-            health.width = hp.health / hp.maxHealth * width;
-            shield.width = hp.shield / hp.maxShield * width;
-
-            bg.setDepth(depth);
-            bg.x = x;
-            bg.y = y;
-            health.setDepth(depth);
-            health.x = x;
-            health.y = y;
-            shield.setDepth(depth);
-            shield.x = x;
-            shield.y = y;
-        });
-
-        const stopDestroy = api.patcher.after(character, "destroy", destroy);
-        api.onStop(destroy);
-
-        function destroy() {
-            bg.destroy();
-            health.destroy();
-            shield.destroy();
-            stopUpdate();
-            stopDestroy();
-        }
-    };
-
-    api.patcher.after(scene.characterManager, "addCharacter", (_, __, character) => {
-        addHealthbar(character);
+                health.width = hp.health / hp.maxHealth * width;
+                shield.width = hp.shield / hp.maxShield * width;
+                bg.visible = health.visible = shield.visible = visible;
+            }
+        };
     });
 
-    for(const character of scene.characterManager.characters.values()) {
-        addHealthbar(character);
-    }
+    api.onStop(destroy);
 });

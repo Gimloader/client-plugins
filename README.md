@@ -21,7 +21,7 @@ If you want to add a new script, create a new subdirectory inside /plugins or /l
 Official plugins must follow Gimkit's statement on modding. Do not add a plugin here that
 - gives an advantage over other players (that isn't just quality of life)
 - bypasses paywalls
-- spams Gimkit server
+- spams Gimkit's servers
 
 ### Before committing
 

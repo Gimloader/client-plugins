@@ -9,6 +9,7 @@ declare namespace Gimloader {
     
     interface Libraries {
         Communication: typeof import("./libraries/Communication/src").default;
+        CharacterLabels: typeof import("./libraries/CharacterLabels/src").default;
     }
 }
 

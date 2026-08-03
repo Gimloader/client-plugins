@@ -4,7 +4,8 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "Healthbars",
     description: "Adds healthbars underneath players' names",
-    version: "0.1.6",
+    version: "1.0.0",
     gamemodes: ["2d"],
-    changelog: ["Updated webpage url"]
+    changelog: ["Used the CharacterLabels library"],
+    needsLibs: ["CharacterLabels"]
 });

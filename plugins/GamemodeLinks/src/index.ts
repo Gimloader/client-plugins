@@ -78,7 +78,7 @@ if(root === "gamemode") {
                     }
                 }
             ]);
-        }, console.error);
+        }, api.logger.error);
 
     // Creating games will close the popup
     api.net.modifyFetchResponse("**/create", cleanup);
