@@ -16,11 +16,10 @@ export default class Streamer {
     static async getMessageBytes(char: Character, initial: number[]) {
         const array = [...initial];
 
-        // dprint-ignore-start
+        // dprint-ignore
         for await (const chunk of this.restOfBytes(char)) {
-      // dprint-ignore-end
-          array.push(...chunk);
-      }
+            array.push(...chunk);
+        }
 
         return array;
     }
