@@ -24,8 +24,13 @@ class EnabledManager {
     static stickerResolved = false;
 
     static init() {
-        StickerMessenger.ownedStickerRes.then(() => this.handlePotentialEnabledChange());
         api.net.state.session.listen("phase", () => this.handlePotentialEnabledChange());
+    }
+
+    static resolveSticker(sticker: string | null) {
+        EnabledManager.ownedSticker = sticker;
+        EnabledManager.stickerResolved = true;
+        EnabledManager.handlePotentialEnabledChange();
     }
 
     static handlePotentialEnabledChange() {
@@ -80,9 +85,7 @@ api.net.onLoad(() => {
 type OnEnabledCallback = (enabled: boolean) => void;
 
 StickerMessenger.ownedStickerRes.then(sticker => {
-    EnabledManager.ownedSticker = sticker;
-    EnabledManager.stickerResolved = true;
-    EnabledManager.handlePotentialEnabledChange();
+    EnabledManager.resolveSticker(sticker);
 });
 
 export default class Communication<T extends Message = Message> {
