@@ -22,9 +22,3 @@ export interface StateUpdate {
     done: boolean;
     data: any;
 }
-
-export interface PendingAngle {
-    angle: number;
-    resolve: () => void;
-    reject: () => void;
-}
