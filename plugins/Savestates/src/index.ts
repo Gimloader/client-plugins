@@ -1,10 +1,8 @@
-import { summitCoords } from "$shared/consts";
+import { defaultState, summitCoords } from "$shared/consts";
+
 import { createState, deleteState, getSelectedState, renameState, setSelected, storage, updateState, upgradeFromLegacy } from "./states";
 
 const desync = api.plugin("Desynchronize");
-
-const defaultState =
-    '{"gravity":0.001,"velocity":{"x":0,"y":0},"movement":{"direction":"none","xVelocity":0,"accelerationTicks":0},"jump":{"isJumping":false,"jumpsLeft":2,"jumpCounter":0,"jumpTicks":118,"xVelocityAtJumpStart":0},"forces":[],"grounded":true,"groundedTicks":0,"lastGroundedAngle":0}';
 
 type StateLoadCallback = (summit: number | "custom") => void;
 let stateLoadCallbacks: StateLoadCallback[] = [];
@@ -53,6 +51,10 @@ const loadState = () => {
     const selectedState = getSelectedState();
     if(!selectedState) {
         api.UI.notification.error({ message: "You don't have any states, create a state with Gimloader commands", duration: 2 });
+        return;
+    }
+    if(!selectedState.state.includes("wallJump")) {
+        api.UI.notification.error({ message: "This state was saved on a previous version of Gimkit and cannot be loaded now." });
         return;
     }
 

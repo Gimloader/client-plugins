@@ -1,7 +1,8 @@
 import type { ISharedValues } from "../types";
 import { getMoveSpeed } from "./index";
 import { initLasers, updateLasers } from "./updateLasers";
-import { defaultState, generatePhysicsInput } from "./util";
+import { generatePhysicsInput } from "./util";
+import { defaultState } from "$shared/consts";
 
 export default class TASTools {
     physicsManager = api.stores.phaser.scene.worldManager.physics;
