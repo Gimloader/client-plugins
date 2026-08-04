@@ -1,8 +1,5 @@
 import type { IFrameInfo } from "../types";
 
-export const defaultState =
-    '{"gravity":0.001,"velocity":{"x":0,"y":0},"movement":{"direction":"none","xVelocity":0,"accelerationTicks":0},"jump":{"isJumping":false,"jumpsLeft":2,"jumpCounter":0,"jumpTicks":118,"xVelocityAtJumpStart":0},"forces":[],"grounded":true,"groundedTicks":0,"lastGroundedAngle":0}';
-
 export function generatePhysicsInput(frame: IFrameInfo, lastFrame?: IFrameInfo) {
     const jump = frame.up && !lastFrame?.up;
 
