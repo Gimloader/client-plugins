@@ -9,3 +9,6 @@ export const summitCoords: Vector[] = [
     { x: 356.540008544921, y: 351.66000366210 },
     { x: 401.269989013671, y: 285.73999023437 }
 ];
+
+export const defaultState =
+    '{"actualMovement":{"x":0,"y":0},"movement":{"direction":"none","xVelocity":0,"accelerationTicks":0},"jump":{"isJumping":false,"jumpsLeft":2,"jumpCounter":0,"jumpTicks":291,"xVelocityAtJumpStart":0,"lastJumpGravityMultiplier":1},"wallJump":{"ticks":-1,"transitionTicks":-1,"forceInputTicks":0,"slidingTicks":0,"jumpBuffer":[],"inputVelocityX":0},"forces":[],"gravityZones":[],"inertia":{"x":0,"y":0},"velocity":{"x":0,"y":0.001},"cancelInertiaOnNextGrounded":false,"inputVelocityControlFactor":1,"lastUsedVelocityToCalculateMovement":{"x":0,"y":0.001},"grounded":true,"sliding":false,"groundedTicks":0,"lastGroundedAngle":0}';
