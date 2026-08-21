@@ -1,51 +1,36 @@
 import type { ByteStreamCallback, Message, OnMessageCallback, StringStreamCallback } from "./types";
-import AimingMessenger from "./aiming";
-import { getIdentifier, isUint24, isUint8 } from "./encoding";
+import AimingMessenger from "./messengers/aiming";
+import { getIdentifier, identifierToBytes, identifierToDozens } from "./encoding";
 import Streamer from "./streamer";
-import StickerMessenger from "./stickers/stickerSending";
+import StickerMessenger from "./messengers/stickers";
 import { splicer } from "./util";
 
-function listenToCharacter(character: Gimloader.Stores.Character) {
-    if(character.id === api.stores.network.authId) return;
-    api.patcher.before(character.aimingAndLookingAround, "setTargetAngle", (_, [angle]) => {
-        const netChar = api.net.state.characters.get(character.id)!;
-        const bytes = AimingMessenger.getBytes(netChar, angle);
-        if(!bytes) return;
-
-        AimingMessenger.handleBytes(netChar, bytes);
-        return true;
-    });
-}
-
 class EnabledManager {
-    private static readonly onEnabledCallbacks = new Set<OnEnabledCallback>();
+    private static onEnabledCallbacks = new Set<OnEnabledCallback>();
     private static lastEnabled = false;
-    static ownedSticker: string | null = null;
     static stickerResolved = false;
+    static ready = StickerMessenger.ownedStickerPromise.then(() => {}, () => {});
 
     static init() {
-        api.net.state.session.listen("phase", () => this.handlePotentialEnabledChange());
+        api.net.state.session.listen("phase", () => this.handlePotentialEnabledChange(false));
+        this.ready.then(() => this.handlePotentialEnabledChange(true));
     }
 
-    static resolveSticker(sticker: string | null) {
-        EnabledManager.ownedSticker = sticker;
-        EnabledManager.stickerResolved = true;
-        EnabledManager.handlePotentialEnabledChange();
-    }
-
-    static handlePotentialEnabledChange() {
+    static handlePotentialEnabledChange(afterReady: boolean) {
         const enabled = this.enabled;
         const lastEnabled = this.lastEnabled;
         if(enabled === lastEnabled) return;
+
         this.lastEnabled = enabled;
 
         for(const cb of this.onEnabledCallbacks) {
-            cb(enabled);
+            cb(enabled, afterReady);
         }
     }
 
     static get enabled() {
-        return api.net.type === "Colyseus" && (api.net.state.session.phase === "game" || Boolean(this.ownedSticker));
+        if(api.net.type !== "Colyseus") return false;
+        return api.net.state.session.phase === "game" || Boolean(StickerMessenger.ownedSticker);
     }
 
     static onEnabledChanged(callback: OnEnabledCallback) {
@@ -62,95 +47,100 @@ api.net.onLoad(() => {
     StickerMessenger.init();
     EnabledManager.init();
 
-    const scene = api.stores.phaser.scene;
+    api.net.state.session.listen("phase", (phase) => {
+        if(phase === "game") StickerMessenger.reset();
+        else AimingMessenger.reset();
 
-    api.patcher.after(scene.characterManager, "addCharacter", (_, __, character) => {
-        listenToCharacter(character);
-    });
-
-    for(const character of scene.characterManager.characters.values()) {
-        listenToCharacter(character);
-    }
-
-    api.net.state.characters.get(api.stores.network.authId)!.projectiles.listen("aimAngle", (angle) => {
-        if(!angle || angle !== AimingMessenger.pendingAngle) return;
-        AimingMessenger.angleChangeRes?.();
+        Streamer.updateCallbacks.clear();
     }, false);
-
-    api.net.on("WORLD_CHANGES", (data, editFn) => {
-        StickerMessenger.receiver.handleAddedDevices(data.devices.addedDevices, editFn);
-    });
 });
 
-type OnEnabledCallback = (enabled: boolean) => void;
+type OnEnabledCallback = (enabled: boolean, enabledAfterReady: boolean) => void;
 
-StickerMessenger.ownedStickerRes.then(sticker => {
-    EnabledManager.resolveSticker(sticker);
-});
+interface QueuedMessage {
+    message: Message;
+    resolvers: PromiseWithResolvers<void>;
+    aimingMessenger: AimingMessenger;
+    stickerMessenger: StickerMessenger;
+    retried?: boolean;
+}
 
 export default class Communication<T extends Message = Message> {
-    readonly #identifierString: string;
-    readonly #identifier: number[];
-    readonly #onDisabledCallbacks: (() => void)[] = [];
+    static readonly #queue: QueuedMessage[] = [];
     readonly #aimingMessenger: AimingMessenger;
+    readonly #stickerMessenger: StickerMessenger;
     readonly #streamer: Streamer;
+    readonly #onDisabledCallbacks: (() => void)[] = [];
 
     static get enabled() {
         return EnabledManager.enabled;
     }
 
+    get enabled() {
+        return EnabledManager.enabled;
+    }
+
     constructor(name: string) {
-        this.#identifier = getIdentifier(name);
-        this.#identifierString = this.#identifier.join(",");
-        this.#aimingMessenger = new AimingMessenger(this.#identifier);
-        this.#streamer = new Streamer(this.#identifierString);
+        const identifier = getIdentifier(name);
+        this.#streamer = new Streamer(identifier);
+        this.#aimingMessenger = new AimingMessenger(identifierToBytes(identifier));
+        this.#stickerMessenger = new StickerMessenger(identifierToDozens(identifier));
     }
 
     onEnabledChanged(callback: OnEnabledCallback) {
         return EnabledManager.onEnabledChanged(callback);
     }
 
-    async send(message: T) {
-        // Don't send messages if nobody else is in the server
-        const players = [...api.net.state.characters.values()].filter(char => char.type === "player");
-        if(players.length <= 1) return;
+    send(message: T) {
+        const resolvers = Promise.withResolvers<void>();
+        Communication.#queue.push({
+            aimingMessenger: this.#aimingMessenger,
+            stickerMessenger: this.#stickerMessenger,
+            message,
+            resolvers
+        });
 
-        let messenger: StickerMessenger | AimingMessenger;
-        if(api.net.state.session.phase === "preGame") {
-            if(!EnabledManager.ownedSticker) throw new Error("Cannot send messages when in lobby without owned stickers");
-            messenger = new StickerMessenger(EnabledManager.ownedSticker, this.#identifier);
-        } else {
-            messenger = this.#aimingMessenger;
-        }
+        if(Communication.#queue.length === 1) Communication.#processQueue();
+        return resolvers.promise;
+    }
 
-        switch (typeof message) {
-            case "number": {
-                if(isUint24(message)) {
-                    return await messenger.sendPositiveInt24(message);
-                } else if(isUint24(-message)) {
-                    return await messenger.sendNegativeInt24(message);
+    static async #processQueue() {
+        while(this.#queue.length > 0) {
+            // Don't send messages if nobody else is in the server
+            const players = [...api.net.state.characters.values()].filter(char => char.type === "player");
+            if(players.length === 0) {
+                for(const item of this.#queue) item.resolvers.resolve();
+                this.#queue.length = 0;
+                return;
+            }
+
+            const queued = this.#queue[0];
+            if(!queued) return;
+
+            try {
+                if(api.net.state.session.phase === "preGame") {
+                    await queued.stickerMessenger.send(queued.message);
                 } else {
-                    return await messenger.sendNumber(message);
+                    await queued.aimingMessenger.send(queued.message);
                 }
-            }
-            case "string": {
-                return await messenger.sendString(message);
-            }
-            case "boolean": {
-                return await messenger.sendBoolean(message);
-            }
-            case "object": {
-                if(
-                    Array.isArray(message)
-                    && message.every(element => typeof element === "number")
-                    && message.every(isUint8)
-                    && message.length > 0
-                ) {
-                    return await messenger.sendBytes(message);
+            } catch {
+                if(queued.retried) {
+                    api.logger.error("Failed to send", queued.message, "after retry, giving up");
+                    queued.resolvers.reject();
+                    this.#queue.shift();
                 } else {
-                    return await messenger.sendObject(message);
+                    api.logger.error("Failed to send", queued.message, "retrying...");
+                    queued.retried = true;
+
+                    // Wait a sec for gimkit to switch modes
+                    await new Promise((res) => setTimeout(res, 500));
                 }
+
+                continue;
             }
+
+            queued.resolvers.resolve();
+            this.#queue.shift();
         }
     }
 

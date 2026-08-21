@@ -15,6 +15,8 @@
     let input: HTMLInputElement;
 
     async function scroll(force: boolean) {
+        if(!wrap) return;
+
         const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
         await tick();
 

@@ -8,7 +8,8 @@ export type Message =
 export type Character = Gimloader.Schema.ObjectSchema<Gimloader.Schema.CharacterState>;
 
 export type OnMessageCallback<T extends Message = Message> = (message: T, player: Character) => void;
-export type OnStreamCallback<T> = (chunks: AsyncGenerator<T>, player: Character) => void;
+export type StreamSubscription<T> = (data: T, done: boolean) => void;
+export type OnStreamCallback<T> = (subscribe: (callback: StreamSubscription<T>) => void, player: Character) => void;
 export type StringStreamCallback = OnStreamCallback<string>;
 export type ByteStreamCallback = OnStreamCallback<number[]>;
 
@@ -18,7 +19,7 @@ export interface Callbacks {
     byteStream: ByteStreamCallback[];
 }
 
-export interface StateUpdate {
-    done: boolean;
-    data: any;
+export interface AddedDevices {
+    devices: any[];
+    values: any[];
 }

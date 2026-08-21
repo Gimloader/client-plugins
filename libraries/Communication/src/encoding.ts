@@ -1,10 +1,7 @@
+import { stickerIdentifierLength } from "./consts";
+
 export const isUint8 = (n: number) => Number.isInteger(n) && n >= 0 && n <= 255;
 export const isUint24 = (n: number) => Number.isInteger(n) && n >= 0 && n <= 0xFFFFFF;
-export const splitUint16 = (int: number) => [
-    (int >> 8) & 0xFF,
-    int & 0xFF
-];
-export const joinUint16 = (int1: number, int2: number) => (int1 << 8) | int2;
 export const splitUint24 = (int: number) => [
     (int >> 16) & 0xFF,
     (int >> 8) & 0xFF,
@@ -31,7 +28,42 @@ export function floatToBytes(float: number) {
     return Array.from(byteView);
 }
 
-export function getIdentifier(str: string) {
+// dozens -> number -> bytes -> float
+export function dozensToFloat(dozens: number[]) {
+    let number = 0n;
+    for(const dozen of dozens) {
+        number *= 12n;
+        number += BigInt(dozen);
+    }
+
+    const bytes: number[] = new Array(8).fill(0);
+    for(let i = bytes.length - 1; i >= 0; i--) {
+        bytes[i] = Number(number & 0xFFn);
+        number >>= 8n;
+    }
+
+    return bytesToFloat(bytes);
+}
+
+export function floatToDozens(float: number) {
+    const bytes = floatToBytes(float);
+    let number = 0n;
+
+    for(const byte of bytes) {
+        number <<= 8n;
+        number |= BigInt(byte);
+    }
+
+    const dozens: number[] = new Array(18).fill(0);
+    for(let i = dozens.length - 1; i >= 0; i--) {
+        dozens[i] = Number(number % 12n);
+        number /= 12n;
+    }
+
+    return dozens;
+}
+
+export function getIdentifier(str: string): number {
     let hash = 0;
 
     for(let i = 0; i < str.length; i++) {
@@ -39,14 +71,73 @@ export function getIdentifier(str: string) {
         hash = hash * 31 + charCode | 0;
     }
 
-    const uInt32Hash = hash >>> 0;
+    return hash >>> 0;
+}
 
+export function identifierToBytes(identifier: number): number[] {
     return [
-        uInt32Hash >>> 24 & 255,
-        uInt32Hash >>> 16 & 255,
-        uInt32Hash >>> 8 & 255,
-        uInt32Hash & 255
+        identifier >>> 24 & 255,
+        identifier >>> 16 & 255,
+        identifier >>> 8 & 255,
+        identifier & 255
     ];
+}
+
+export function identifierToDozens(identifier: number): number[] {
+    return numberToDozens(identifier, stickerIdentifierLength);
+}
+
+export function joinUint32(bytes: number[]) {
+    return (
+        bytes[0] << 24
+        | bytes[1] << 16
+        | bytes[2] << 8
+        | bytes[3]
+    );
+}
+
+export function numberToBytes(number: number, size: number) {
+    const dozens = new Array(size).fill(0);
+
+    for(let i = size - 1; i >= 0; i--) {
+        dozens[i] = number & 0xFF;
+        number >>= 8;
+    }
+
+    return dozens;
+}
+
+export function bytesToNumber(bytes: number[]) {
+    let result = 0;
+
+    for(let i = 0; i < bytes.length; i++) {
+        result <<= 8;
+        result |= bytes[i];
+    }
+
+    return result;
+}
+
+export function numberToDozens(number: number, size: number) {
+    const dozens = new Array(size).fill(0);
+
+    for(let i = size - 1; i >= 0; i--) {
+        dozens[i] = number % 12;
+        number = Math.floor(number / 12);
+    }
+
+    return dozens;
+}
+
+export function dozensToNumber(dozens: number[]) {
+    let result = 0;
+
+    for(let i = 0; i < dozens.length; i++) {
+        result *= 12;
+        result += dozens[i];
+    }
+
+    return result;
 }
 
 export function encodeCharacters(characters: string) {
@@ -56,7 +147,7 @@ export function encodeCharacters(characters: string) {
         .filter((c) => c < 256 && c > 0);
 }
 
-export function encodeBytes(bytes: number[]): number[] {
+export function bytesToDozens(bytes: number[]): number[] {
     const output: number[] = [];
     let accum = 0;
     let bitLength = 0;
@@ -89,12 +180,19 @@ export function encodeBytes(bytes: number[]): number[] {
     return output;
 }
 
-export function decodeBytes(encoded: number[]): number[] {
-    const output: number[] = [];
-    let accum = 0;
-    let bitLength = 0;
+export type DozensDecodeState = [number, number];
 
-    for(const number of encoded) {
+interface DozensDecodeResult {
+    result: number[];
+    state: DozensDecodeState;
+}
+
+export function dozensToBytes(dozens: number[], state?: DozensDecodeState): DozensDecodeResult {
+    const output: number[] = [];
+    let accum = state?.[0] ?? 0;
+    let bitLength = state?.[1] ?? 0;
+
+    for(const number of dozens) {
         if(number < 8) {
             accum |= number << (bitLength + 1);
             bitLength += 4;
@@ -111,5 +209,5 @@ export function decodeBytes(encoded: number[]): number[] {
         }
     }
 
-    return output;
+    return { result: output, state: [accum, bitLength] };
 }

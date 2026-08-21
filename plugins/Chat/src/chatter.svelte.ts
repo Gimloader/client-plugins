@@ -89,15 +89,11 @@ export default class Chatter {
             editFn(null);
         });
 
-        if(Comms.enabled) {
-            this.comms.send(Op.Greet);
-        }
-
         settings.listen("showSkins", (value) => this.showSkins = value);
 
         const joinedPlayers = new Set<string>();
 
-        this.comms.onStringStream(async (chunks, char) => {
+        this.comms.onStringStream((subscribe, char) => {
             if(!settings.streamMessages) return;
 
             // Mark the player as not typing
@@ -112,17 +108,15 @@ export default class Chatter {
             });
             const message = this.messages[this.messages.length - 1];
 
-            // dprint-ignore-start
-            for await (const chunk of chunks) {
-            // dprint-ignore-end
+            subscribe((chunk, done) => {
                 this.scroll(false);
                 message.text += chunk;
-            }
 
-            // Format the message after it has been fully received
-            if(!format) return;
-            message.text = format({ inputText: message.text });
-            message.formatted = true;
+                // Format the message after it has been fully received
+                if(!done || !format) return;
+                message.text = format({ inputText: message.text });
+                message.formatted = true;
+            });
         });
 
         this.comms.onMessage((message, char) => {
@@ -138,7 +132,7 @@ export default class Chatter {
             } else {
                 switch (message) {
                     case Op.Join:
-                        if(joinedPlayers.has(char.id)) return;
+                        if(joinedPlayers.has(char.id)) break;
                         this.addMessage(`${char.name} connected to the chat`, false, char.appearance.skin);
                         joinedPlayers.add(char.id);
                         break;
@@ -170,11 +164,11 @@ export default class Chatter {
             })
         );
 
-        this.comms.onEnabledChanged((enabled) => {
+        this.comms.onEnabledChanged((enabled, afterReady) => {
             this.enabled = enabled;
             if(enabled) {
                 this.addMessage("The chat is active!", false);
-                this.comms.send(Op.Join);
+                this.comms.send(afterReady ? Op.Greet : Op.Join);
             } else {
                 this.addMessage("The chat is no longer active", false);
                 this.playersTyping = [];

@@ -1,64 +1,45 @@
-import type { Callbacks, Character, OnStreamCallback, StateUpdate } from "./types";
+import type { Callbacks, Character, Message, OnStreamCallback, StreamSubscription } from "./types";
 
 export default class Streamer {
-    static readonly callbacks = new Map<string, Callbacks>();
-    static updatePromises = new Map<Character, Promise<StateUpdate>>();
-    static updateResolvers = new Map<Character, (data: StateUpdate) => void>();
+    static callbacks = new Map<number, Callbacks>();
+    static updateCallbacks = new Map<Character, StreamSubscription<any>[]>();
 
-    static async *restOfBytes(char: Character) {
-        while(true) {
-            const update = await this.nextBytes(char);
-            yield update.data;
-            if(update.done) break;
+    static startStream(
+        callbacks: OnStreamCallback<any>[],
+        char: Character,
+        initial: number[],
+        done: boolean,
+        map?: (...bytes: number[]) => any
+    ) {
+        const subscriptions: StreamSubscription<any>[] = [];
+        this.updateCallbacks.set(char, subscriptions);
+
+        for(const callback of callbacks) {
+            callback((sub) => {
+                subscriptions.push((data, done) => {
+                    sub(map ? map(...data) : data, done);
+                });
+            }, char);
         }
+
+        this.onStreamData(char, initial, done);
     }
 
-    static async getMessageBytes(char: Character, initial: number[]) {
-        const array = [...initial];
+    static onStreamData(char: Character, data: any, done: boolean) {
+        const subscriptions = this.updateCallbacks.get(char);
+        if(!subscriptions) return;
 
-        // dprint-ignore
-        for await (const chunk of this.restOfBytes(char)) {
-            array.push(...chunk);
-        }
-
-        return array;
+        for(const sub of subscriptions) sub(data, done);
+        if(done) this.updateCallbacks.delete(char);
     }
 
-    static nextBytes(char: Character) {
-        const existing = this.updatePromises.get(char);
-        if(existing) return existing;
+    static onMessage(identifier: number, value: Message, char: Character) {
+        const callbacks = Streamer.callbacks.get(identifier);
+        if(!callbacks) return;
 
-        const { promise, resolve } = Promise.withResolvers<StateUpdate>();
-        this.updatePromises.set(char, promise);
-        this.updateResolvers.set(char, resolve);
-
-        return promise;
-    }
-
-    static startCompletedStream<T>(callbacks: OnStreamCallback<T>[], char: Character, initial: T) {
-        const generator = async function*() {
-            yield initial;
-        };
-
-        for(const cb of callbacks) {
-            cb(generator(), char);
-        }
-    }
-
-    static startStream<T>(callbacks: OnStreamCallback<T>[], char: Character, initial: number[], map?: (...bytes: number[]) => T) {
-        const generator = async function*() {
-            yield map ? map(...initial) : initial;
-
-            // dprint-ignore-start
-            for await (const chunk of Streamer.restOfBytes(char)) {
-          // dprint-ignore-start
-              yield map ? map(...chunk) : chunk;
-          }
-        };
-
-        for(const cb of callbacks) {
-            cb(generator(), char);
-        }
+        callbacks.message.forEach((cb) => {
+            cb(value, char);
+        });
     }
 
     readonly callbacks: Callbacks = {
@@ -67,11 +48,11 @@ export default class Streamer {
         stringStream: []
     };
 
-    constructor(private readonly identifierString: string) {
-        Streamer.callbacks.set(identifierString, this.callbacks);
+    constructor(private readonly identifier: number) {
+        Streamer.callbacks.set(identifier, this.callbacks);
     }
 
     destroy() {
-        Streamer.callbacks.delete(this.identifierString);
+        Streamer.callbacks.delete(this.identifier);
     }
 }
