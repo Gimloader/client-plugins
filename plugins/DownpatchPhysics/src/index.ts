@@ -1,5 +1,5 @@
 // biome-ignore-all lint: This file includes minified code
-import RAPIER from "@dimforge/rapier2d-compat-old";
+import type * as RapierType from "@dimforge/rapier2d-compat";
 import { ce, defaultAirMovement, gi, hc, lo, originalAirMovement, PI, q5, se, we, Y5 } from "./consts";
 
 const settings = api.settings.create([
@@ -21,14 +21,12 @@ settings.listen("version", (version) => {
     else we.movement.air = defaultAirMovement;
 }, true);
 
-const rapier = api.rewriter.createShared("rapier", RAPIER);
+let RAPIER: typeof RapierType;
 
-api.rewriter.addParseHook("App", (code) => {
-    const index = code.indexOf("Object.freeze({__proto__:null,version:");
-    if(index === -1) return code;
-
-    const end = code.indexOf(";", index);
-    return code.slice(0, index) + rapier + code.slice(end);
+api.rewriter.exposeVar("App", {
+    check: "get RigidBodyType()",
+    find: /(\w{1,3})=Object\.freeze\({__proto__:null,version/,
+    callback: (rapier) => RAPIER = rapier
 });
 
 api.net.onLoad(() => {
@@ -277,7 +275,6 @@ api.net.onLoad(() => {
         let o = new Set(),
             s = Lr(t.id),
             { bodies: r } = Ve();
-        // @ts-expect-error mismatched rapier versions
         Ve().world.intersectionsWithShape(e.rigidBody.translation(), 0, new RAPIER.Capsule(s.height, s.radius), (B: any) => {
             var l;
             let E = B.parent().userData,

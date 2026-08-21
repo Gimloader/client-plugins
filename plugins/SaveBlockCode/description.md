@@ -1,0 +1,1 @@
+SaveBlockCode adds the "Save current block", "Load block from file", "Copy current block", and "Paste to current block" commands to the command palette. These commands allow you to copy/downloads blocks to be moved between maps or devices.
