@@ -499,8 +499,8 @@ export default class StickerMessenger {
             const queued = this.stickerQueue[0];
             if(!queued) return;
 
-            const sendStickers = Math.min(queued.stickerCodes.length, stickerRoom);
-            for(const stickerCode of queued.stickerCodes.slice(0, sendStickers)) {
+            const stickerAmount = Math.min(queued.stickerCodes.length, stickerRoom);
+            for(const stickerCode of queued.stickerCodes.slice(0, stickerAmount)) {
                 const stickerData = codeToSticker(stickerCode);
                 api.net.send("PLACE_STICKER", {
                     stickerId: this.ownedSticker,
@@ -508,17 +508,21 @@ export default class StickerMessenger {
                 });
             }
 
-            this.stickersSentAfterLastWait += sendStickers;
+            this.stickersSentAfterLastWait += stickerAmount;
+
+            const resolvers = Promise.withResolvers<void>();
             this.pendingStickers.push({
-                amount: sendStickers,
-                resolvers: Promise.withResolvers<void>()
+                amount: stickerAmount,
+                resolvers
             });
 
-            if(sendStickers === queued.stickerCodes.length) {
-                queued.resolvers.resolve();
+            if(stickerAmount === queued.stickerCodes.length) {
                 this.stickerQueue.shift();
+                resolvers.promise.then(() => {
+                    queued.resolvers.resolve();
+                });
             } else {
-                queued.stickerCodes.splice(0, sendStickers);
+                queued.stickerCodes.splice(0, stickerAmount);
             }
         }
     }
