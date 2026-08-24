@@ -49,18 +49,18 @@ export default class PlantDrops extends BaseLine {
                 dropped = true;
                 this.drops++;
                 this.updateDrops();
-                api.net.off("WORLD_CHANGES", addDrop);
+                api.net.colyseus.off("WORLD_CHANGES", addDrop);
             };
 
             setTimeout(() => {
-                api.net.off("WORLD_CHANGES", addDrop);
+                api.net.colyseus.off("WORLD_CHANGES", addDrop);
                 if(!dropped) this.updateDrops();
             }, 100);
 
             this.net.on("WORLD_CHANGES", addDrop);
         });
 
-        api.net.state.session.listen("phase", () => {
+        api.net.colyseus.state.session.listen("phase", () => {
             this.knockouts = 0;
             this.drops = 0;
             this.updateDrops();

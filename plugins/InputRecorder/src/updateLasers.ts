@@ -1,6 +1,6 @@
 let lasers: Gimloader.Stores.Device[] = [];
 
-api.net.on("DEVICES_STATES_CHANGES", (packet) => {
+api.net.colyseus.on("DEVICES_STATES_CHANGES", (packet) => {
     for(let i = 0; i < packet.changes.length; i++) {
         const device = packet.changes[i];
         if(lasers.some(l => l.id === device[0])) {

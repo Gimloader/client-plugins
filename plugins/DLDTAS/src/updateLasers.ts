@@ -3,7 +3,7 @@ import type { ISharedValues } from "../types";
 let lasers: Gimloader.Stores.Device[] = [];
 let laserOffset: number = api.storage.getValue("laserOffset", 0);
 
-api.net.on("DEVICES_STATES_CHANGES", (packet) => {
+api.net.colyseus.on("DEVICES_STATES_CHANGES", (packet) => {
     for(let i = 0; i < packet.changes.length; i++) {
         const device = packet.changes[i];
         if(lasers.some(l => l.id === device[0])) {

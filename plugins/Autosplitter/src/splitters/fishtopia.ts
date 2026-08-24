@@ -32,7 +32,7 @@ export default class FishtopiaAutosplitter extends SplitsAutosplitter {
             }
         });
 
-        api.net.on("send:MESSAGE_FOR_DEVICE", (e) => {
+        api.net.colyseus.on("send:MESSAGE_FOR_DEVICE", (e) => {
             const id = e.deviceId;
             if(!id) return;
             const device = api.stores.phaser.scene.worldManager.devices.getDeviceById(id);

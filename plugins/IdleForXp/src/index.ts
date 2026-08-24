@@ -29,7 +29,7 @@ function answerQuestion() {
     api.net.send("MESSAGE_FOR_DEVICE", packet);
 }
 
-api.net.on("DEVICES_STATES_CHANGES", (event) => {
+api.net.colyseus.on("DEVICES_STATES_CHANGES", (event) => {
     for(const change of event.changes) {
         const id = change[0];
         for(let i = 0; i < change[1].length; i++) {

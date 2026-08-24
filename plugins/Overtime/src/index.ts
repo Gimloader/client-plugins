@@ -145,7 +145,7 @@ api.net.onLoad(async () => {
         })
     );
 
-    api.net.on("KNOCKOUT", () => {
+    api.net.colyseus.on("KNOCKOUT", () => {
         if(!settings.suddenDeath) return;
         overtime?.suddenDeath();
     });

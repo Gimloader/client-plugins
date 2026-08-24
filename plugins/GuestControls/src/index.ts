@@ -102,22 +102,22 @@ api.net.onLoad(() => {
             comms.destroy();
         });
 
-        api.net.on("send:END_GAME", (_, editFn) => {
+        api.net.colyseus.on("send:END_GAME", (_, editFn) => {
             comms.send(Op.EndGame);
             editFn(null);
         });
 
-        api.net.on("send:RESTORE_MAP_EARLIER", (_, editFn) => {
+        api.net.colyseus.on("send:RESTORE_MAP_EARLIER", (_, editFn) => {
             comms.send(Op.ResetToLobby);
             editFn(null);
         });
 
-        api.net.on("send:ADD_GAME_TIME", (_, editFn) => {
+        api.net.colyseus.on("send:ADD_GAME_TIME", (_, editFn) => {
             comms.send(Op.AddGameTime);
             editFn(null);
         });
 
-        api.net.on("send:KICK_PLAYER", ({ characterId }, editFn) => {
+        api.net.colyseus.on("send:KICK_PLAYER", ({ characterId }, editFn) => {
             const index = characters().findIndex(char => char.id === characterId) + 10;
             comms.send(index);
             editFn(null);

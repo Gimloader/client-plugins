@@ -1,7 +1,7 @@
 let startMessage: any = null;
 let ignoreNextStart = false;
 
-api.net.on("send:START_GAME", (message) => {
+api.net.colyseus.on("send:START_GAME", (message) => {
     if(ignoreNextStart) return;
     startMessage = message;
 });

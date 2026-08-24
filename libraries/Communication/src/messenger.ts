@@ -12,7 +12,7 @@ export default class Messenger {
     private static ignoreNextAngle = false;
 
     static init() {
-        api.net.on("send:AIMING", (message, editFn) => {
+        api.net.colyseus.on("send:AIMING", (message, editFn) => {
             if(this.ignoreNextAngle) {
                 this.ignoreNextAngle = false;
                 return;
