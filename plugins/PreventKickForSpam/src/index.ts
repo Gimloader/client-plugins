@@ -2,7 +2,7 @@ api.net.onLoad(() => {
     let firstAnswerTime = 0;
     let lastAnswerTime = 0;
 
-    api.net.on("send:QUESTION_ANSWERED", (_, editFn) => {
+    api.net.blueboat.on("send:QUESTION_ANSWERED", (_, editFn) => {
         const now = Date.now();
         firstAnswerTime ||= now;
 

@@ -12,7 +12,7 @@ function codeToSticker(code: number) {
 
 function awaitBackToLobby() {
     return new Promise<void>((res) => {
-        const unsub = api.net.state.session.listen("loadingPhase", (loading) => {
+        const unsub = api.net.colyseus.state.session.listen("loadingPhase", (loading) => {
             if(loading) return;
             unsub();
             res();
@@ -67,7 +67,7 @@ export default class StickerMessenger {
         this.ownedStickerPromise.then((sticker) => this.ownedSticker = sticker);
 
         api.onStop(
-            api.net.state.characters.onAdd((char) => {
+            api.net.colyseus.state.characters.onAdd((char) => {
                 if(char.id === api.stores.network.authId) return;
 
                 const history: number[] = [];
@@ -82,7 +82,7 @@ export default class StickerMessenger {
             })
         );
 
-        api.net.on("WORLD_CHANGES", (data) => {
+        api.net.colyseus.on("WORLD_CHANGES", (data) => {
             this.handleAddedDevices(data.devices.addedDevices);
         });
     }
@@ -148,7 +148,7 @@ export default class StickerMessenger {
     }
 
     static appendCharacterBuffer(characterId: string, newBuffer: number[]) {
-        const char = api.net.state.characters.get(characterId);
+        const char = api.net.colyseus.state.characters.get(characterId);
         if(!char) return;
 
         if(newBuffer.length === 1) {
@@ -322,7 +322,7 @@ export default class StickerMessenger {
     }
 
     static getPlacement(characterId: string, stickerY: number) {
-        const char = api.net.state.characters.get(characterId);
+        const char = api.net.colyseus.state.characters.get(characterId);
         if(!char) throw new Error(`Could not find player ${characterId}`);
 
         const history = this.characterYHistory.get(char);
@@ -492,7 +492,7 @@ export default class StickerMessenger {
                 stickerRoom = maxStickersBeforeWait;
             }
 
-            if(api.net.state.session.loadingPhase) {
+            if(api.net.colyseus.state.session.loadingPhase) {
                 await awaitBackToLobby();
             }
 
@@ -502,8 +502,8 @@ export default class StickerMessenger {
             const stickerAmount = Math.min(queued.stickerCodes.length, stickerRoom);
             for(const stickerCode of queued.stickerCodes.slice(0, stickerAmount)) {
                 const stickerData = codeToSticker(stickerCode);
-                api.net.send("PLACE_STICKER", {
-                    stickerId: this.ownedSticker,
+                api.net.colyseus.send("PLACE_STICKER", {
+                    stickerId: this.ownedSticker!,
                     ...stickerData
                 });
             }

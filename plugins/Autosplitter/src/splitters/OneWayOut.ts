@@ -14,7 +14,7 @@ export default class OneWayOutAutosplitter extends SplitsAutosplitter {
 
         const gameSession = api.net.state.session.gameSession;
 
-        api.net.on("DEVICES_STATES_CHANGES", (msg) => {
+        api.net.colyseus.on("DEVICES_STATES_CHANGES", (msg) => {
             for(const change of msg.changes) {
                 if(msg.values[change[1][0]] === "GLOBAL_healthPercent") {
                     const device = api.stores.phaser.scene.worldManager.devices.getDeviceById(change[0]);
@@ -34,7 +34,7 @@ export default class OneWayOutAutosplitter extends SplitsAutosplitter {
             }
         });
 
-        api.net.on("send:MESSAGE_FOR_DEVICE", (e) => {
+        api.net.colyseus.on("send:MESSAGE_FOR_DEVICE", (e) => {
             const id = e?.deviceId;
             if(!id) return;
             const device = api.stores.phaser.scene.worldManager.devices.getDeviceById(id);

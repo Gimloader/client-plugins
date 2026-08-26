@@ -3,7 +3,7 @@ import type { Vector } from "@dimforge/rapier2d-compat";
 api.net.onLoad(() => {
     const placedTiles = new Set<string>();
 
-    api.net.on("send:CONSUME", (data: Vector | {}, editFn) => {
+    api.net.colyseus.on("send:CONSUME", (data: Vector | {}, editFn) => {
         if(!("x" in data)) return;
 
         const tileString = `${data.x}_${data.y}`;
@@ -14,7 +14,7 @@ api.net.onLoad(() => {
         }
     });
 
-    api.net.on("TERRAIN_CHANGES", (data) => {
+    api.net.colyseus.on("TERRAIN_CHANGES", (data) => {
         if(data.initial) return;
 
         setTimeout(() => {

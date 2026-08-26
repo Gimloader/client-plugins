@@ -86,8 +86,8 @@ export default class AutoKicker {
                 this.scanPlayersColyseus();
             }));
         } else {
-            api.net.on("UPDATED_PLAYER_LEADERBOARD", this.boundBlueboatMsg);
-            api.onStop(() => api.net.off("UPDATED_PLAYER_LEADERBOARD", this.boundBlueboatMsg));
+            api.net.blueboat.on("UPDATED_PLAYER_LEADERBOARD", this.boundBlueboatMsg);
+            api.onStop(() => api.net.blueboat.off("UPDATED_PLAYER_LEADERBOARD", this.boundBlueboatMsg));
         }
     }
 

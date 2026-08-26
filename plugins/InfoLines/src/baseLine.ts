@@ -15,11 +15,12 @@ export default abstract class BaseLine {
     protected enabled = false;
 
     protected net = {
-        on: (...args: Parameters<Gimloader.NetApi["on"]>) => {
+        on: (...args: Parameters<Gimloader.ColyseusApi["on"]>) => {
             this.onStop(() => {
-                api.net.off(args[0], args[1]);
+                api.net.colyseus.off(args[0], args[1]);
             });
-            return api.net.on(...args);
+
+            return api.net.colyseus.on(...args);
         }
     };
 

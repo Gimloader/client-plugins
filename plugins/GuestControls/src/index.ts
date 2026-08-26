@@ -74,9 +74,9 @@ api.net.onLoad(() => {
                     }
                 }
 
-                api.net.send("START_GAME", {
+                api.net.colyseus.send("START_GAME", {
                     customTeams,
-                    modeType: api.stores.me.preferences.startGameWithMode,
+                    modeType: api.stores.me.preferences.startGameWithMode as Gimloader.Stores.SessionModeType,
                     ownerAsSpectator: api.stores.session.ownerRole === "spectator"
                 });
 
@@ -88,18 +88,18 @@ api.net.onLoad(() => {
                     if(Comms.enabled) comms.send(Op.PluginOn);
                     break;
                 case Op.EndGame:
-                    api.net.send("END_GAME");
+                    api.net.colyseus.send("END_GAME");
                     break;
                 case Op.ResetToLobby:
-                    api.net.send("RESTORE_MAP_EARLIER");
+                    api.net.colyseus.send("RESTORE_MAP_EARLIER");
                     break;
                 case Op.AddGameTime:
-                    api.net.send("ADD_GAME_TIME");
+                    api.net.colyseus.send("ADD_GAME_TIME");
                     break;
                 default: {
                     const character = characters()[message - 10];
                     if(!character) return;
-                    api.net.send("KICK_PLAYER", {
+                    api.net.colyseus.send("KICK_PLAYER", {
                         characterId: character.id
                     });
                 }
@@ -123,7 +123,7 @@ api.net.onLoad(() => {
             comms.destroy();
         });
 
-        api.net.on("send:START_GAME", (data, editFn) => {
+        api.net.colyseus.on("send:START_GAME", (data, editFn) => {
             const teams: number[] = [];
             for(const [playerId, team] of Object.entries<string>(data.customTeams)) {
                 const index = characters().findIndex((char) => char.id === playerId);
@@ -134,22 +134,22 @@ api.net.onLoad(() => {
             editFn(null);
         });
 
-        api.net.on("send:END_GAME", (_, editFn) => {
+        api.net.colyseus.on("send:END_GAME", (_, editFn) => {
             comms.send(Op.EndGame);
             editFn(null);
         });
 
-        api.net.on("send:RESTORE_MAP_EARLIER", (_, editFn) => {
+        api.net.colyseus.on("send:RESTORE_MAP_EARLIER", (_, editFn) => {
             comms.send(Op.ResetToLobby);
             editFn(null);
         });
 
-        api.net.on("send:ADD_GAME_TIME", (_, editFn) => {
+        api.net.colyseus.on("send:ADD_GAME_TIME", (_, editFn) => {
             comms.send(Op.AddGameTime);
             editFn(null);
         });
 
-        api.net.on("send:KICK_PLAYER", ({ characterId }, editFn) => {
+        api.net.colyseus.on("send:KICK_PLAYER", ({ characterId }, editFn) => {
             const index = characters().findIndex(char => char.id === characterId) + 10;
             comms.send(index);
             editFn(null);

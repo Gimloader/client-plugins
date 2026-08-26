@@ -84,7 +84,7 @@ export default class Chatter {
 
     constructor(private readonly scroll: (force: boolean) => void) {
         // redirect the activity feed to the chat
-        api.net.on("ACTIVITY_FEED_MESSAGE", (message, editFn) => {
+        api.net.colyseus.on("ACTIVITY_FEED_MESSAGE", (message, editFn) => {
             this.addMessage(`> ${message.message}`, true);
             editFn(null);
         });
