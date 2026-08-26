@@ -56,7 +56,7 @@ export default class AutoKicker {
 
     start() {
         if(api.net.type === "Colyseus") {
-            const chars = api.net.state.characters;
+            const chars = api.net.colyseus.state.characters;
 
             api.onStop(chars.onAdd((e) => {
                 if(!e || e.id === this.myId) return;
@@ -185,7 +185,7 @@ export default class AutoKicker {
     }
 
     scanPlayersColyseus() {
-        const characters = api.net.state.characters;
+        const characters = api.net.colyseus.state.characters;
         const nameCount = new Map<string, number>();
 
         // tally name counts
@@ -261,9 +261,9 @@ export default class AutoKicker {
         if(this.kicked.has(id)) return;
         this.kicked.add(id);
 
-        const char = api.net.state.characters.get(id)!;
+        const char = api.net.colyseus.state.characters.get(id)!;
 
-        api.net.send("KICK_PLAYER", { characterId: id });
+        api.net.colyseus.send("KICK_PLAYER", { characterId: id });
         if(settings.notify) api.UI.notification.open({ message: `Kicked ${char.name} for ${reason}` });
     }
 
@@ -273,7 +273,7 @@ export default class AutoKicker {
 
         const playername = this.lastLeaderboard?.find((e) => e.id === id)?.name;
 
-        api.net.send("KICK_PLAYER", id);
+        api.net.blueboat.send("KICK_PLAYER", id);
         if(settings.notify) api.UI.notification.open({ message: `Kicked ${playername ?? "player"} for ${reason}` });
     }
 }

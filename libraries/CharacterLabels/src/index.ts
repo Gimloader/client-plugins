@@ -78,7 +78,7 @@ function patchCharacter(character: Gimloader.Stores.Character) {
     const unpatchUpdate = api.patcher.after(character.nametag, "update", () => {
         if(!character.nametag.tag) return;
         const { x, y, depth } = character.nametag.tag;
-        const stateChar = api.net.state.characters.get(character.id);
+        const stateChar = api.net.colyseus.state.characters.get(character.id);
 
         let offset = 22;
         if(character.nametag.fragilityTag) offset += 15;

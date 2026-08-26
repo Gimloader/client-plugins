@@ -28,7 +28,7 @@ api.net.onLoad(() => {
     let firstPhase = true;
 
     // allow us to be moved when the game starts/stops
-    api.onStop(api.net.state.session.listen("phase", () => {
+    api.onStop(api.net.colyseus.state.session.listen("phase", () => {
         if(firstPhase) {
             firstPhase = false;
             return;
