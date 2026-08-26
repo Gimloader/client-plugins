@@ -92,7 +92,7 @@ export default class AutoKicker {
     }
 
     boundBlueboatMsg = this.onBlueboatMsg.bind(this);
-    onBlueboatMsg(e: any) {
+    onBlueboatMsg(e: Gimloader.ReceivedMessages1d["UPDATED_PLAYER_LEADERBOARD"]) {
         this.lastLeaderboard = e.items;
 
         this.scanPlayersBlueboat();
