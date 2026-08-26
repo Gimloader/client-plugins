@@ -483,8 +483,8 @@ export default class StickerMessenger {
         while(this.stickerQueue.length > 0) {
             let stickerRoom = maxStickersBeforeWait - this.stickersSentAfterLastWait;
             if(stickerRoom <= 0) {
-                // This additional wait is needed to prevent stickers from being dropped
                 await this.pendingStickers.at(-1)?.resolvers.promise;
+                // This additional wait is needed to prevent stickers from being dropped
                 await new Promise<void>((res) => setTimeout(res, stickerWait));
 
                 this.lastStickerWait = Date.now();
