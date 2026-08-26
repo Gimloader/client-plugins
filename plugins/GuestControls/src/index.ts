@@ -76,7 +76,8 @@ api.net.onLoad(() => {
 
                 api.net.colyseus.send("START_GAME", {
                     customTeams,
-                    modeType: api.stores.me.preferences.startGameWithMode as Gimloader.Stores.SessionModeType,
+                    // @ts-expect-error Incorrect type
+                    modeType: api.stores.me.preferences.startGameWithMode,
                     ownerAsSpectator: api.stores.session.ownerRole === "spectator"
                 });
 
