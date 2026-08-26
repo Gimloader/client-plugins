@@ -5,7 +5,7 @@ import { getIdentifier, isUint24, isUint8 } from "./encoding";
 function listenToCharacter(character: Gimloader.Stores.Character) {
     if(character.id === api.stores.network.authId) return;
     api.patcher.before(character.aimingAndLookingAround, "setTargetAngle", (_, [angle]) => {
-        const netChar = api.net.state.characters.get(character.id)!;
+        const netChar = api.net.colyseus.state.characters.get(character.id)!;
         const bytes = Messenger.getBytes(netChar, angle);
         if(!bytes) return;
 
@@ -27,7 +27,7 @@ api.net.onLoad(() => {
         listenToCharacter(character);
     }
 
-    api.net.state.characters.get(api.stores.network.authId)!.projectiles.listen("aimAngle", (angle) => {
+    api.net.colyseus.state.characters.get(api.stores.network.authId)!.projectiles.listen("aimAngle", (angle) => {
         if(!angle || angle !== Messenger.pendingAngle) return;
         Messenger.angleChangeRes?.();
     }, false);
@@ -56,11 +56,11 @@ export default class Communication<T extends Message = Message> {
     }
 
     static get enabled() {
-        return api.net.state?.session.phase === "game";
+        return api.net.colyseus?.state.session.phase === "game";
     }
 
     onEnabledChanged(callback: (enabled: boolean) => void) {
-        const unsub = api.net.state.session.listen("phase", (phase) => {
+        const unsub = api.net.colyseus.state.session.listen("phase", (phase) => {
             callback(phase === "game");
         }, false);
 
@@ -74,7 +74,7 @@ export default class Communication<T extends Message = Message> {
         }
 
         // Don't send messages if nobody else is in the server
-        const players = [...api.net.state.characters.values()].filter(char => char.type === "player");
+        const players = [...api.net.colyseus.state.characters.values()].filter(char => char.type === "player");
         if(players.length <= 1) return;
 
         switch (typeof message) {

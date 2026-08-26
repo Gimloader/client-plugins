@@ -51,7 +51,7 @@ async function setBlockJson(json: string) {
     if(!deviceId || !gridId) return error("Could not detect a currently edited block");
 
     try {
-        const unsub = api.net.state.world.devices.codeGrids.get(deviceId)?.items.get(gridId)?.listen("json", () => {
+        const unsub = api.net.colyseus.state.world.devices.codeGrids.get(deviceId)?.items.get(gridId)?.listen("json", () => {
             api.UI.forceReactUpdate();
             clearTimeout(updateTimeout);
             unsub();
@@ -62,12 +62,12 @@ async function setBlockJson(json: string) {
             unsub();
         }, 2000);
 
-        api.net.send("JOIN_CODE_GRID", {
+        api.net.colyseus.send("JOIN_CODE_GRID", {
             deviceId,
             gridId
         });
 
-        api.net.send("SET_CODE_GRID_JSON", {
+        api.net.colyseus.send("SET_CODE_GRID_JSON", {
             deviceId,
             gridId,
             json

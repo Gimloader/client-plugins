@@ -65,7 +65,7 @@ api.net.onLoad(async () => {
     });
 
     api.onStop(
-        api.net.state.characters.onAdd((char) => {
+        api.net.colyseus.state.characters.onAdd((char) => {
             if(char.id === myId) return;
             if(char.type === "player" && !settings.collidePlayers) return;
             if(char.type === "sentry" && !settings.collideSentries) return;
@@ -80,9 +80,9 @@ api.net.onLoad(async () => {
 
     if(!api.net.isHost) {
         const { gameOwnerId } = api.stores.session;
-        api.net.state.session.listen("phase", (phase) => {
+        api.net.colyseus.state.session.listen("phase", (phase) => {
             if(
-                api.net.state.characters.get(gameOwnerId)?.teamId === "__SPECTATORS_TEAM"
+                api.net.colyseus.state.characters.get(gameOwnerId)?.teamId === "__SPECTATORS_TEAM"
                 && phase === "game"
             ) {
                 removeCollider(gameOwnerId);

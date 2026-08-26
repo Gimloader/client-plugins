@@ -7,7 +7,7 @@ let lastCheckpointReached = 0;
 let canRespawn = false;
 
 api.net.onLoad(() => {
-    api.net.state.session.gameSession.listen("phase", (phase) => {
+    api.net.colyseus.state.session.gameSession.listen("phase", (phase) => {
         if(phase !== "results") return;
 
         canRespawn = false;
@@ -43,7 +43,7 @@ const enable = () => {
     let startImmunityActive = false;
 
     api.patcher.after(physics, "physicsStep", () => {
-        if(api.net.state.session.gameSession.phase === "results") return;
+        if(api.net.colyseus.state.session.gameSession.phase === "results") return;
         if(startImmunityActive) return;
 
         const devicesInView = api.stores.phaser.scene.worldManager.devices.devicesInView;

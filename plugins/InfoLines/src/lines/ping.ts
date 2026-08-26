@@ -30,7 +30,7 @@ export default class Ping extends BaseLine {
         });
 
         const interval = setInterval(async () => {
-            api.net.send("REQUEST_INITIAL_WORLD");
+            api.net.colyseus.send("REQUEST_INITIAL_WORLD");
             const start = Date.now();
             await new Promise<void>(res => deviceChangeRes = res);
             this.update(`ping: ${Date.now() - start} ms`);

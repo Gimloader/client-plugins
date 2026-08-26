@@ -2,7 +2,7 @@ api.net.onLoad(() => {
     const options = JSON.parse(api.stores.world.mapOptionsJSON);
     let visible = options.showHealthAndShield && options.healthMode === "healthAndShield";
 
-    api.onStop(api.net.state.listen("mapSettings", (settingsJson) => {
+    api.onStop(api.net.colyseus.state.listen("mapSettings", (settingsJson) => {
         const options = JSON.parse(settingsJson);
         visible = options.showHealthAndShield && options.healthMode === "healthAndShield";
     }, false));
@@ -15,7 +15,7 @@ api.net.onLoad(() => {
 
     const addLabel = api.lib("CharacterLabels");
     const destroy = addLabel(character => {
-        const stateChar = api.net.state.characters.get(character.id);
+        const stateChar = api.net.colyseus.state.characters.get(character.id);
         if(!stateChar) return;
 
         const bg = scene.add.rectangle(0, 0, width, 10, gray);

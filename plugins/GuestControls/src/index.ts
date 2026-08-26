@@ -63,18 +63,18 @@ api.net.onLoad(() => {
                     if(Comms.enabled) comms.send(Op.PluginOn);
                     break;
                 case Op.EndGame:
-                    api.net.send("END_GAME");
+                    api.net.colyseus.send("END_GAME");
                     break;
                 case Op.ResetToLobby:
-                    api.net.send("RESTORE_MAP_EARLIER");
+                    api.net.colyseus.send("RESTORE_MAP_EARLIER");
                     break;
                 case Op.AddGameTime:
-                    api.net.send("ADD_GAME_TIME");
+                    api.net.colyseus.send("ADD_GAME_TIME");
                     break;
                 default: {
                     const character = characters()[message - 10];
                     if(!character) return;
-                    api.net.send("KICK_PLAYER", {
+                    api.net.colyseus.send("KICK_PLAYER", {
                         characterId: character.id
                     });
                 }
@@ -83,7 +83,7 @@ api.net.onLoad(() => {
     } else {
         const { session } = api.stores;
 
-        api.net.state.session.listen("phase", (phase) => {
+        api.net.colyseus.state.session.listen("phase", (phase) => {
             if(phase !== "game") session.amIGameOwner = false;
         });
 

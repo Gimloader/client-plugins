@@ -1,19 +1,13 @@
 let questions: any[] = [];
 let answerDeviceId: string, currentQuestionId: string;
 
-interface Packet {
-    key: string;
-    deviceId: string;
-    data: any;
-}
-
 function answerQuestion() {
     if(!currentQuestionId) return;
 
     const question = questions.find(q => q._id === currentQuestionId);
     if(!question) return;
 
-    const packet: Packet = {
+    const packet: Gimloader.SentMessages2d["MESSAGE_FOR_DEVICE"] = {
         key: "answered",
         deviceId: answerDeviceId,
         data: {}
@@ -26,7 +20,7 @@ function answerQuestion() {
         packet.data.answer = correctAnswerId;
     }
 
-    api.net.send("MESSAGE_FOR_DEVICE", packet);
+    api.net.colyseus.send("MESSAGE_FOR_DEVICE", packet);
 }
 
 api.net.colyseus.on("DEVICES_STATES_CHANGES", (event) => {

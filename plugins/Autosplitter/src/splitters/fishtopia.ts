@@ -13,9 +13,9 @@ export default class FishtopiaAutosplitter extends SplitsAutosplitter {
     constructor() {
         super("Fishtopia");
 
-        const gameSession = api.net.state.session.gameSession;
+        const gameSession = api.net.colyseus.state.session.gameSession;
 
-        api.net.state.session.listen("loadingPhase", (val) => {
+        api.net.colyseus.state.session.listen("loadingPhase", (val) => {
             if(val) return;
 
             if(gameSession.phase === "game") {
@@ -52,7 +52,7 @@ export default class FishtopiaAutosplitter extends SplitsAutosplitter {
         });
 
         const id = api.stores.phaser.mainCharacter.id;
-        api.net.state.characters.get(id)!.inventory.slots.onChange((_, key) => {
+        api.net.colyseus.state.characters.get(id)!.inventory.slots.onChange((_, key) => {
             if(key === "gim-fish") {
                 this.timer.split();
                 this.timer.stop();

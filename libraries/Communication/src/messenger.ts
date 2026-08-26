@@ -25,7 +25,7 @@ export default class Messenger {
         });
 
         // Purge the queue once the game ends
-        api.net.state.session.listen("phase", (phase) => {
+        api.net.colyseus.state.session.listen("phase", (phase) => {
             if(phase === "game") return;
             this.angleQueue.forEach((pending) => pending.reject());
             this.angleQueue.length = 0;
@@ -162,7 +162,7 @@ export default class Messenger {
             const queuedAngle = this.angleQueue[0];
 
             this.ignoreNextAngle = true;
-            api.net.send("AIMING", { angle: queuedAngle.angle });
+            api.net.colyseus.send("AIMING", { angle: queuedAngle.angle });
 
             try {
                 await this.awaitAngleChange();
@@ -176,7 +176,7 @@ export default class Messenger {
 
         // Send the real angle afterwards (we don't care about this being dropped)
         if(!this.realAngle) return;
-        api.net.send("AIMING", { angle: this.realAngle });
+        api.net.colyseus.send("AIMING", { angle: this.realAngle });
     }
 
     private static async awaitAngleChange() {
