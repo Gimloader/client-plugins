@@ -510,17 +510,14 @@ export default class StickerMessenger {
 
             this.stickersSentAfterLastWait += stickerAmount;
 
-            const resolvers = Promise.withResolvers<void>();
             this.pendingStickers.push({
                 amount: stickerAmount,
-                resolvers
+                resolvers: Promise.withResolvers<void>()
             });
 
             if(stickerAmount === queued.stickerCodes.length) {
                 this.stickerQueue.shift();
-                resolvers.promise.then(() => {
-                    queued.resolvers.resolve();
-                });
+                queued.resolvers.resolve();
             } else {
                 queued.stickerCodes.splice(0, stickerAmount);
             }
