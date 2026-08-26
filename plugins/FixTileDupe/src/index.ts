@@ -1,9 +1,7 @@
-import type { Vector } from "@dimforge/rapier2d-compat";
-
 api.net.onLoad(() => {
     const placedTiles = new Set<string>();
 
-    api.net.colyseus.on("send:CONSUME", (data: Vector | {}, editFn) => {
+    api.net.colyseus.on("send:CONSUME", (data, editFn) => {
         if(!("x" in data)) return;
 
         const tileString = `${data.x}_${data.y}`;
