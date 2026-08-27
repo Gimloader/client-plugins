@@ -56,7 +56,7 @@ export default class Communication<T extends Message = Message> {
     }
 
     static get enabled() {
-        return api.net.colyseus?.state.session.phase === "game";
+        return api.net.colyseus.state?.session.phase === "game";
     }
 
     onEnabledChanged(callback: (enabled: boolean) => void) {
