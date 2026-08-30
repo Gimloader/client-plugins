@@ -34,10 +34,11 @@ export default function ThemePicker(props: {
         else setActiveTheme(customThemes[themeIndex]);
     }, [themeType, themeIndex]);
 
-    const openThemeCreator = () => {
+    const openThemeCreator = (editingIndex?: number) => {
+        const defaultTheme = editingIndex !== undefined ? customThemes[editingIndex] : undefined;
         let creatingTheme: Theme;
 
-        api.UI.showModal(<ThemeCreator onChange={(theme) => creatingTheme = theme} />, {
+        api.UI.showModal(<ThemeCreator defaultTheme={defaultTheme} onChange={(theme) => creatingTheme = theme} />, {
             id: "ThemeCreator",
             title: "Create New Theme",
             closeOnBackgroundClick: false,
@@ -49,10 +50,19 @@ export default function ThemePicker(props: {
                 text: "Save",
                 style: "primary",
                 onClick: () => {
-                    // save the new theme
-                    setThemeIndex(customThemes.length);
-                    setThemeType("custom");
-                    setCustomThemes([...customThemes, creatingTheme]);
+                    if(editingIndex !== undefined) {
+                        // edit the existing theme
+                        const newThemes = [...customThemes];
+                        newThemes[editingIndex] = creatingTheme;
+                        setCustomThemes(newThemes);
+
+                        if(customThemes[editingIndex] === activeTheme) setActiveTheme(creatingTheme);
+                    } else {
+                        // save as a new theme
+                        setThemeIndex(customThemes.length);
+                        setThemeType("custom");
+                        setCustomThemes([...customThemes, creatingTheme]);
+                    }
                 }
             }]
         });
@@ -78,7 +88,10 @@ export default function ThemePicker(props: {
                 {customThemes.map((theme, i) => (
                     <div className="customTheme">
                         <div className="delete" onClick={() => deleteTheme(i)}>
-                            🗑
+                            &#x1F5D1;
+                        </div>
+                        <div className="edit" onClick={() => openThemeCreator(i)}>
+                            &#x270E;
                         </div>
                         <div
                             className="customThemePreview"
@@ -95,7 +108,7 @@ export default function ThemePicker(props: {
                     </div>
                 ))}
 
-                <button className="addCustomTheme" onClick={openThemeCreator}>
+                <button className="addCustomTheme" onClick={() => openThemeCreator()}>
                     Create New Theme
                 </button>
             </div>

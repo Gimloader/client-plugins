@@ -1,33 +1,40 @@
 import type { Theme } from "../types";
 
-export default function ThemeCreator({ onChange }: { onChange: (theme: Theme) => void }) {
+interface ThemeCreatorProps {
+    defaultTheme?: Theme;
+    onChange: (theme: Theme) => void;
+}
+
+export default function ThemeCreator({ defaultTheme, onChange }: ThemeCreatorProps) {
     const React = api.React;
 
-    const [theme, setTheme] = React.useState<Theme>({
-        name: "New theme",
-        question: {
-            background: "#303f9f",
-            text: "#ffffff"
-        },
-        palette: [
-            {
-                background: "#771322",
+    const [theme, setTheme] = React.useState<Theme>(
+        defaultTheme ?? {
+            name: "New theme",
+            question: {
+                background: "#303f9f",
                 text: "#ffffff"
             },
-            {
-                background: "#a85c15",
-                text: "#ffffff"
-            },
-            {
-                background: "#0d6b33",
-                text: "#ffffff"
-            },
-            {
-                background: "#076296",
-                text: "#ffffff"
-            }
-        ]
-    });
+            palette: [
+                {
+                    background: "#771322",
+                    text: "#ffffff"
+                },
+                {
+                    background: "#a85c15",
+                    text: "#ffffff"
+                },
+                {
+                    background: "#0d6b33",
+                    text: "#ffffff"
+                },
+                {
+                    background: "#076296",
+                    text: "#ffffff"
+                }
+            ]
+        }
+    );
 
     React.useEffect(() => {
         onChange(theme);

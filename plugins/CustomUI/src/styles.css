@@ -40,7 +40,7 @@
     gap: 5px;
     align-items: center;
 
-    .delete {
+    .delete, .edit {
         cursor: pointer;
         font-size: 30px;
         flex-shrink: 0;
