@@ -175,7 +175,7 @@
     }
 }
 
-.flex-column.maxAll > .maxWidth > span {
+.useCustomTheme .flex-column.maxAll > .maxWidth > span {
     &:nth-child(1) > div {
         background-color: var(--answer-bg-1) !important;
         color: var(--answer-text-1) !important;

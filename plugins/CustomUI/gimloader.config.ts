@@ -4,7 +4,7 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "CustomUI",
     description: "Allows you to customize various things about the Gimkit UI",
-    version: "0.3.4",
+    version: "0.3.5",
     hasSettings: true,
-    changelog: ["Updated webpage url"]
+    changelog: ["Fixed theme displaying on 1d answer screen even when disabled"]
 });
