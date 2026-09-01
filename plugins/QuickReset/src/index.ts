@@ -11,12 +11,12 @@ export function reset() {
 
     exitToLobby();
 
-    const gameSession = api.net.state.session.gameSession;
+    const gameSession = api.net.colyseus.state.session.gameSession;
     if(gameSession.phase === "countdown") return;
 
     ignoreNextStart = true;
     const interval = setInterval(() => {
-        api.net.send("START_GAME", startMessage);
+        api.net.colyseus.send("START_GAME", startMessage);
     }, 100);
 
     const unsub = gameSession.listen("phase", (phase) => {
@@ -31,8 +31,8 @@ export function reset() {
 export function exitToLobby() {
     if(api.net.type !== "Colyseus" || !api.stores.session.amIGameOwner) return;
 
-    api.net.send("END_GAME");
-    api.net.send("RESTORE_MAP_EARLIER");
+    api.net.colyseus.send("END_GAME");
+    api.net.colyseus.send("RESTORE_MAP_EARLIER");
 }
 
 api.hotkeys.addConfigurableHotkey({

@@ -40,7 +40,7 @@
     gap: 5px;
     align-items: center;
 
-    .delete {
+    .delete, .edit {
         cursor: pointer;
         font-size: 30px;
         flex-shrink: 0;
@@ -175,7 +175,7 @@
     }
 }
 
-.flex-column.maxAll > .maxWidth > span {
+.useCustomTheme .flex-column.maxAll > .maxWidth > span {
     &:nth-child(1) > div {
         background-color: var(--answer-bg-1) !important;
         color: var(--answer-text-1) !important;

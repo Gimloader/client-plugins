@@ -81,7 +81,7 @@ class Overtime {
         this.overtimeCount++;
 
         for(let i = 0; i < settings.length; i++) {
-            api.net.send("ADD_GAME_TIME");
+            api.net.colyseus.send("ADD_GAME_TIME");
         }
 
         api.UI.notification.info({
@@ -97,7 +97,7 @@ class Overtime {
     suddenDeath() {
         if(!this.overtimeCount || this.isTied()) return;
         this.stop();
-        api.net.send("END_GAME");
+        api.net.colyseus.send("END_GAME");
     }
 }
 
@@ -125,7 +125,7 @@ api.net.onLoad(async () => {
 
     let overtime: Overtime | null = null;
 
-    const session = api.net.state.session;
+    const session = api.net.colyseus.state.session;
 
     api.onStop(
         session.gameSession.listen("phase", (phase) => {

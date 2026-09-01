@@ -60,7 +60,7 @@ interface Message {
 
 export default class Chatter {
     private readonly comms = new Comms<string | Op>("Chat");
-    private readonly me = api.net.state.characters.get(api.stores.network.authId)!;
+    private readonly me = api.net.colyseus.state.characters.get(api.stores.network.authId)!;
     private typing = false;
     private timeout: ReturnType<typeof setTimeout> | null = null;
     playersTyping = $state<Character[]>([]);
@@ -158,7 +158,7 @@ export default class Chatter {
         });
 
         api.onStop(
-            api.net.state.characters.onRemove((char) => {
+            api.net.colyseus.state.characters.onRemove((char) => {
                 joinedPlayers.delete(char.id);
                 this.playersTyping = this.playersTyping.filter(c => c !== char);
             })
