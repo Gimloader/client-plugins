@@ -211,6 +211,7 @@ export default class DLDAutosplitter extends SplitsAutosplitter {
 
         const isPb = !this.pb || this.timer.elapsed < this.pb;
         if(!isPb) return;
+
         const username = api.stores.phaser.mainCharacter.nametag.name;
         let mode = "Full Game";
         if(this.data.mode !== "Full Game") {

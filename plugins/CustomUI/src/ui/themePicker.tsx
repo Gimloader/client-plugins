@@ -68,9 +68,9 @@ export default function ThemePicker(props: {
         });
     };
 
-    const deleteTheme = (index: number) => {
+    const deleteTheme = async (index: number) => {
         const theme = customThemes[index];
-        const confirm = window.confirm(`Are you sure you want to delete the theme "${theme.name}"?`);
+        const confirm = await api.UI.confirm("Theme Deletion", `Are you sure you want to delete the theme "${theme.name}"?`);
         if(!confirm) return;
 
         if(theme === activeTheme) setThemeIndex(0);

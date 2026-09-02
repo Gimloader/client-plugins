@@ -17,16 +17,18 @@ export function initLasers(values: SharedValues) {
     api.hotkeys.addHotkey({
         key: "KeyL",
         alt: true
-    }, () => {
+    }, async () => {
         api.hotkeys.releaseAll();
 
-        const offset = prompt(`Enter the laser offset in frames, from 0 to 65 (currently ${laserOffset})`);
+        const offset = await api.UI.prompt("Laser offset", {
+            text: `Enter the laser offset in frames, from 0 to 65 (currently ${laserOffset})`
+        });
         if(offset === null) return;
 
         const parsed = parseInt(offset, 10);
 
         if(Number.isNaN(parsed) || parsed < 0 || parsed > 65) {
-            alert("Invalid offset");
+            api.UI.notification.error({ message: "Invalid laser offset" });
             return;
         }
 

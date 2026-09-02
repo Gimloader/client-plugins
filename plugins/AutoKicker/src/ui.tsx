@@ -112,13 +112,12 @@ export default function UI({ autoKicker }: { autoKicker: AutoKicker }) {
                 })}
                 <button
                     className="add"
-                    onClick={() => {
-                        let name = prompt("Enter the name to blacklist");
+                    onClick={async () => {
+                        const name = await api.UI.prompt("Enter the name to blacklist");
                         if(!name) return;
-                        name = name.trim();
 
                         autoKicker.blacklist.push({
-                            name,
+                            name: name.trim(),
                             exact: true
                         });
                         setBlacklist([...autoKicker.blacklist]);

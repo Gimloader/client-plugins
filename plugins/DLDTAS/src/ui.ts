@@ -140,8 +140,8 @@ export function createUI() {
             .catch(() => {});
     });
 
-    div.querySelector("#reset")?.addEventListener("click", () => {
-        const conf = confirm("Are you sure you want to reset?");
+    div.querySelector("#reset")?.addEventListener("click", async () => {
+        const conf = await api.UI.confirm("Reset TAS", "Are you sure you want to reset your TAS?");
         if(!conf) return;
 
         setPlaying(false);

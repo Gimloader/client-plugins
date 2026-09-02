@@ -9,8 +9,8 @@
 
     let { splits, data = $bindable(), category }: Props = $props();
 
-    function resetSplits() {
-        let conf = confirm("Are you sure you want to reset all splits for this category?");
+    async function resetSplits() {
+        let conf = await api.UI.confirm("Reset Splits", "Are you sure you want to reset all splits for this category?");
         if(!conf) return;
 
         data.pb[category] = [];

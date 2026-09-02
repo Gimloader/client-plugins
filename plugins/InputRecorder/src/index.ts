@@ -3,16 +3,12 @@ import Recorder from "./recorder";
 
 let recorder: Recorder;
 
-function startRecording() {
+function toggleRecording() {
     if(!recorder) return;
 
     if(recorder.playing) {
         api.UI.notification.open({ message: "Cannot record while playing", type: "error" });
         return;
-    }
-
-    if(recorder.recording) {
-        api.hotkeys.releaseAll();
     }
 
     recorder.toggleRecording();
@@ -48,7 +44,7 @@ api.hotkeys.addConfigurableHotkey({
         key: "KeyR",
         alt: true
     }
-}, startRecording);
+}, toggleRecording);
 
 api.hotkeys.addConfigurableHotkey({
     category: "Input Recorder",
@@ -62,7 +58,7 @@ api.hotkeys.addConfigurableHotkey({
 api.net.onLoad(() => {
     recorder = new Recorder(api.stores.phaser.scene.worldManager.physics);
 
-    api.commands.addCommand({ text: () => `InputRecorder: ${recorder.recording ? "Stop Recording" : "Start Recording"}` }, startRecording);
+    api.commands.addCommand({ text: () => `InputRecorder: ${recorder.recording ? "Stop Recording" : "Start Recording"}` }, toggleRecording);
     api.commands.addCommand({ text: "InputRecorder: Play Back Recording" }, playBackRecording);
 });
 
