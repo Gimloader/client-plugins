@@ -1,4 +1,4 @@
-export interface IBlacklistedName {
+export interface BlacklistedName {
     name: string;
     exact: boolean;
 }

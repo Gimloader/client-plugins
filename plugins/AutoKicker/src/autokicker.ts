@@ -1,5 +1,5 @@
 import { invisRegex } from "./consts";
-import type { IBlacklistedName } from "./types";
+import type { BlacklistedName } from "./types";
 
 const settings = api.settings.create([
     {
@@ -17,7 +17,7 @@ export default class AutoKicker {
     kickSkinless = false;
     kickIdle = false;
     kickBlank = false;
-    blacklist: IBlacklistedName[] = [];
+    blacklist: BlacklistedName[] = [];
     idleDelay = 20000;
     UIVisible = true;
 

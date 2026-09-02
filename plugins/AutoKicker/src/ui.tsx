@@ -1,5 +1,5 @@
 import type AutoKicker from "./autokicker";
-import type { IBlacklistedName } from "./types";
+import type { BlacklistedName } from "./types";
 
 export default function UI({ autoKicker }: { autoKicker: AutoKicker }) {
     const React = api.React;
@@ -82,7 +82,7 @@ export default function UI({ autoKicker }: { autoKicker: AutoKicker }) {
             )}
             <h2>Blacklist</h2>
             <div className="blacklist">
-                {blacklist.map((entry: IBlacklistedName) => {
+                {blacklist.map((entry: BlacklistedName) => {
                     return (
                         <button className="rule" key={entry.name}>
                             <div className="name">
@@ -101,7 +101,7 @@ export default function UI({ autoKicker }: { autoKicker: AutoKicker }) {
                             <button
                                 className="delete"
                                 onClick={() => {
-                                    autoKicker.blacklist = autoKicker.blacklist.filter((e: IBlacklistedName) => e.name !== entry.name);
+                                    autoKicker.blacklist = autoKicker.blacklist.filter((e: BlacklistedName) => e.name !== entry.name);
                                     setBlacklist([...autoKicker.blacklist]);
                                     autoKicker.saveSettings();
                                 }}>

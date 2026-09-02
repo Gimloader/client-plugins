@@ -1,4 +1,4 @@
-import type { ISharedValues } from "../types";
+import type { SharedValues } from "./types";
 import { getMoveSpeed } from "./index";
 import { initLasers, updateLasers } from "./updateLasers";
 import { generatePhysicsInput } from "./util";
@@ -17,7 +17,7 @@ export default class TASTools {
     startPos = { x: 33.87, y: 638.38 };
     startState = defaultState;
 
-    constructor(public values: ISharedValues, public updateTable: () => void) {
+    constructor(public values: SharedValues, public updateTable: () => void) {
         this.physicsManager.physicsStep = (dt: number) => {
             // only rerender, rather than running the physics loop
             api.stores.phaser.mainCharacter.physics.postUpdate(dt);

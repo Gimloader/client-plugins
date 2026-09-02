@@ -1,6 +1,6 @@
 import type { Vector } from "@dimforge/rapier2d-compat";
 
-export interface IFrameInfo {
+export interface FrameInfo {
     right: boolean;
     left: boolean;
     up: boolean;
@@ -8,13 +8,13 @@ export interface IFrameInfo {
     state?: string;
 }
 
-export interface ISharedValues {
-    frames: IFrameInfo[];
+export interface SharedValues {
+    frames: FrameInfo[];
     currentFrame: number;
 }
 
 export interface TAS {
-    frames: IFrameInfo[];
+    frames: FrameInfo[];
     laserOffset: number;
     startPos?: Vector;
     startState?: string;

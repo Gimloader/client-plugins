@@ -1,6 +1,6 @@
 import type { Vector } from "@dimforge/rapier2d-compat";
 
-export interface IRecording {
+export interface Recording {
     startPos: Vector;
     startState: string;
     platformerPhysics: string;

@@ -1,4 +1,4 @@
-import type { ISharedValues } from "../types";
+import type { SharedValues } from "./types";
 
 let lasers: Gimloader.Stores.Device[] = [];
 let laserOffset: number = api.storage.getValue("laserOffset", 0);
@@ -13,7 +13,7 @@ api.net.colyseus.on("DEVICES_STATES_CHANGES", (packet) => {
     }
 });
 
-export function initLasers(values: ISharedValues) {
+export function initLasers(values: SharedValues) {
     api.hotkeys.addHotkey({
         key: "KeyL",
         alt: true

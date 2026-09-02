@@ -1,14 +1,14 @@
 import controller from "$assets/controller.svg";
 import { downloadJsonFile, readJsonFile } from "$shared/files";
-import type { IRecording } from "../../../plugins/InputRecorder/types";
-import type { IFrameInfo, ISharedValues, TAS } from "../types";
+import type { Recording } from "../../InputRecorder/src/types";
+import type { FrameInfo, SharedValues, TAS } from "./types";
 import { hideHitbox, initOverlay, showHitbox } from "./overlay";
 import TASTools from "./tools";
 import { getLaserOffset, setLaserOffset } from "./updateLasers";
 import { getTickKeys, save } from "./util";
 
-const frames: IFrameInfo[] = api.storage.getValue("frames", []);
-const values: ISharedValues = { frames, currentFrame: 0 };
+const frames: FrameInfo[] = api.storage.getValue("frames", []);
+const values: SharedValues = { frames, currentFrame: 0 };
 
 export function createUI() {
     let rowOffset = 0;
@@ -116,7 +116,7 @@ export function createUI() {
         tools.stopPlaying();
 
         readJsonFile()
-            .then((data: IFrameInfo[] | TAS | IRecording) => {
+            .then((data: FrameInfo[] | TAS | Recording) => {
                 // compatibility with older versions and input recordings
                 if(Array.isArray(data)) {
                     values.frames = data;

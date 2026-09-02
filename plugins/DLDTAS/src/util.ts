@@ -1,6 +1,6 @@
-import type { IFrameInfo } from "../types";
+import type { FrameInfo } from "./types";
 
-export function generatePhysicsInput(frame: IFrameInfo, lastFrame?: IFrameInfo) {
+export function generatePhysicsInput(frame: FrameInfo, lastFrame?: FrameInfo) {
     const jump = frame.up && !lastFrame?.up;
 
     /* The angle is determined like so: 0 for right, 180 for left etc.
@@ -30,8 +30,8 @@ export const getTickKeys = (input: Gimloader.Stores.TickInput) => ({
     up: input.jump
 });
 
-export function save(frames: IFrameInfo[]) {
-    const saveList: IFrameInfo[] = [];
+export function save(frames: FrameInfo[]) {
+    const saveList: FrameInfo[] = [];
     for(const frame of frames) {
         const { left, right, up } = frame;
         saveList.push({ left, right, up });

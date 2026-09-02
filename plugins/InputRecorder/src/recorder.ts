@@ -1,5 +1,5 @@
 import type { Vector } from "@dimforge/rapier2d-compat";
-import type { IRecording } from "../types";
+import type { Recording } from "./types";
 import { stopUpdatingLasers, updateLasers } from "./updateLasers";
 import { downloadJsonFile } from "$shared/files";
 
@@ -65,7 +65,7 @@ export default class Recorder {
         if(!save) return;
 
         // download the file
-        const json: IRecording = {
+        const json: Recording = {
             startPos: this.startPos,
             startState: this.startState,
             platformerPhysics: this.platformerPhysics,
@@ -76,7 +76,7 @@ export default class Recorder {
         downloadJsonFile(json, fileName ?? `recording-${name}.json`);
     }
 
-    async playback(data: IRecording) {
+    async playback(data: Recording) {
         const desync = api.plugin("Desynchronize");
         desync.DLD.cancelRespawn();
 
