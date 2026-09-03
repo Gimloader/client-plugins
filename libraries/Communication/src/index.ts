@@ -1,159 +1,163 @@
 import type { ByteStreamCallback, Message, OnMessageCallback, StringStreamCallback } from "./types";
-import Messenger from "./messenger";
-import { getIdentifier, isUint24, isUint8 } from "./encoding";
+import AimingMessenger from "./messengers/aiming";
+import { getIdentifier, identifierToBytes, identifierToDozens } from "./encoding";
+import Streamer from "./streamer";
+import StickerMessenger from "./messengers/stickers";
+import { splicer } from "./util";
 
-function listenToCharacter(character: Gimloader.Stores.Character) {
-    if(character.id === api.stores.network.authId) return;
-    api.patcher.before(character.aimingAndLookingAround, "setTargetAngle", (_, [angle]) => {
-        const netChar = api.net.colyseus.state.characters.get(character.id)!;
-        const bytes = Messenger.getBytes(netChar, angle);
-        if(!bytes) return;
+class EnabledManager {
+    private static onEnabledCallbacks = new Set<OnEnabledCallback>();
+    private static lastEnabled = false;
+    static stickerResolved = false;
+    static ready = StickerMessenger.ownedStickerPromise.then(() => {}, () => {});
 
-        Messenger.handleBytes(netChar, bytes);
-        return true;
-    });
-}
-
-api.net.onLoad(() => {
-    Messenger.init();
-
-    const scene = api.stores.phaser.scene;
-
-    api.patcher.after(scene.characterManager, "addCharacter", (_, __, character) => {
-        listenToCharacter(character);
-    });
-
-    for(const character of scene.characterManager.characters.values()) {
-        listenToCharacter(character);
+    static init() {
+        api.net.state.session.listen("phase", () => this.handlePotentialEnabledChange(false));
+        this.ready.then(() => this.handlePotentialEnabledChange(true));
     }
 
-    api.net.colyseus.state.characters.get(api.stores.network.authId)!.projectiles.listen("aimAngle", (angle) => {
-        if(!angle || angle !== Messenger.pendingAngle) return;
-        Messenger.angleChangeRes?.();
-    }, false);
-});
+    static handlePotentialEnabledChange(afterReady: boolean) {
+        const enabled = this.enabled;
+        const lastEnabled = this.lastEnabled;
+        if(enabled === lastEnabled) return;
 
-export default class Communication<T extends Message = Message> {
-    readonly #identifierString: string;
-    readonly #onDisabledCallbacks: (() => void)[] = [];
-    readonly #messenger: Messenger;
+        this.lastEnabled = enabled;
 
-    constructor(name: string) {
-        const identifier = getIdentifier(name);
-        this.#identifierString = identifier.join(",");
-        this.#messenger = new Messenger(identifier);
-    }
-
-    get #callbacks() {
-        if(!Messenger.callbacks.has(this.#identifierString)) {
-            Messenger.callbacks.set(this.#identifierString, {
-                message: [],
-                stringStream: [],
-                byteStream: []
-            });
+        for(const cb of this.onEnabledCallbacks) {
+            cb(enabled, afterReady);
         }
-        return Messenger.callbacks.get(this.#identifierString)!;
     }
 
     static get enabled() {
-        return api.net.colyseus.state?.session.phase === "game";
+        if(api.net.type !== "Colyseus") return false;
+        return api.net.state.session.phase === "game" || Boolean(StickerMessenger.ownedSticker);
     }
 
-    onEnabledChanged(callback: (enabled: boolean) => void) {
-        const unsub = api.net.colyseus.state.session.listen("phase", (phase) => {
-            callback(phase === "game");
-        }, false);
+    static onEnabledChanged(callback: OnEnabledCallback) {
+        this.onEnabledCallbacks.add(callback);
 
-        this.#onDisabledCallbacks.push(unsub);
-        return unsub;
+        return () => {
+            this.onEnabledCallbacks.delete(callback);
+        };
+    }
+}
+
+api.net.onLoad(() => {
+    AimingMessenger.init();
+    StickerMessenger.init();
+    EnabledManager.init();
+
+    api.net.state.session.listen("phase", (phase) => {
+        if(phase === "game") StickerMessenger.reset();
+        else AimingMessenger.reset();
+
+        Streamer.updateCallbacks.clear();
+    }, false);
+});
+
+type OnEnabledCallback = (enabled: boolean, enabledAfterReady: boolean) => void;
+
+interface QueuedMessage {
+    message: Message;
+    resolvers: PromiseWithResolvers<void>;
+    aimingMessenger: AimingMessenger;
+    stickerMessenger: StickerMessenger;
+    retried?: boolean;
+}
+
+export default class Communication<T extends Message = Message> {
+    static readonly #queue: QueuedMessage[] = [];
+    readonly #aimingMessenger: AimingMessenger;
+    readonly #stickerMessenger: StickerMessenger;
+    readonly #streamer: Streamer;
+    readonly #onDisabledCallbacks: (() => void)[] = [];
+
+    static get enabled() {
+        return EnabledManager.enabled;
     }
 
-    async send(message: T) {
-        if(!Communication.enabled) {
-            throw new Error("Communication can only be used after the game is started");
-        }
+    get enabled() {
+        return EnabledManager.enabled;
+    }
 
-        // Don't send messages if nobody else is in the server
-        const players = [...api.net.colyseus.state.characters.values()].filter(char => char.type === "player");
-        if(players.length <= 1) return;
+    constructor(name: string) {
+        const identifier = getIdentifier(name);
+        this.#streamer = new Streamer(identifier);
+        this.#aimingMessenger = new AimingMessenger(identifierToBytes(identifier));
+        this.#stickerMessenger = new StickerMessenger(identifierToDozens(identifier));
+    }
 
-        switch (typeof message) {
-            case "number": {
-                if(isUint24(message)) {
-                    return await this.#messenger.sendPositiveInt24(message);
-                } else if(isUint24(-message)) {
-                    return await this.#messenger.sendNegativeInt24(message);
+    onEnabledChanged(callback: OnEnabledCallback) {
+        return EnabledManager.onEnabledChanged(callback);
+    }
+
+    send(message: T) {
+        const resolvers = Promise.withResolvers<void>();
+        Communication.#queue.push({
+            aimingMessenger: this.#aimingMessenger,
+            stickerMessenger: this.#stickerMessenger,
+            message,
+            resolvers
+        });
+
+        if(Communication.#queue.length === 1) Communication.#processQueue();
+        return resolvers.promise;
+    }
+
+    static async #processQueue() {
+        while(this.#queue.length > 0) {
+            // Don't send messages if nobody else is in the server
+            const players = [...api.net.state.characters.values()].filter(char => char.type === "player");
+            if(players.length === 0) {
+                for(const item of this.#queue) item.resolvers.resolve();
+                this.#queue.length = 0;
+                return;
+            }
+
+            const queued = this.#queue[0];
+            if(!queued) return;
+
+            try {
+                if(api.net.state.session.phase === "preGame") {
+                    await queued.stickerMessenger.send(queued.message);
                 } else {
-                    return await this.#messenger.sendNumber(message);
+                    await queued.aimingMessenger.send(queued.message);
                 }
-            }
-            case "string": {
-                if(message.length <= 3) {
-                    return await this.#messenger.sendThreeCharacters(message);
+            } catch {
+                if(queued.retried) {
+                    api.logger.error("Failed to send", queued.message, "after retry, giving up");
+                    queued.resolvers.reject();
+                    this.#queue.shift();
                 } else {
-                    return await this.#messenger.sendString(message);
+                    api.logger.error("Failed to send", queued.message, "retrying...");
+                    queued.retried = true;
+
+                    // Wait a sec for gimkit to switch modes
+                    await new Promise((res) => setTimeout(res, 500));
                 }
+
+                continue;
             }
-            case "boolean": {
-                return await this.#messenger.sendBoolean(message);
-            }
-            case "object": {
-                if(
-                    Array.isArray(message)
-                    && message.every(element => typeof element === "number")
-                    && message.every(isUint8)
-                    && message.length > 0
-                ) {
-                    if(message.length === 1) {
-                        return await this.#messenger.sendByte(message[0]);
-                    } else if(message.length === 2) {
-                        return await this.#messenger.sendTwoBytes(message);
-                    } else if(message.length === 3) {
-                        return await this.#messenger.sendThreeBytes(message);
-                    } else if(message.length > 3) {
-                        return await this.#messenger.sendSeveralBytes(message);
-                    }
-                } else {
-                    const stringified = JSON.stringify(message);
-                    if(stringified.length <= 3) {
-                        return await this.#messenger.sendSmallObject(stringified);
-                    }
-                    return await this.#messenger.sendObject(stringified);
-                }
-            }
+
+            queued.resolvers.resolve();
+            this.#queue.shift();
         }
     }
 
     onMessage(callback: OnMessageCallback<T>) {
-        const cb = callback as OnMessageCallback<Message>;
-        this.#callbacks.message.push(cb);
-
-        return () => {
-            const index = this.#callbacks.message.indexOf(cb);
-            if(index !== -1) this.#callbacks.message.slice(index, 1);
-        };
+        return splicer(this.#streamer.callbacks.message, callback);
     }
 
     onStringStream(callback: StringStreamCallback) {
-        this.#callbacks.stringStream.push(callback);
-
-        return () => {
-            const index = this.#callbacks.stringStream.indexOf(callback);
-            if(index !== -1) this.#callbacks.stringStream.slice(index, 1);
-        };
+        return splicer(this.#streamer.callbacks.stringStream, callback);
     }
 
     onByteStream(callback: ByteStreamCallback) {
-        this.#callbacks.byteStream.push(callback);
-
-        return () => {
-            const index = this.#callbacks.byteStream.indexOf(callback);
-            if(index !== -1) this.#callbacks.byteStream.slice(index, 1);
-        };
+        return splicer(this.#streamer.callbacks.byteStream, callback);
     }
 
     destroy() {
-        Messenger.callbacks.delete(this.#identifierString);
+        this.#streamer.destroy();
         this.#onDisabledCallbacks.forEach(cb => cb());
     }
 }
