@@ -1,6 +1,6 @@
 // biome-ignore-all lint: This file includes minified code
 import type * as RapierType from "@dimforge/rapier2d-compat";
-import { ce, defaultAirMovement, gi, hc, lo, originalAirMovement, PI, q5, se, we, Y5 } from "./consts";
+import { ce, defaultAirMovement, gi, hc, lo, mapOptions, originalAirMovement, PI, q5, se, we, Y5 } from "./consts";
 
 const settings = api.settings.create([
     {
@@ -31,6 +31,32 @@ api.rewriter.exposeVar("App", {
 
 api.net.onLoad(() => {
     const scene = api.stores.phaser.scene;
+
+    api.stores.phaser.mainCharacter.physics.state = {
+        "gravity": 0.001,
+        "velocity": {
+            "x": 0,
+            "y": 0
+        },
+        "movement": {
+            "direction": "none",
+            "xVelocity": 0,
+            "accelerationTicks": 0
+        },
+        "jump": {
+            "isJumping": false,
+            "jumpsLeft": 2,
+            "jumpCounter": 0,
+            "jumpTicks": 118,
+            "xVelocityAtJumpStart": 0
+        },
+        "forces": [],
+        "grounded": true,
+        "groundedTicks": 0,
+        "lastGroundedAngle": 0
+    };
+
+    api.patcher.instead(api.stores.phaser.mainCharacter.physics, "sendToServer", () => {});
 
     api.patcher.instead(api.stores.phaser.mainCharacter.physics, "preUpdate", (thisVal) => {
         thisVal.prevState = {
@@ -342,12 +368,11 @@ api.net.onLoad(() => {
             e = uJ({
                 characterId: t
             }),
-            I = fe(),
-            o = e != null && e.overrideJumpHeight ? e.jumpHeight ?? I.jumpHeight : I.jumpHeight,
-            s = e != null && e.overrideJumpDurationMS ? e.jumpDurationMS ?? I.jumpDurationMS : I.jumpDurationMS,
-            r = e != null && e.overrideJumpHangTimeMS ? e.jumpHangTimeMS ?? I.jumpHangTimeMS : I.jumpHangTimeMS,
-            B = e != null && e.overrideSubsequentJumpMultiplier ? e.subsequentJumpMultiplier ?? I.subsequentJumpMultiplier : I.subsequentJumpMultiplier,
-            E = e != null && e.overrideMaxJumps ? e.maxJumps ?? I.maxJumps : I.maxJumps;
+            o = e != null && e.overrideJumpHeight ? e.jumpHeight ?? mapOptions.jumpHeight : mapOptions.jumpHeight,
+            s = e != null && e.overrideJumpDurationMS ? e.jumpDurationMS ?? mapOptions.jumpDurationMS : mapOptions.jumpDurationMS,
+            r = e != null && e.overrideJumpHangTimeMS ? e.jumpHangTimeMS ?? mapOptions.jumpHangTimeMS : mapOptions.jumpHangTimeMS,
+            B = e != null && e.overrideSubsequentJumpMultiplier ? e.subsequentJumpMultiplier ?? mapOptions.subsequentJumpMultiplier : mapOptions.subsequentJumpMultiplier,
+            E = e != null && e.overrideMaxJumps ? e.maxJumps ?? mapOptions.maxJumps : mapOptions.maxJumps;
         return {
             jumpHeight: o,
             jumpDurationMS: s,
@@ -369,18 +394,6 @@ api.net.onLoad(() => {
         let I = e.options;
         if(I) {
             return I;
-        }
-    }
-
-    function fe() {
-        var e, I;
-        let g = k.world.mapOptionsJSON;
-        if(g) {
-            return JSON.parse(g);
-        }
-        let t = (I = (e = vI()) == null ? void 0 : e.state) == null ? void 0 : I.mapSettings;
-        if(t) {
-            return JSON.parse(t);
         }
     }
 
@@ -571,10 +584,9 @@ api.net.onLoad(() => {
             e = uJ({
                 characterId: t
             }),
-            I = fe(),
-            o = e != null && e.overrideMaxGravityPerSecond ? (e == null ? void 0 : e.maxGravityPerSecond) ?? I.maxGravityPerSecond : I.maxGravityPerSecond,
-            s = e != null && e.overrideTimeToMaxGravityMS ? e.timeToMaxGravityMS ?? I.timeToMaxGravityMS : I.timeToMaxGravityMS,
-            r = e != null && e.overrideYTravelUntilMaxGravity ? e.yTravelUntilMaxGravity ?? I.yTravelUntilMaxGravity : I.yTravelUntilMaxGravity;
+            o = e != null && e.overrideMaxGravityPerSecond ? (e == null ? void 0 : e.maxGravityPerSecond) ?? mapOptions.maxGravityPerSecond : mapOptions.maxGravityPerSecond,
+            s = e != null && e.overrideTimeToMaxGravityMS ? e.timeToMaxGravityMS ?? mapOptions.timeToMaxGravityMS : mapOptions.timeToMaxGravityMS,
+            r = e != null && e.overrideYTravelUntilMaxGravity ? e.yTravelUntilMaxGravity ?? mapOptions.yTravelUntilMaxGravity : mapOptions.yTravelUntilMaxGravity;
         return {
             maxGravityPerSecond: o,
             timeToMaxGravityMS: s,

@@ -12,6 +12,17 @@ export const lo = {
     }
 };
 
+export const mapOptions = {
+    maxGravityPerSecond: 10,
+    timeToMaxGravityMS: 630,
+    yTravelUntilMaxGravity: 3.5,
+    jumpHeight: 1.92,
+    jumpDurationMS: 400,
+    jumpHangTimeMS: 50,
+    subsequentJumpMultiplier: 0.66,
+    maxJumps: 2
+};
+
 export const defaultAirMovement = {
     accelerationSpeed: 0.08125,
     decelerationSpeed: 0.08125,
