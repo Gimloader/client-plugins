@@ -7,7 +7,6 @@ const settings = api.settings.create([
         type: "dropdown",
         id: "version",
         title: "Version of physics to use",
-        description: "The original physics are just an approximation since the code has been lost",
         options: [
             { label: "Knockback Patch", value: "knockback" },
             { label: "Creative Patch", value: "creative" },

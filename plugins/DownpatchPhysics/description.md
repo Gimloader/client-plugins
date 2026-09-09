@@ -3,5 +3,3 @@ DownpatchPhysics reverts Gimkit's physics to how it functioned in older versions
 1. Knockback Patch (has slope jumps)
 2. Creative Patch (also has "boosts")
 3. Original (also has changed air movement)
-
-The original physics are only an approximation, since the original code was not archived.
