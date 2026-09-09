@@ -1,6 +1,6 @@
 // biome-ignore-all lint: This file includes minified code
 import type * as RapierType from "@dimforge/rapier2d-compat";
-import { ce, defaultAirMovement, gi, hc, lo, mapOptions, originalAirMovement, PI, q5, se, we, Y5 } from "./consts";
+import { ce, gi, hc, lo, mapOptions, PI, q5, se, we, Y5 } from "./consts";
 
 const settings = api.settings.create([
     {
@@ -15,11 +15,6 @@ const settings = api.settings.create([
         ]
     }
 ]);
-
-settings.listen("version", (version) => {
-    if(version === "original") we.movement.air = originalAirMovement;
-    else we.movement.air = defaultAirMovement;
-}, true);
 
 let RAPIER: typeof RapierType;
 
@@ -80,6 +75,50 @@ api.net.onLoad(() => {
                 input: thisVal.tickInput
             });
     });
+
+    const airSpeedMinimum = 0.75;
+    const originalCalcVelocity = function(A: any, t: any) {
+        var e = 0,
+            i = 0,
+            n = null == t ? void 0 : t.angle,
+            s = null !== n && (n < 90 || n > 270) ? "right" : null !== n && n > 90 && n < 270 ? "left" : "none",
+            C = api.stores.me.movementSpeed / hc.normal,
+            l = api.platformerPhysics.platformerGroundSpeed * C;
+        A.physics.state.jump.isJumping && (l = Math.max(l * airSpeedMinimum, A.physics.state.jump.xVelocityAtJumpStart));
+        var h = 0;
+        "left" === s ? h = -l : "right" === s && (h = l);
+        var c = 0 !== h;
+        if(
+            s !== A.physics.state.movement.direction
+            && (c && 0 !== A.physics.state.movement.xVelocity && (A.physics.state.movement.xVelocity = 0), A.physics.state.movement.accelerationTicks = 0, A.physics.state.movement.direction = s),
+                A.physics.state.movement.xVelocity !== h
+        ) {
+            A.physics.state.movement.accelerationTicks += 1;
+            var u = 0;
+            u = A.physics.state.grounded
+                ? c ? api.platformerPhysics.movement.ground.accelerationSpeed : api.platformerPhysics.movement.ground.decelerationSpeed
+                : c
+                ? api.platformerPhysics.movement.air.accelerationSpeed
+                : api.platformerPhysics.movement.air.decelerationSpeed;
+            var B = 20 / gi.tickRate;
+            u *= A.physics.state.movement.accelerationTicks * B,
+                e = h > A.physics.state.movement.xVelocity
+                    ? Phaser.Math.Clamp(A.physics.state.movement.xVelocity + u, A.physics.state.movement.xVelocity, h)
+                    : Phaser.Math.Clamp(A.physics.state.movement.xVelocity - u, h, A.physics.state.movement.xVelocity);
+        } else e = h;
+        return A.physics.state.grounded && A.physics.state.velocity.y > api.platformerPhysics.platformerGroundSpeed * C && Math.sign(e) === Math.sign(A.physics.state.velocity.x) && (e = A.physics.state.velocity.x),
+            A.physics.state.movement.xVelocity = e,
+            A.physics.state.gravity = $5(A.id),
+            i += A.physics.state.gravity,
+            A.physics.state.forces.forEach(function(A2: any) {
+                var n2 = A2.ticks[0];
+                n2 && (e += n2.x, i += n2.y), A2.ticks.shift();
+            }),
+            {
+                x: e,
+                y: i
+            };
+    };
 
     const k = api.stores;
     const WA = (id: string) => scene.characterManager.characters.get(id);
@@ -444,7 +483,14 @@ api.net.onLoad(() => {
 
     function P5(g: any) {
         let t = WA(g.characterId);
-        const calcVelocity = settings.version === "knockback" ? j5 : oldCalcVelocity;
+        let calcVelocity;
+        if(settings.version === "knockback") {
+            calcVelocity = j5;
+        } else if(settings.version === "creative") {
+            calcVelocity = oldCalcVelocity;
+        } else {
+            calcVelocity = originalCalcVelocity;
+        }
 
         return t ? Fe() && !wr() ? calcVelocity(t, g.input) : W5(t, g.input) : {
             x: 0,
