@@ -23,18 +23,6 @@ export const mapOptions = {
     maxJumps: 2
 };
 
-export const defaultAirMovement = {
-    accelerationSpeed: 0.08125,
-    decelerationSpeed: 0.08125,
-    maxAccelerationSpeed: 0.14130434782608697
-};
-
-export const originalAirMovement = {
-    accelerationSpeed: 0.121875,
-    decelerationSpeed: 0.08125,
-    maxAccelerationSpeed: 0.155
-};
-
 export const we = {
     "capsule": {
         "topDown": {
@@ -85,7 +73,11 @@ export const we = {
             "decelerationSpeed": 0.1625,
             "maxAccelerationSpeed": 0.14130434782608697
         },
-        "air": defaultAirMovement
+        "air": {
+            "accelerationSpeed": 0.08125,
+            "decelerationSpeed": 0.08125,
+            "maxAccelerationSpeed": 0.14130434782608697
+        }
     },
     "jump": {
         "coyoteJumpLimitMS": 200,

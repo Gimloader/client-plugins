@@ -124,7 +124,6 @@ api.net.onLoad(() => {
     const ee = () => api.stores.network.authId;
     const Ve = () => scene.worldManager.physics;
     const _i = (id: string) => scene.worldManager.devices.getDeviceById(id);
-    const vI = () => api.stores.network.room;
     const Fe = () => api.stores.session.mapStyle === "platformer";
     const wr2 = () => api.stores.session.phase === "preGame";
     const Fr = () => api.stores.session.phase === "game";
