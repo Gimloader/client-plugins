@@ -1,6 +1,7 @@
-Communication is a runtime library that allows plugins to set up isolated messaging with other clients in the lobby. It does this by "aiming" your character (which fortunately works even when you don't have a weapon) and sending a float that converts to 8 bytes. It's important to note that this method requires headers, identifiers, angle distribution and server approval waiting, so **it can be slow** and you should be mindful of how messages are sent.
+Communication is a runtime library that allows plugins to set up isolated messaging with other clients in the lobby. It does this using two methods: "aiming" your character's weapon when in-game, and sending large amounts of stickers when in the lobby. While they are under the same api, there are several important differences bertween them.
 
-Messages are either sent as a single angle, or split into multiple angles. Whenever you can, you want to send a message that fits into as few angles as possible for speed.
+## Aiming Messages (sent in-game)
+Aiming messages are either sent as a single angle, or split into multiple angles. Whenever you can, you want to send a message that fits into as few angles as possible for speed.
 
 The following are sent into a single angle:
 - A positive or negative int24 number (-16,777,216 to 16,777,216)
@@ -14,6 +15,13 @@ Everything else is sent as multiple angles, and the time it takes to send depend
 - A string over 3 characters (takes roughly length/7 angles)
 
 An array with a length over 3 of numbers that are all integers between 0 and 255 are sent optimally and are not stringified like other arrays.
+
+## Sticker Messages (sent in lobby)
+Sticker messages are much less deterministic than aiming messages. They can send a significantly higher amount of data with less time, however the time they take to send is very inconsistent - it can take less than 100 ms or over 500 ms, even if you have a consistent ping. The amount of data that receiving packets hold is also very inconsistent.
+
+Other than arrays that only include integers between 0 and 255, any object/array is stringified when sending and parsed when receiving, similar to aiming messages.
+
+It is also important to note that your owned stickers have to be fetched, and if you don't have any stickers communication will remain disabled in the lobby.
 
 ## Usage
 
@@ -50,14 +58,13 @@ api.net.onLoad(async () => {
         }
     })
 
-    // `send` is async. It resolves when the server has gotten the angle, and rejects if the game ended when it tried to send the angle
+    // `send` is async. It resolves when players have received the angle, and rejects if the game ended or started in the middle of sending the message.
     await comms.send(2);
 });
 ```
 
 ## Notes
 
-- You can unfortunately not send messages in the lobby, use `Comms.enabled` to determine if you are in the lobby.
 - Do not do `api.net.colyseus.state.characters.onAdd(() => comms.send("Hello new player!"))` because `onAdd` is not necessarily the moment where the player can listen to messages. Instead, create a message for players to send once they have joined the lobby, and respond based on that message.
 - If multiple plugins send messages at the same time messages will be queued to avoid messages being dropped by the server, and messages may be delayed.
 - When sending strings, characters with codes larger than 255 will be filtered out.
