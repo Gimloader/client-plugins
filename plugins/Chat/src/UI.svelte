@@ -15,6 +15,8 @@
     let input: HTMLInputElement;
 
     async function scroll(force: boolean) {
+        if(!wrap) return;
+
         const shouldScroll = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 1;
         await tick();
 
@@ -24,7 +26,7 @@
     const chatter = new Chatter(scroll);
 
     let inputPlaceholder = $derived.by(() => {
-        if(!chatter.enabled) return "Chat not available in lobby";
+        if(!chatter.enabled) return "Chat cannot be used when in lobby without stickers";
         if(chatter.sending) return "Sending...";
         return "...";
     });
