@@ -82,7 +82,7 @@ api.net.onLoad(() => {
             n = null == t ? void 0 : t.angle,
             s = null !== n && (n < 90 || n > 270) ? "right" : null !== n && n > 90 && n < 270 ? "left" : "none",
             C = api.stores.me.movementSpeed / hc.normal,
-            l = api.platformerPhysics.platformerGroundSpeed * C;
+            l = we.platformerGroundSpeed * C;
         A.physics.state.jump.isJumping && (l = Math.max(l * airSpeedMinimum, A.physics.state.jump.xVelocityAtJumpStart));
         var h = 0;
         "left" === s ? h = -l : "right" === s && (h = l);
@@ -95,17 +95,17 @@ api.net.onLoad(() => {
             A.physics.state.movement.accelerationTicks += 1;
             var u = 0;
             u = A.physics.state.grounded
-                ? c ? api.platformerPhysics.movement.ground.accelerationSpeed : api.platformerPhysics.movement.ground.decelerationSpeed
+                ? c ? we.movement.ground.accelerationSpeed : we.movement.ground.decelerationSpeed
                 : c
-                ? api.platformerPhysics.movement.air.accelerationSpeed
-                : api.platformerPhysics.movement.air.decelerationSpeed;
+                ? we.movement.air.accelerationSpeed
+                : we.movement.air.decelerationSpeed;
             var B = 20 / gi.tickRate;
             u *= A.physics.state.movement.accelerationTicks * B,
                 e = h > A.physics.state.movement.xVelocity
                     ? Phaser.Math.Clamp(A.physics.state.movement.xVelocity + u, A.physics.state.movement.xVelocity, h)
                     : Phaser.Math.Clamp(A.physics.state.movement.xVelocity - u, h, A.physics.state.movement.xVelocity);
         } else e = h;
-        return A.physics.state.grounded && A.physics.state.velocity.y > api.platformerPhysics.platformerGroundSpeed * C && Math.sign(e) === Math.sign(A.physics.state.velocity.x) && (e = A.physics.state.velocity.x),
+        return A.physics.state.grounded && A.physics.state.velocity.y > we.platformerGroundSpeed * C && Math.sign(e) === Math.sign(A.physics.state.velocity.x) && (e = A.physics.state.velocity.x),
             A.physics.state.movement.xVelocity = e,
             A.physics.state.gravity = $5(A.id),
             i += A.physics.state.gravity,
@@ -502,9 +502,9 @@ api.net.onLoad(() => {
         const s = null == t ? void 0 : t.angle,
             g = null !== s && (s < 90 || s > 270) ? "right" : null !== s && s > 90 && s < 270 ? "left" : "none",
             C = k.me.movementSpeed / hc.normal;
-        let h = api.platformerPhysics.platformerGroundSpeed * C;
+        let h = we.platformerGroundSpeed * C;
         if(A.physics.state.jump.isJumping) {
-            const t = Math.min(api.platformerPhysics.jump.airSpeedMinimum.maxSpeed, h * api.platformerPhysics.jump.airSpeedMinimum.multiplier);
+            const t = Math.min(we.jump.airSpeedMinimum.maxSpeed, h * we.jump.airSpeedMinimum.multiplier);
             h = Math.max(t, A.physics.state.jump.xVelocityAtJumpStart);
         }
         let l = 0;
@@ -519,10 +519,10 @@ api.net.onLoad(() => {
             let t = 0,
                 i = 0;
             A.physics.state.grounded
-                ? B ? (t = api.platformerPhysics.movement.ground.accelerationSpeed, i = api.platformerPhysics.movement.ground.maxAccelerationSpeed) : t = api.platformerPhysics.movement.ground.decelerationSpeed
+                ? B ? (t = we.movement.ground.accelerationSpeed, i = we.movement.ground.maxAccelerationSpeed) : t = we.movement.ground.decelerationSpeed
                 : B
-                ? (t = api.platformerPhysics.movement.air.accelerationSpeed, i = api.platformerPhysics.movement.air.maxAccelerationSpeed)
-                : t = api.platformerPhysics.movement.air.decelerationSpeed;
+                ? (t = we.movement.air.accelerationSpeed, i = we.movement.air.maxAccelerationSpeed)
+                : t = we.movement.air.decelerationSpeed;
             const s = 20 / gi.tickRate;
             t *= A.physics.state.movement.accelerationTicks * s,
                 i && (t = Math.min(i, t)),
@@ -530,7 +530,7 @@ api.net.onLoad(() => {
                     ? Phaser.Math.Clamp(A.physics.state.movement.xVelocity + t, A.physics.state.movement.xVelocity, l)
                     : Phaser.Math.Clamp(A.physics.state.movement.xVelocity - t, l, A.physics.state.movement.xVelocity);
         } else e = l;
-        return A.physics.state.grounded && A.physics.state.velocity.y > api.platformerPhysics.platformerGroundSpeed * C && Math.sign(e) === Math.sign(A.physics.state.velocity.x) && (e = A.physics.state.velocity.x),
+        return A.physics.state.grounded && A.physics.state.velocity.y > we.platformerGroundSpeed * C && Math.sign(e) === Math.sign(A.physics.state.velocity.x) && (e = A.physics.state.velocity.x),
             A.physics.state.movement.xVelocity = e,
             A.physics.state.gravity = $5(A.id),
             i += A.physics.state.gravity,
