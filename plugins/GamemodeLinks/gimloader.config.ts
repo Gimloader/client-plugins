@@ -4,7 +4,7 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "GamemodeLinks",
     description: "Creates game rooms from links, particularly useful in bookmarks.",
-    version: "0.4.0",
+    version: "0.5.0",
     hasSettings: true,
-    changelog: ["Removed requirement to reload the page"]
+    changelog: ["Added custom page when loading a gamemode link"]
 });

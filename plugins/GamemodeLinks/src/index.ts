@@ -1,4 +1,5 @@
 import makeGame from "./makeGame";
+import LoadingScreen from "./LoadingScreen";
 
 const setLink = (path: string) => {
     const href = new URL(path, location.href).href;
@@ -105,6 +106,16 @@ if(root === "gamemode") {
                 content: err.message
             });
         });
+
+    // Swap the 404 screen for a loading screen
+    api.rewriter.exposeVar("NotFound-", {
+        find: /\):null,(\w{1,3})=\({prefixCls:/,
+        callback: (component) => {
+            api.patcher.afterReact(component, () => {
+                return api.React.createElement(LoadingScreen);
+            });
+        }
+    });
 } else {
     fetch("/api/games/summary/me")
         .then(res => res.json())
