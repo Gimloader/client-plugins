@@ -16,18 +16,21 @@ let pathname = location.pathname;
 let title = document.title;
 
 function updatePage() {
-    // if(!api.settings.updateLink) return;
-    if(!selectOpen || !experienceId) {
-        setLink(pathname);
-    } else {
-        const newSearch = new URLSearchParams(hooks);
-        setLink(`/gamemode/${experienceId}?${newSearch.toString()}`);
+    if(api.settings.updateLink) {
+        if(!selectOpen || !experienceId) {
+            setLink(pathname);
+        } else {
+            const newSearch = new URLSearchParams(hooks);
+            setLink(`/gamemode/${experienceId}?${newSearch.toString()}`);
+        }
     }
 
-    if(!selectOpen || !gamemodeTitle) {
-        document.title = title;
-    } else {
-        document.title = gamemodeTitle;
+    if(api.settings.updateTitle) {
+        if(!selectOpen || !gamemodeTitle) {
+            document.title = title;
+        } else {
+            document.title = gamemodeTitle;
+        }
     }
 }
 
