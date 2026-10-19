@@ -4,8 +4,7 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "GamemodeLinks",
     description: "Creates game rooms from links, particularly useful in bookmarks.",
-    version: "0.3.4",
+    version: "0.4.0",
     hasSettings: true,
-    reloadRequired: "notingame",
-    changelog: ["Fixed for gimloader v1.12.0"]
+    changelog: ["Removed requirement to reload the page"]
 });

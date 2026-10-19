@@ -1,37 +1,94 @@
-import { getSection, insert, replaceSection } from "$shared/rewritingUtils";
 import makeGame from "./makeGame";
 
-type Hooks = Record<string, string | number>;
+const setLink = (path: string) => {
+    const href = new URL(path, location.href).href;
+    if(location.href === href) return;
 
-const copyUrlWrapper = api.rewriter.createShared("CopyURLWrapper", (id: string) => {
-    navigator.clipboard.writeText(`${location.origin}/gamemode/${id}`)
-        .then(() => api.UI.message.success({ content: "Map link copied" }))
-        .catch(() => api.UI.message.error({ content: "Failed to copy map link" }));
-});
+    history.pushState({}, "", href);
+};
 
-api.rewriter.addParseHook("App", code => {
-    if(!code.includes("Note that deleting a map will also remove it from Creative Discovery")) return code;
+let experienceId = "";
+let hooks: Record<string, string> = {};
+let selectOpen = false;
+let gamemodeTitle = "";
 
-    // copy the rename item and morph it into a link item
-    let linkItem = getSection(code, "{menu:{items:[@,{key:`delete");
-    // biome-ignore lint/suspicious/noTemplateCurlyInString: This is just part of the util
-    const idString = getSection(linkItem, "rename-${@}");
-    linkItem = linkItem.replace("rename", "link");
-    linkItem = linkItem.replace("Rename", "Copy Edit Link");
-    linkItem = linkItem.replace("fa-edit", "fa-link");
-    linkItem = replaceSection(linkItem, ".stopPropagation(),@}", `${copyUrlWrapper}?.(${idString})`);
+let pathname = location.pathname;
+let title = document.title;
 
-    return insert(code, "danger:!0,onClick:#()}}@#", `,${linkItem}`);
-});
+function updatePage() {
+    // if(!api.settings.updateLink) return;
+    if(!selectOpen || !experienceId) {
+        setLink(pathname);
+    } else {
+        const newSearch = new URLSearchParams(hooks);
+        setLink(`/gamemode/${experienceId}?${newSearch.toString()}`);
+    }
 
-const setLink = (path: string) => history.pushState({}, "", path);
+    if(!selectOpen || !gamemodeTitle) {
+        document.title = title;
+    } else {
+        document.title = gamemodeTitle;
+    }
+}
 
-let { pathname } = location, { title } = document;
-
-function cleanup() {
+api.onStop(() => {
     setLink(pathname);
     document.title = title;
-}
+});
+
+api.rewriter.swapVar("App-", {
+    check: "`EXPERIENCE_HOOKS`",
+    find: /}\):null]}\)},(\w{1,3})=.=>{let{options/,
+    callback: (updateHooks, initial) => {
+        if(!initial) api.UI.forceReactUpdate();
+
+        return function(this: any, props: any) {
+            const options = { ...props.options };
+            const kitKey = Object.keys(options).find(hook => hook.toLowerCase().includes("kit"));
+            if(kitKey) delete options[kitKey];
+
+            experienceId = props.experienceId;
+            hooks = options;
+            updatePage();
+
+            return updateHooks.apply(this, arguments);
+        };
+    }
+});
+
+api.rewriter.exposeVar("App-", {
+    check: "`EXPERIENCE_GROUP_CACHE`",
+    find: /EXPERIENCE_GROUP_CACHE`,(\w{1,3})=/,
+    callback: (modal) => {
+        api.patcher.afterReact(modal, (_, props, returnVal) => {
+            pathname = location.pathname;
+            title = document.title;
+
+            const close = props[0].close;
+            props[0].close = () => {
+                close();
+                selectOpen = false;
+                experienceId = "";
+                gamemodeTitle = "";
+                updatePage();
+            };
+
+            selectOpen = returnVal.props.children.props.children.props.children[1].props.game !== undefined;
+            updatePage();
+        });
+    }
+});
+
+api.rewriter.exposeVar("App-", {
+    check: "(min-height: 650px)",
+    find: /image:`gamepad`}},(\w{1,3})=/,
+    callback: (titleComponent) => {
+        api.patcher.beforeReact(titleComponent, (_, props) => {
+            gamemodeTitle = props[0].title;
+            updatePage();
+        });
+    }
+});
 
 const [root, id] = location.pathname.split("/").slice(1);
 
@@ -63,9 +120,7 @@ if(root === "gamemode") {
                     title: "Update Tab Link",
                     description: "If the tab link text should be updated to the gamemode link when using the gamemode selector",
                     default: true,
-                    onChange(enabled) {
-                        if(!enabled) cleanup();
-                    }
+                    onChange: updatePage
                 },
                 {
                     id: "updateTitle",
@@ -73,71 +128,8 @@ if(root === "gamemode") {
                     title: "Update Tab Title",
                     description: "If the tab title should be updated to the gamemode name using the gamemode selector",
                     default: true,
-                    onChange(enabled) {
-                        if(!enabled) cleanup();
-                    }
+                    onChange: updatePage
                 }
             ]);
         }, api.logger.error);
-
-    // Creating games will close the popup
-    api.net.modifyFetchResponse("**/create", cleanup);
-
-    api.onStop(() => {
-        if(location.pathname.startsWith("/gamemode")) cleanup();
-    });
 }
-
-const setHooksWrapper = api.rewriter.createShared("SetHooksWrapper", (hooks: Hooks) => {
-    if(!api.settings.updateLink) return;
-    hooks = { ...hooks };
-
-    // Gimkit uses "kit", "kitId", and "Kit ID".
-    const kitKey = Object.keys(hooks).find(hook => hook.toLowerCase().includes("kit"));
-    if(kitKey) delete hooks[kitKey];
-
-    for(const key in hooks) {
-        if(typeof hooks[key] === "number") {
-            hooks[key] = hooks[key].toString();
-        }
-    }
-
-    const searchParams = new URLSearchParams(hooks as Record<string, string>);
-    const newLink = `?${searchParams.toString()}`;
-    if(location.search === newLink) return;
-    setLink(newLink);
-});
-
-const setMapDataWrapper = api.rewriter.createShared("SetMapDataWrapper", (id: string, name: string) => {
-    if(api.settings.updateLink) {
-        const path = location.pathname.split("/");
-        if(path[1] !== "gamemode") {
-            pathname = location.pathname;
-            title = document.title;
-        }
-        if(path[2] === id) return;
-        setLink("/gamemode/" + id + location.search);
-    }
-    if(api.settings.updateTitle) {
-        document.title = name;
-    }
-});
-
-const closePopupWrapper = api.rewriter.createShared("ClosePopupWrapper", cleanup);
-
-api.rewriter.addParseHook("App", code => {
-    // Updates the hooks
-    if(code.includes("We're showing this hook for testing purposes")) {
-        const name = getSection(code, "state:@,");
-        // Updates the hooks
-        return insert(code, ".readOnly]);@#", `${setHooksWrapper}?.(${name});`);
-    } else if(code.includes("The more reliable, the easier it is for crewmates to win")) {
-        const gameVarName = getSection(code, ".name,description:@.");
-
-        // Triggers manual popup closes
-        code = insert(code, ")=>{let[#=()=>{@#", `${closePopupWrapper}?.();`);
-        // Updates the selected game
-        return insert(code, '"EXPERIENCE_HOOKS"})@}', `;${setMapDataWrapper}?.(${gameVarName}?._id, ${gameVarName}?.name);`);
-    }
-    return code;
-});
