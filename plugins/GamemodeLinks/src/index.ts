@@ -102,8 +102,10 @@ if(root === "gamemode") {
             location.href = `/host?id=${gameId}`;
         })
         .catch((err: Error) => {
-            api.UI.modal.error({
-                content: err.message
+            api.UI.onComponentLoad("modal", () => {
+                api.UI.modal.error({
+                    content: err.message
+                });
             });
         });
 
