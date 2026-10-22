@@ -1,0 +1,1 @@
+AutoSellDuplicates will automatically sell duplicate cosmetics you get from packs. This happens both when enabling the plugin and whenever your inventory changes.
