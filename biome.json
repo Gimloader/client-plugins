@@ -18,7 +18,7 @@
 					},
 					"correctness": {
 						"noUnusedVariables": "off",
-						"noUnusedImports": "off"	
+						"noUnusedImports": "off"
 					}
 				}
 			}
@@ -29,7 +29,13 @@
 		"rules": {
 			"a11y": "off",
 			"correctness": {
-				"noConstructorReturn": "off"
+				"noConstructorReturn": "off",
+				"noUnusedVariables": {
+					"level": "error",
+					"options": {
+						"ignoreRestSiblings": true
+					}
+				}
 			},
 			"style": {
 				"noNonNullAssertion": "off",
@@ -40,7 +46,8 @@
 				"noBannedTypes": "off",
 				"noStaticOnlyClass": "off",
 				"noThisInStatic": "off",
-				"noImportantStyles": "off"
+				"noImportantStyles": "off",
+				"useArrowFunction": "off"
 			},
 			"suspicious": {
 				"noConfusingVoidType": "off",
