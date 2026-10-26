@@ -8,6 +8,7 @@ CreativeTools adds a variety of improvements to the creative editor. It is still
   * This can be configured in the Editing Options menu like other Creative options
 * Copy/paste wires alongside devices
 * Edit the channel a block is tied to
+* Command pallette command to remove everything from a map
 
 The following features are also planned:
 
@@ -15,5 +16,4 @@ The following features are also planned:
 * Layer-based multiselect restriction
 * Mass-replacing terrain
 * Creating shapes out of terrain
-* Removing everything in a map
 * Improving layer management somehow

@@ -1,4 +1,4 @@
-const maxSendsPerSecond = 100;
+const maxSendsPerSecond = 150;
 const sendDelay = 1000 / maxSendsPerSecond;
 
 export function pauseSend() {

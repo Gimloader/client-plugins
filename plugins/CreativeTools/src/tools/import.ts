@@ -5,7 +5,12 @@ import { pauseSend, prepareOptions } from "../util";
 export async function importWholeMap() {
     try {
         const data = await readJsonFile();
-        await importWholeMapData(data);
+
+        api.UI.toast.promise(importWholeMapData(data), {
+            loading: "Importing map data...",
+            success: "Done!",
+            error: "Something went wrong"
+        });
     } catch {}
 }
 

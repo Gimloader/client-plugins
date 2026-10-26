@@ -33,6 +33,11 @@ export function addAction<T extends keyof Actions>(type: T, data: Actions[T], me
     }, 0);
 }
 
+export function clearUndoStacks() {
+    undoStack.length = 0;
+    redoStack.length = 0;
+}
+
 api.net.onLoad(() => {
     const devices = api.stores.phaser.scene.worldManager.devices;
     const actionManager = api.stores.phaser.scene.actionManager;
