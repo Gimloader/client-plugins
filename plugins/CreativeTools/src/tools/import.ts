@@ -1,6 +1,6 @@
 import type { MapData } from "../types";
 import { readJsonFile } from "$shared/files";
-import { pauseSend, prepareOptions } from "../util";
+import { prepareOptions } from "../util";
 
 export async function importWholeMap() {
     try {
@@ -8,7 +8,7 @@ export async function importWholeMap() {
 
         api.UI.toast.promise(importWholeMapData(data), {
             loading: "Importing map data...",
-            success: "Done!",
+            success: "Imported map data",
             error: "Something went wrong"
         });
     } catch {}
@@ -17,7 +17,6 @@ export async function importWholeMap() {
 export async function importWholeMapData(data: MapData) {
     for(const tile of data.terrain) {
         api.net.colyseus.send("PLACE_TERRAIN", tile);
-        await pauseSend();
     }
 
     for(const device of data.devices) {
@@ -30,13 +29,10 @@ export async function importWholeMapData(data: MapData) {
             depth: device.depth,
             options: JSON.stringify(prepareOptions(device.options))
         });
-
-        await pauseSend();
     }
 
     for(const wire of data.wires) {
         api.net.colyseus.send("PLACE_WIRE", wire);
-        await pauseSend();
     }
 
     for(const deviceId in data.codeGrids) {

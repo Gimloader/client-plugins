@@ -1,10 +1,3 @@
-const maxSendsPerSecond = 150;
-const sendDelay = 1000 / maxSendsPerSecond;
-
-export function pauseSend() {
-    return new Promise((res) => setTimeout(res, sendDelay));
-}
-
 export function dataFromDevice(device: Gimloader.Stores.Device) {
     return {
         x: device.x,

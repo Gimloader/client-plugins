@@ -1,18 +1,14 @@
-import { pauseSend } from "../util";
 import { clearUndoStacks } from "./undo";
 
 export async function nukeMap() {
     const warning = "Are you sure you want to remove everything from the map? This cannot be undone.";
-    if(!api.UI.confirm("Remove Everything Confirmation", warning)) return;
+    if(!await api.UI.confirm("Remove Everything Confirmation", warning)) return;
 
-    api.UI.toast.promise(removeTilesAndDevices(), {
-        loading: "Removing everything from map...",
-        success: "Done!",
-        error: "Something went wrong"
-    });
+    removeTilesAndDevices();
+    api.UI.toast.success("Removed everything from the map");
 }
 
-async function removeTilesAndDevices() {
+function removeTilesAndDevices() {
     const layerManager = api.stores.phaser.scene.tileManager.layerManager;
     clearUndoStacks();
 
@@ -24,8 +20,6 @@ async function removeTilesAndDevices() {
                 y: tile.y,
                 depth: i
             });
-
-            await pauseSend();
         }
     }
 
@@ -35,7 +29,6 @@ async function removeTilesAndDevices() {
         if(device.deviceOption.id === "mapOptions") continue;
 
         api.net.colyseus.sendDirect("REMOVE_DEVICE", { id: device.id });
-        await pauseSend();
     }
 
     clearUndoStacks();

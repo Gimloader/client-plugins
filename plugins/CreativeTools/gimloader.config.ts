@@ -4,11 +4,8 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "CreativeTools",
     description: "Adds various quality of life improvements to the Creative editor",
-    version: "0.2.0",
+    version: "0.2.1",
     reloadRequired: "ingame",
     gamemodes: ["creative"],
-    changelog: [
-        "Added the ability to remove everything from your map",
-        "Added a loading toast when importing a map"
-    ]
+    changelog: ["Increased speed of nuke/import commands"]
 });
