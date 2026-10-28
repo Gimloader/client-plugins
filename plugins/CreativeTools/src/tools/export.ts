@@ -32,7 +32,7 @@ export function getWholeMapData(): MapData {
         devices.push({
             x: device.x,
             y: device.y,
-            depth: device.depth,
+            depth: device.layers.depth,
             layerId: device.layers.layer,
             deviceId: device.deviceOption.id,
             id: device.id,

@@ -1,7 +1,6 @@
 CreativeTools adds a variety of improvements to the creative editor. It is still under active development. Currently, it gives the following:
 
 * Command pallette commands to import/export the entire map
-  * There is a known issue with layering at the moment
 * Undo and redo various actions
 * Increased eraser selection size
 * Select, move around, and copy terrain
