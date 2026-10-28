@@ -5,18 +5,29 @@ import { nukeMap } from "./tools/nuke";
 import "./tools/selection";
 import "./tools/eraserSize";
 import "./tools/renameBlocks";
+import { replaceSelection } from "./tools/selection";
+
+const isNotInGame = () => api.net.type !== "Colyseus";
 
 api.commands.addCommand({
-    text: "CreativeTools: Export World"
+    text: "CreativeTools: Export World",
+    hidden: isNotInGame
 }, exportWholeMap);
 
 api.commands.addCommand({
-    text: "CreativeTools: Import World"
+    text: "CreativeTools: Import World",
+    hidden: isNotInGame
 }, importWholeMap);
 
 api.commands.addCommand({
-    text: "CreativeTools: Remove Everything From Map"
+    text: "CreativeTools: Remove Everything From Map",
+    hidden: isNotInGame
 }, nukeMap);
+
+api.commands.addCommand({
+    text: "CreativeTools: Find/Replace Selected Terrain",
+    hidden: isNotInGame
+}, replaceSelection);
 
 api.net.onLoad(() => {
     api.hotkeys.addHotkey({

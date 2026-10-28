@@ -4,8 +4,8 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "CreativeTools",
     description: "Adds various quality of life improvements to the Creative editor",
-    version: "0.2.1",
+    version: "0.3.0",
     reloadRequired: "ingame",
     gamemodes: ["creative"],
-    changelog: ["Increased speed of nuke/import commands"]
+    changelog: ["Added find/replace for selected terrain"]
 });

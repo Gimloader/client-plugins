@@ -10,6 +10,49 @@ let isMovingTiles = false;
 let updateAction: (action: string) => void;
 let multiselectMode = api.storage.getValue("multiselectMode", "all");
 
+export async function replaceSelection(ctx: Gimloader.CommandContext) {
+    if(isMovingTiles) {
+        api.UI.toast.error("Cannot replace selection while moving tiles");
+        return;
+    }
+
+    if(selectedTiles.length === 0) {
+        api.UI.toast.error("No tiles selected");
+        return;
+    }
+
+    const terrainOptions = api.stores.worldOptions.terrainOptions;
+    const terrainTypes = terrainOptions.map((t) => ({
+        label: t.name,
+        value: t.id
+    }));
+    const possibleTerrainTypes = terrainTypes.filter((t) => selectedTiles.some((tile) => tile.terrainOption.id === t.value));
+
+    const fromId = await ctx.select({
+        title: "Terrain type to replace",
+        options: possibleTerrainTypes
+    });
+
+    const toId = await ctx.select({
+        title: "Replace with",
+        options: terrainTypes
+    });
+
+    const matchingTiles = selectedTiles.filter((tile) => tile.terrainOption.id === fromId);
+    for(const tile of matchingTiles) {
+        removeTile(tile);
+        api.net.colyseus.send("PLACE_TERRAIN", {
+            x: tile.realX,
+            y: tile.realY,
+            collides: tile.collides,
+            depth: tile.depth,
+            terrain: toId
+        });
+    }
+
+    api.UI.toast.success(`Replaced ${matchingTiles.length} tile${matchingTiles.length === 1 ? "" : "s"}`);
+}
+
 api.net.onLoad(() => {
     const multiselect = api.stores.phaser.scene.actionManager.multiselect;
     const layerManager = api.stores.phaser.scene.tileManager.layerManager;
