@@ -34,6 +34,7 @@ export interface MapData {
     devices: Device[];
     codeGrids: Record<string, Record<string, CodeGrid>>;
     wires: Wire[];
+    customAssets: Record<string, Gimloader.Stores.CustomAsset>;
 }
 
 export interface SelectedTile {

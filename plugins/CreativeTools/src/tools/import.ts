@@ -15,6 +15,17 @@ export async function importWholeMap() {
 }
 
 export async function importWholeMapData(data: MapData) {
+    for(const id in data.customAssets) {
+        const asset = data.customAssets[id];
+        api.net.colyseus.send("ADD_CUSTOM_ASSET", {
+            data: JSON.stringify(asset.data),
+            icon: asset.icon,
+            id: asset.id,
+            name: asset.name,
+            optionId: asset.optionId
+        });
+    }
+
     for(const tile of data.terrain) {
         api.net.colyseus.send("PLACE_TERRAIN", tile);
     }

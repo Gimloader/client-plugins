@@ -73,10 +73,14 @@ export function getWholeMapData(): MapData {
         }
     }
 
+    const mobxCustomAssets = api.stores.world.customAssets.customAssets;
+    const customAssets = Object.fromEntries(JSON.parse(JSON.stringify(mobxCustomAssets)));
+
     return {
         terrain,
         devices,
         wires,
-        codeGrids
+        codeGrids,
+        customAssets
     };
 }

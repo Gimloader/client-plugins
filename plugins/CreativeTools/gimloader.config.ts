@@ -4,8 +4,8 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "CreativeTools",
     description: "Adds various quality of life improvements to the Creative editor",
-    version: "0.3.0",
+    version: "0.3.1",
     reloadRequired: "ingame",
     gamemodes: ["creative"],
-    changelog: ["Added find/replace for selected terrain"]
+    changelog: ["Fixed custom assets not being exported"]
 });
