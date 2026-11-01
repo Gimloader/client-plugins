@@ -1,7 +1,7 @@
 import { createCodeGrid } from "./import";
 
-api.rewriter.exposeVar("App-BZH0", {
-    find: /ht/,
+api.rewriter.exposeVar("App-", {
+    find: /\.gridId}\)},\w{1,3}=\w{1,3}\(\),(\w{1,3})=/,
     callback: (display) => {
         api.UI.forceReactUpdate();
 

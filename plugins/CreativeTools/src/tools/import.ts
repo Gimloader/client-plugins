@@ -46,14 +46,17 @@ export async function importWholeMapData(data: MapData) {
         api.net.colyseus.send("PLACE_WIRE", wire);
     }
 
-    for(const deviceId in data.codeGrids) {
-        for(const key in data.codeGrids[deviceId]) {
-            const grid = data.codeGrids[deviceId][key];
-            const json = JSON.stringify(grid.json);
+    // We can't do several grids on the same device in parallel easily because that creates a race condition
+    await Promise.all(
+        Object.keys(data.codeGrids).map(async (deviceId) => {
+            for(const key in data.codeGrids[deviceId]) {
+                const grid = data.codeGrids[deviceId][key];
+                const json = JSON.stringify(grid.json);
 
-            await createCodeGrid(deviceId, json, grid.triggerType, grid.triggerValue);
-        }
-    }
+                await createCodeGrid(deviceId, json, grid.triggerType, grid.triggerValue);
+            }
+        })
+    );
 }
 
 export async function createCodeGrid(deviceId: string, json: string, triggerType: string, triggerValue?: string) {
