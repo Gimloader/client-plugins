@@ -28,3 +28,11 @@ export function prepareOptions(options: Record<string, any>) {
     const { itemToGrant, ...rest } = options;
     return rest;
 }
+
+export function safeParse(json: string, defaultVal: any) {
+    try {
+        return JSON.parse(json);
+    } catch {
+        return defaultVal;
+    }
+}

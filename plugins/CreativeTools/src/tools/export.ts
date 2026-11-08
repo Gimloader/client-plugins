@@ -1,5 +1,6 @@
 import type { CodeGrid, Device, MapData, Tile, Wire } from "../types";
 import { downloadFile } from "$shared/files";
+import { safeParse } from "../util";
 
 export function exportWholeMap() {
     const data = getWholeMapData();
@@ -68,7 +69,7 @@ export function getWholeMapData(): MapData {
             codeGrids[deviceId][gridId] = {
                 triggerType: grid.triggerType,
                 triggerValue: grid.triggerValue,
-                json: JSON.parse(grid.json)
+                json: safeParse(grid.json, {})
             };
         }
     }
