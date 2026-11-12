@@ -11,7 +11,6 @@
 <h2>Gim</h2>
 <div class="button-container">
     <div>
-        New
         <DropdownMenu.Root>
             <DropdownMenu.Trigger style="font-size: 50px" class="item-button">
                 +
@@ -21,9 +20,9 @@
                 <DropdownMenu.Item onclick={() => CosmeticSelection.addCustomSkin()}>Custom Gim</DropdownMenu.Item>
             </DropdownMenu.Content>
         </DropdownMenu.Root>
+        New
     </div>
     <div>
-        Unchanged
         <button
             style="font-size: 32px"
             class="item-button"
@@ -32,10 +31,10 @@
         >
             🗙
         </button>
+        Unchanged
     </div>
     {#each CosmeticSelection.customSkins as name}
         <div>
-            {name}
             <ContextMenu.Root>
                 <ContextMenu.Trigger>
                     <button
@@ -56,11 +55,11 @@
                     </ContextMenu.Item>
                 </ContextMenu.Content>
             </ContextMenu.Root>
+            {name}
         </div>
     {/each}
     {#each CosmeticSelection.pastSkins as skin}
         <div>
-            {skin.id}
             <ContextMenu.Root>
                 <ContextMenu.Trigger>
                     <button
@@ -86,6 +85,7 @@
                     {/if}
                 </ContextMenu.Content>
             </ContextMenu.Root>
+            {skin.id}
         </div>
     {/each}
 </div>
@@ -93,7 +93,6 @@
 <h2>Trail</h2>
 <div class="button-container">
     <div>
-        New
         <button
             style="font-size: 50px"
             class="item-button"
@@ -101,9 +100,9 @@
         >
             +
         </button>
+        New
     </div>
     <div>
-        Unchanged
         <button
             style="font-size: 32px"
             class="item-button"
@@ -112,10 +111,10 @@
         >
             🗙
         </button>
+        Unchanged
     </div>
     {#each CosmeticSelection.pastTrails as trail}
         <div>
-            {trail}
             <ContextMenu.Root>
                 <ContextMenu.Trigger>
                     <button
@@ -133,6 +132,7 @@
                     </ContextMenu.Item>
                 </ContextMenu.Content>
             </ContextMenu.Root>
+            {trail}
         </div>
     {/each}
 </div>
