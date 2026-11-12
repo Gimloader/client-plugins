@@ -1,29 +1,24 @@
-import UI from "./UI.svelte";
+import { patchCharacters } from "./characterManager";
+import Selector from "./ui/Selector.svelte";
 import { mount, unmount } from "svelte";
+
+api.net.onLoad(patchCharacters);
 
 function showUI() {
     const div = document.createElement("div");
-    const ui = mount(UI, { target: div });
+    const ui = mount(Selector, { target: div });
 
     api.UI.showModal(div, {
         id: "CharacterCustomization",
         title: "Character Customization",
-        closeOnBackgroundClick: false,
-        style: "min-width: min(90vw, 500px); width: max-content",
+        style: "width: min(90vw, 830px)",
         onClosed() {
             unmount(ui);
         },
         buttons: [
             {
-                text: "Cancel",
-                style: "close"
-            },
-            {
                 text: "Apply",
-                style: "primary",
-                onClick() {
-                    ui.save();
-                }
+                style: "primary"
             }
         ]
     });

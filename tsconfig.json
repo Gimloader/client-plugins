@@ -17,8 +17,11 @@
     },
     "include": [
         "./plugins/**/*.ts",
+        "./plugins/**/*.svelte",
         "./libraries/**/*.ts",
+        "./libraries/**/*.svelte",
         "./shared/**/*.ts",
+        "./shared/**/*.svelte",
         "./main.d.ts"
     ]
 }

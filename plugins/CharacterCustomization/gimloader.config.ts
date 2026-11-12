@@ -4,7 +4,7 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "CharacterCustomization",
     description: "Allows you to use any gim or a custom gim client-side",
-    version: "0.7.2",
+    version: "1.0.0",
     hasSettings: true,
     gamemodes: ["2d"],
     changelog: ["Updated webpage url"]
