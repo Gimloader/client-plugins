@@ -118,6 +118,8 @@ api.rewriter.addParseHook("PlaceDevice-", (code) => {
 });
 
 export function undo() {
+    if(!api.stores.phaser.scene.input.isOver) return;
+
     const actions = undoStack.pop();
     if(!actions) {
         api.UI.toast.error("Nothing to undo");
@@ -154,6 +156,8 @@ export function undo() {
 }
 
 export function redo() {
+    if(!api.stores.phaser.scene.input.isOver) return;
+
     const actions = redoStack.pop();
     if(!actions) {
         api.UI.toast.error("Nothing to redo");
