@@ -4,6 +4,7 @@ import { decompress } from "compress-json";
 import StylePicker from "./ui/StylePicker.svelte";
 import { mount } from "svelte";
 import { updateMainSkin, updateMainTrail } from "./characterManager";
+import { dispatchSkinChange, dispatchTrailChange } from "./sync";
 
 export interface CustomSkin {
     type: "custom";
@@ -187,12 +188,14 @@ export default new class CosmeticSelection {
     updateSkin(skin: SkinChoice) {
         this.skin = skin;
         updateMainSkin(this.skin);
+        dispatchSkinChange(this.skin);
         api.storage.setValue("skin", $state.snapshot(this.skin));
     }
 
     updateTrail(trail: TrailChoice) {
         this.trail = trail;
         updateMainTrail(this.trail);
+        dispatchTrailChange(this.trail);
         api.storage.setValue("trail", $state.snapshot(this.trail));
     }
 

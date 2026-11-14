@@ -11,7 +11,9 @@
         "moduleDetection": "force",
         "paths": {
             "$assets/*": ["./assets/*"],
-            "$shared/*": ["./shared/*"]
+            "$shared/*": ["./shared/*"],
+            "$plugins/*": ["./plugins/*"],
+            "$libraries/*": ["./libraries/*"]
         },
         "types": ["@gimloader/types"]
     },

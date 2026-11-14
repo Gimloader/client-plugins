@@ -1,8 +1,8 @@
 import type { SkinChoice, TrailChoice } from "./selection.svelte";
 import CosmeticController from "./cosmeticController";
 
-let mainSkin: SkinChoice = null;
-let mainTrail: TrailChoice = null;
+export let mainSkin: SkinChoice = null;
+export let mainTrail: TrailChoice = null;
 const controllers = new Map<string, CosmeticController>();
 
 export function patchCharacters() {
@@ -58,4 +58,13 @@ export function updateSkin(id: string, skin: SkinChoice) {
 
 export function updateTrail(id: string, trail: string | null) {
     controllers.get(id)?.setTrail(trail);
+}
+
+export function disableNonMainCosmetics() {
+    for(const [id, controller] of controllers) {
+        if(id !== api.stores?.network?.authId) {
+            controller.setSkin(null);
+            controller.setTrail(null);
+        }
+    }
 }

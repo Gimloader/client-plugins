@@ -1,4 +1,6 @@
 import { patchCharacters } from "./characterManager";
+import { setSyncEnabled } from "./sync";
+import OpenButton from "./ui/OpenButton.svelte";
 import Selector from "./ui/Selector.svelte";
 import { mount, unmount } from "svelte";
 
@@ -28,4 +30,27 @@ api.hotkeys.addHotkey({
     key: "KeyC",
     alt: true
 }, showUI);
-api.openSettingsMenu(() => showUI());
+
+const settings = api.settings.create([
+    {
+        type: "toggle",
+        id: "syncCosmetics",
+        title: "Sync Cosmetics",
+        description: "Synchronize cosmetics with other players who have this setting enabled. Does not sync custom gims.",
+        default: true
+    },
+    {
+        type: "customsection",
+        id: "cosmeticSelection",
+        render: (element) => {
+            mount(OpenButton, {
+                target: element,
+                props: {
+                    onclick: showUI
+                }
+            });
+        }
+    }
+]);
+
+settings.listen("syncCosmetics", (enabled) => setSyncEnabled(enabled), true);

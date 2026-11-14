@@ -31,7 +31,7 @@ export default class CosmeticController {
             }
 
             this.defaultSkin = args[0];
-            if(this.character.isMain && this.skin) return true;
+            if(this.skin) return true;
         });
 
         this.unpatchTrail = api.patcher.before(this.character.characterTrail, "updateAppearance", (_, args) => {
@@ -41,7 +41,7 @@ export default class CosmeticController {
             }
 
             this.defaultTrail = args[0];
-            if(this.character.isMain && this.trail) return true;
+            if(this.trail) return true;
         });
 
         if(this.skin) this.setSkin(this.skin);
