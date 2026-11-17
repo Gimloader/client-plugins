@@ -23,10 +23,15 @@ export function dataFromDeviceInfo(device: Gimloader.Stores.DeviceData) {
 }
 
 export function prepareOptions(options: Record<string, any>) {
-    if(options.grantItemWhenDamaged || options.itemToGrant === undefined) return options;
+    const newOptions = { ...options };
 
-    const { itemToGrant, ...rest } = options;
-    return rest;
+    for(const key in newOptions) {
+        if(newOptions[key] === null) {
+            delete newOptions[key];
+        }
+    }
+
+    return newOptions;
 }
 
 export function safeParse(json: string, defaultVal: any) {

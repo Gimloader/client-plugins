@@ -2,7 +2,7 @@ import type { SelectedTile } from "../types";
 import { settings } from "../settings";
 import { addAction } from "./undo";
 
-const selectedTileIds: Set<string> = new Set();
+export const selectedTileIds: Set<string> = new Set();
 const selectedTiles: SelectedTile[] = [];
 const currentlySelectedTiles: SelectedTile[] = [];
 let movingTiles: SelectedTile[] = [];

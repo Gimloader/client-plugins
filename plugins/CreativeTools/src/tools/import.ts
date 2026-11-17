@@ -2,11 +2,11 @@ import type { MapData } from "../types";
 import { readJsonFile } from "$shared/files";
 import { prepareOptions } from "../util";
 
-export async function importWholeMap() {
+export async function importMap() {
     try {
         const data = await readJsonFile();
 
-        api.UI.toast.promise(importWholeMapData(data), {
+        api.UI.toast.promise(importMapData(data), {
             loading: "Importing map data...",
             success: "Imported map data",
             error: "Something went wrong"
@@ -14,7 +14,33 @@ export async function importWholeMap() {
     } catch {}
 }
 
-export async function importWholeMapData(data: MapData) {
+export async function importMapData(data: MapData) {
+    let tileShiftX = 0;
+    let tileShiftY = 0;
+    let shiftX = 0;
+    let shiftY = 0;
+
+    // If the selection is a region place the top left corner on top of the player
+    if(data.isRegion && (data.terrain.length > 0 || data.devices.length > 0)) {
+        let topLeftX = Infinity;
+        let topLeftY = Infinity;
+
+        for(const tile of data.terrain) {
+            if(tile.x * 64 < topLeftX) topLeftX = tile.x * 64;
+            if(tile.y * 64 < topLeftY) topLeftY = tile.y * 64;
+        }
+
+        for(const device of data.devices) {
+            if(device.x < topLeftX) topLeftX = device.x;
+            if(device.y < topLeftY) topLeftY = device.y;
+        }
+
+        tileShiftX = Math.floor((api.stores.phaser.mainCharacter.body.x - topLeftX) / 64);
+        tileShiftY = Math.floor((api.stores.phaser.mainCharacter.body.y - topLeftY) / 64);
+        shiftX = tileShiftX * 64;
+        shiftY = tileShiftY * 64;
+    }
+
     for(const id in data.customAssets) {
         const asset = data.customAssets[id];
         api.net.colyseus.send("ADD_CUSTOM_ASSET", {
@@ -27,13 +53,19 @@ export async function importWholeMapData(data: MapData) {
     }
 
     for(const tile of data.terrain) {
-        api.net.colyseus.send("PLACE_TERRAIN", tile);
+        api.net.colyseus.send("PLACE_TERRAIN", {
+            x: tile.x + tileShiftX,
+            y: tile.y + tileShiftY,
+            terrain: tile.terrain,
+            collides: tile.collides,
+            depth: tile.depth
+        });
     }
 
     for(const device of data.devices) {
         api.net.colyseus.send("PLACE_DEVICE", {
-            x: device.x,
-            y: device.y,
+            x: device.x + shiftX,
+            y: device.y + shiftY,
             id: device.id,
             deviceTypeId: device.deviceId,
             layerId: device.layerId,

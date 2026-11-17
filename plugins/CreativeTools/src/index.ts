@@ -1,5 +1,5 @@
-import { exportWholeMap } from "./tools/export";
-import { importWholeMap } from "./tools/import";
+import { exportSelection, exportWholeMap } from "./tools/export";
+import { importMap } from "./tools/import";
 import { redo, undo } from "./tools/undo";
 import { nukeMap } from "./tools/nuke";
 import "./tools/selection";
@@ -10,14 +10,25 @@ import { replaceSelection } from "./tools/selection";
 const isNotInGame = () => api.net.type !== "Colyseus";
 
 api.commands.addCommand({
-    text: "CreativeTools: Export World",
+    text: "CreativeTools: Export Whole Map",
     hidden: isNotInGame
 }, exportWholeMap);
 
 api.commands.addCommand({
-    text: "CreativeTools: Import World",
+    text: "CreativeTools: Export Selection",
     hidden: isNotInGame
-}, importWholeMap);
+}, exportSelection);
+
+// We actually infer whether it's from a selection based on the file itself
+api.commands.addCommand({
+    text: "CreativeTools: Import Whole Map",
+    hidden: isNotInGame
+}, importMap);
+
+api.commands.addCommand({
+    text: "CreativeTools: Import Selection",
+    hidden: isNotInGame
+}, importMap);
 
 api.commands.addCommand({
     text: "CreativeTools: Remove Everything From Map",

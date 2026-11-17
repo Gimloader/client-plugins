@@ -30,6 +30,7 @@ export interface CodeGrid {
 }
 
 export interface MapData {
+    isRegion?: boolean;
     terrain: Tile[];
     devices: Device[];
     codeGrids: Record<string, Record<string, CodeGrid>>;
