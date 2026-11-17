@@ -4,7 +4,7 @@ import { redo, undo } from "./tools/undo";
 import { nukeMap } from "./tools/nuke";
 import "./tools/selection";
 import "./tools/eraserSize";
-import "./tools/renameBlocks";
+import "./tools/blocks";
 import { replaceSelection } from "./tools/selection";
 
 const isNotInGame = () => api.net.type !== "Colyseus";
