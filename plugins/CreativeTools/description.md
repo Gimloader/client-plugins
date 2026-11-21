@@ -10,9 +10,9 @@ CreativeTools adds a variety of improvements to the creative editor. It is still
 * Download and import blocks
 * Command pallette command to remove everything from a map
 * Find/replace selected terrain
+* Command pallette commands to create various shapes out of terrain
 
 The following features are also planned:
 
 * Layer-based multiselect restriction
-* Creating shapes out of terrain
 * Improving layer management somehow

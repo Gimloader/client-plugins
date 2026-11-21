@@ -1,3 +1,11 @@
+export function getTerrainOptions() {
+    const terrainOptions = api.stores.worldOptions.terrainOptions;
+    return terrainOptions.map((t) => ({
+        label: t.name,
+        value: t.id
+    }));
+}
+
 export function dataFromDevice(device: Gimloader.Stores.Device) {
     return {
         x: device.x,

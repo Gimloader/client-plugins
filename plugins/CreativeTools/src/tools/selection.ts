@@ -1,10 +1,12 @@
-import type { SelectedTile } from "../types";
+import type { PreviewTile, SelectedTile } from "../types";
 import { settings } from "../settings";
 import { addAction } from "./undo";
+import { getTerrainOptions } from "../util";
 
 export const selectedTileIds: Set<string> = new Set();
 const selectedTiles: SelectedTile[] = [];
 const currentlySelectedTiles: SelectedTile[] = [];
+export const previewTiles: PreviewTile[] = [];
 let movingTiles: SelectedTile[] = [];
 let isMovingTiles = false;
 let updateAction: (action: string) => void;
@@ -21,21 +23,17 @@ export async function replaceSelection(ctx: Gimloader.CommandContext) {
         return;
     }
 
-    const terrainOptions = api.stores.worldOptions.terrainOptions;
-    const terrainTypes = terrainOptions.map((t) => ({
-        label: t.name,
-        value: t.id
-    }));
-    const possibleTerrainTypes = terrainTypes.filter((t) => selectedTiles.some((tile) => tile.terrainOption.id === t.value));
+    const terrainOptions = getTerrainOptions();
+    const possibleTerrainOptions = terrainOptions.filter((t) => selectedTiles.some((tile) => tile.terrainOption.id === t.value));
 
     const fromId = await ctx.select({
         title: "Terrain type to replace",
-        options: possibleTerrainTypes
+        options: possibleTerrainOptions
     });
 
     const toId = await ctx.select({
         title: "Replace with",
-        options: terrainTypes
+        options: terrainOptions
     });
 
     const matchingTiles = selectedTiles.filter((tile) => tile.terrainOption.id === fromId);
@@ -170,6 +168,16 @@ api.net.onLoad(() => {
     );
 
     api.patcher.after(terrainAdditionPreview, "update", () => {
+        for(const tile of previewTiles) {
+            terrainAdditionPreview.createPreviewTile({
+                x: tile.x,
+                y: tile.y,
+                depth: 999,
+                tileIndex: 0,
+                terrainOption: tile.terrainOption
+            });
+        }
+
         if(multiselectMode === "devices" || !multiselect.mouseStartPos) return;
         const offsetX = (inputManager.mouse.worldX - multiselect.mouseStartPos.x) >> 6;
         const offsetY = (inputManager.mouse.worldY - multiselect.mouseStartPos.y) >> 6;

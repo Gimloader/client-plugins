@@ -6,6 +6,12 @@ export interface Tile {
     depth: number;
 }
 
+export interface PreviewTile {
+    x: number;
+    y: number;
+    terrainOption: Gimloader.Stores.TerrainOption;
+}
+
 export interface Device {
     x: number;
     y: number;
