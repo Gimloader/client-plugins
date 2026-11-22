@@ -5,7 +5,7 @@ import { nukeMap } from "./tools/nuke";
 import { replaceSelection } from "./tools/selection";
 import "./tools/eraserSize";
 import "./tools/blocks";
-import { createShape, getCircleTiles, getEllipseTiles, getRectangleTiles, getSquareTiles } from "./tools/shapes";
+import { createShape, getCircleTiles, getEllipseTiles, getHollowCircleTiles, getHollowEllipseTiles, getHollowRectangleTiles, getHollowSquareTiles, getRectangleTiles, getSquareTiles } from "./tools/shapes";
 
 api.net.onLoad(() => {
     api.commands.addCommand({
@@ -38,17 +38,34 @@ api.net.onLoad(() => {
     }, (ctx) => createShape(ctx, "square", getSquareTiles));
 
     api.commands.addCommand({
+        text: "CreativeTools: Create Hollow Square"
+    }, (ctx) => createShape(ctx, "hollow square", getHollowSquareTiles));
+
+    api.commands.addCommand({
         text: "CreativeTools: Create Rectangle"
     }, (ctx) => createShape(ctx, "rectangle", getRectangleTiles));
+
+    api.commands.addCommand({
+        text: "CreativeTools: Create Hollow Rectangle"
+    }, (ctx) => createShape(ctx, "hollow rectangle", getHollowRectangleTiles));
 
     api.commands.addCommand({
         text: "CreativeTools: Create Circle"
     }, (ctx) => createShape(ctx, "circle", getCircleTiles));
 
     api.commands.addCommand({
+        text: "CreativeTools: Create Hollow Circle"
+    }, (ctx) => createShape(ctx, "hollow circle", getHollowCircleTiles));
+
+    api.commands.addCommand({
         text: "CreativeTools: Create Ellipse",
         keywords: ["oval"]
     }, (ctx) => createShape(ctx, "ellipse", getEllipseTiles));
+
+    api.commands.addCommand({
+        text: "CreativeTools: Create Hollow Ellipse",
+        keywords: ["oval"]
+    }, (ctx) => createShape(ctx, "hollow ellipse", getHollowEllipseTiles));
 
     api.hotkeys.addHotkey({
         ctrl: true,

@@ -100,7 +100,9 @@ export async function createShape(context: Gimloader.CommandContext, name: strin
                 bottomRightX,
                 bottomRightY
             );
-        } catch {}
+        } catch {
+            previewTiles.length = 0;
+        }
 
         Object.defineProperty(inputManager.mouse, "isHoldingDown", { value: true, writable: true, enumerable: true });
         Object.defineProperty(inputManager.mouse, "stopRunningClickHandlers", { value: true, writable: true, enumerable: true });
@@ -115,16 +117,60 @@ export const getRectangleTiles: TilesGenerator = (callback, startX, startY, endX
     }
 };
 
-export const getSquareTiles: TilesGenerator = (callback, startX, startY, endX, endY) => {
-    const size = Math.max(endX - startX, endY - startY);
-    for(let x = startX; x < startX + size; x++) {
-        for(let y = startY; y < startY + size; y++) {
-            callback(x, y);
-        }
+export const getHollowRectangleTiles: TilesGenerator = (callback, startX, startY, endX, endY) => {
+    for(let x = startX; x < endX; x++) {
+        callback(x, startY);
+        callback(x, endY - 1);
+    }
+
+    for(let y = startY + 1; y < endY - 1; y++) {
+        callback(startX, y);
+        callback(endX - 1, y);
     }
 };
 
+export const getSquareTiles: TilesGenerator = (callback, startX, startY, endX, endY) => {
+    const size = Math.max(endX - startX, endY - startY);
+    getRectangleTiles(callback, startX, startY, startX + size, startY + size);
+};
+
+export const getHollowSquareTiles: TilesGenerator = (callback, startX, startY, endX, endY) => {
+    const size = Math.max(endX - startX, endY - startY);
+    getHollowRectangleTiles(callback, startX, startY, startX + size, startY + size);
+};
+
 export const getCircleTiles: TilesGenerator = (callback, startX, startY, endX, endY) => {
+    const radius = Math.floor(Math.max(endX - startX, endY - startY) / 2);
+    const centerX = startX + radius;
+    const centerY = startY + radius;
+
+    const addRow = (x1: number, x2: number, y: number) => {
+        for(let x = x1; x <= x2; x++) {
+            callback(x, y);
+        }
+    };
+
+    let x = 0;
+    let y = radius;
+    let error = 1 - radius;
+
+    while(x <= y) {
+        addRow(centerX - x, centerX + x, centerY + y);
+        addRow(centerX - x, centerX + x, centerY - y);
+        addRow(centerX - y, centerX + y, centerY + x);
+        addRow(centerX - y, centerX + y, centerY - x);
+
+        if(error < 0) {
+            error += 2 * x + 3;
+        } else {
+            error += 2 * (x - y) + 5;
+            y--;
+        }
+        x++;
+    }
+};
+
+export const getHollowCircleTiles: TilesGenerator = (callback, startX, startY, endX, endY) => {
     const radius = Math.floor(Math.max(endX - startX, endY - startY) / 2);
     const centerX = startX + radius;
     const centerY = startY + radius;
@@ -153,8 +199,26 @@ export const getCircleTiles: TilesGenerator = (callback, startX, startY, endX, e
     }
 };
 
-// Completely stolen from somewhere
 export const getEllipseTiles: TilesGenerator = (callback, startX, startY, endX, endY) => {
+    const xc = Math.round((startX + endX) / 2);
+    const yc = Math.round((startY + endY) / 2);
+    const rx = Math.round((endX - startX) / 2);
+    const ry = Math.round((endY - startY) / 2);
+    const rxSquared = rx * rx;
+
+    for(let x = 0; x <= rx; x++) {
+        const maxY = Math.round(ry * Math.sqrt(1 - (x * x) / rxSquared));
+        for(let y = 0; y <= maxY; y++) {
+            callback(xc + x, yc + y);
+            callback(xc - x, yc + y);
+            callback(xc + x, yc - y);
+            callback(xc - x, yc - y);
+        }
+    }
+};
+
+// Completely stolen from somewhere
+export const getHollowEllipseTiles: TilesGenerator = (callback, startX, startY, endX, endY) => {
     const xc = Math.round((startX + endX) / 2);
     const yc = Math.round((startY + endY) / 2);
     const rx = Math.round((endX - startX) / 2);
