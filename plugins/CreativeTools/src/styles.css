@@ -1,0 +1,3 @@
+.border-inside-white > * {
+    border-color: white !important;
+}

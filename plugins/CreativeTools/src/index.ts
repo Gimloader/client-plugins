@@ -1,10 +1,12 @@
+import "./styles.css";
+import "./tools/eraserSize";
+import "./tools/blocks";
+import "./tools/layers";
 import { exportSelection, exportWholeMap } from "./tools/export";
 import { importMap } from "./tools/import";
 import { redo, undo } from "./tools/undo";
 import { nukeMap } from "./tools/nuke";
 import { replaceSelection } from "./tools/selection";
-import "./tools/eraserSize";
-import "./tools/blocks";
 import { createShape, getCircleTiles, getEllipseTiles, getHollowCircleTiles, getHollowEllipseTiles, getHollowRectangleTiles, getHollowSquareTiles, getRectangleTiles, getSquareTiles } from "./tools/shapes";
 
 api.net.onLoad(() => {
