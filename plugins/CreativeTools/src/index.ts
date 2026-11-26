@@ -2,6 +2,7 @@ import "./styles.css";
 import "./tools/eraserSize";
 import "./tools/blocks";
 import "./tools/layers";
+import "./tools/hider";
 import { exportSelection, exportWholeMap } from "./tools/export";
 import { importMap } from "./tools/import";
 import { redo, undo } from "./tools/undo";

@@ -4,8 +4,8 @@ export default officialScriptConfig({
     input: "src/index.ts",
     name: "CreativeTools",
     description: "Adds various quality of life improvements to the Creative editor",
-    version: "0.7.0",
+    version: "0.8.0",
     reloadRequired: "ingame",
     gamemodes: ["creative"],
-    changelog: ["Added drag and drop for layer reordering"]
+    changelog: ["Added a menu to hide devices based on layer"]
 });
