@@ -6,6 +6,7 @@ export default workspaceConfig({
     type: "workspace",
     splitPluginsAndLibraries: true,
     injectCss: true,
+    maxChangelogVersions: 5,
     autoAlias: [
         "./plugins",
         "./libraries"
